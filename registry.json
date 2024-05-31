@@ -98,15 +98,15 @@
   },
   "AWSSDK.Core": {
     "listed": true,
-    "version": "3.3.100"
+    "version": "3.7.302.8"
   },
   "AWSSDK.S3": {
     "listed": true,
-    "version": "3.3.100"
+    "version": "3.7.302.8"
   },
   "AWSSDK.SecurityToken": {
     "listed": true,
-    "version": "3.3.100"
+    "version": "3.7.302.8"
   },
   "Ben.Demystifier": {
     "listed": true,
@@ -135,9 +135,13 @@
     "listed": true,
     "version": "1.0.2"
   },
+  "ClosedXML": {
+    "listed": true,
+    "version": "0.92.1"
+  },
   "CLSS.Constants.CollectionPool": {
     "listed": true,
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "CLSS.Constants.DefaultRandom": {
     "listed": true,
@@ -157,7 +161,7 @@
   },
   "CLSS.ExtensionMethods.IComparable.ClampToRange": {
     "listed": true,
-    "version": "1.0.0"
+    "version": "1.3.0"
   },
   "CLSS.ExtensionMethods.IComparable.InRange": {
     "listed": true,
@@ -257,7 +261,7 @@
   },
   "CLSS.Types.AgnosticObjectPool": {
     "listed": true,
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "CLSS.Types.EventLatch": {
     "listed": true,
@@ -314,11 +318,31 @@
   },
   "CSharpFunctionalExtensions": {
     "listed": true,
-    "version": "1.8.1"
+    "version": "2.40.3"
   },
   "CsvHelper": {
     "listed": true,
     "version": "3.0.0"
+  },
+  "Dapplo.Log": {
+    "listed": true,
+    "version": "1.3.17"
+  },
+  "Dapplo.Windows.Common": {
+    "listed": true,
+    "version": "1.0.26"
+  },
+  "Dapplo.Windows.Input": {
+    "listed": true,
+    "version": "1.0.26"
+  },
+  "Dapplo.Windows.Messages": {
+    "listed": true,
+    "version": "1.0.26"
+  },
+  "Dapplo.Windows.User32": {
+    "listed": true,
+    "version": "1.0.26"
   },
   "Dev.ComradeVanti.Nothing": {
     "listed": true,
@@ -327,6 +351,14 @@
   "DnsClient": {
     "listed": true,
     "version": "1.1.0"
+  },
+  "DocumentFormat.OpenXml": {
+    "listed": true,
+    "version": "2.10.0"
+  },
+  "DocumentFormat.OpenXml.Framework": {
+    "listed": true,
+    "version": "3.0.0"
   },
   "DotNetty.Buffers": {
     "listed": true,
@@ -351,6 +383,10 @@
   "Eflatun.Expansions": {
     "listed": true,
     "version": "0.0.1"
+  },
+  "Elasticsearch.Net": {
+    "listed": true,
+    "version": "6.3.0"
   },
   "ErrorProne.NET.CoreAnalyzers": {
     "listed": true,
@@ -380,6 +416,14 @@
     "listed": true,
     "version": "1.0.0"
   },
+  "FastMember": {
+    "listed": true,
+    "version": "1.2.0"
+  },
+  "FastMember.Signed": {
+    "listed": true,
+    "version": "1.2.0"
+  },
   "FluentAssertions": {
     "listed": true,
     "version": "5.0.0",
@@ -405,7 +449,7 @@
   },
   "Google.Apis.AndroidPublisher.v3": {
     "listed": true,
-    "version": "1.35.1.1312"
+    "version": "1.66.0.3324"
   },
   "Google.Apis.Auth": {
     "listed": true,
@@ -414,6 +458,10 @@
   "Google.Apis.Core": {
     "listed": true,
     "version": "1.35.0"
+  },
+  "Google.FlatBuffers": {
+    "listed": true,
+    "version": "22.9.24"
   },
   "Google.Protobuf": {
     "listed": true,
@@ -469,6 +517,10 @@
     "listed": true,
     "version": "2.13.0"
   },
+  "IdentityModel.OidcClient": {
+    "listed": true,
+    "version": "2.3.0"
+  },
   "IDisposableAnalyzers": {
     "listed": true,
     "version": "1.0.0",
@@ -477,6 +529,10 @@
   "Injecter": {
     "listed": true,
     "version": "1.0.0"
+  },
+  "Irony": {
+    "listed": true,
+    "version": "1.5.0"
   },
   "Jdenticon-net": {
     "listed": true,
@@ -505,6 +561,10 @@
   "LiteDB": {
     "listed": true,
     "version": "4.0.0"
+  },
+  "LiteDB.Async": {
+    "listed": true,
+    "version": "0.0.1"
   },
   "LiteDb.Extensions.Caching": {
     "listed": true,
@@ -1009,9 +1069,25 @@
     "version": "[2.0.0,3.3.0]",
     "analyzer": true
   },
+  "ObservableCollections": {
+    "listed": true,
+    "version": "1.0.0"
+  },
+  "ObservableCollections.R3": {
+    "listed": true,
+    "version": "2.0.0"
+  },
   "OneOf": {
     "listed": true,
     "version": "3.0.205"
+  },
+  "OneOf": {
+    "listed": true,
+    "version": "3.0.205"
+  },
+  "OpenSearch.Net": {
+    "listed": true,
+    "version": "1.0.0"
   },
   "Polly": {
     "listed": true,
@@ -1033,6 +1109,10 @@
     "listed": true,
     "version": "1.8.1.3"
   },
+  "Portable.System.DateTimeOnly": {
+    "listed": true,
+    "version": "6.0.0"
+  },
   "Prism.Core": {
     "listed": true,
     "version": "7.0.0.362"
@@ -1053,6 +1133,10 @@
     "listed": true,
     "version": "1.0.177"
   },
+  "pythonnet": {
+    "listed": true,
+    "version": "3.0.0"
+  },
   "QuikGraph": {
     "listed": true,
     "version": "1.0.0"
@@ -1060,6 +1144,14 @@
   "R3": {
     "listed": true,
     "version": "0.0.3"
+  },
+  "ReactiveProperty": {
+    "listed": true,
+    "version": "5.0.0"
+  },
+  "ReactiveProperty.Core": {
+    "listed": true,
+    "version": "7.0.0"
   },
   "RestSharp": {
     "listed": true,
@@ -1113,6 +1205,9 @@
     "version": "4.10.0",
     "analyzer": true
   },
+  "runtime.native.System.Data.SqlClient.sni": {
+    "ignore": true
+  },
   "Scriban": {
     "listed": true,
     "version": "1.2.4"
@@ -1157,6 +1252,14 @@
     "listed": true,
     "version": "1.1.0"
   },
+  "Serilog.Formatting.Elasticsearch": {
+    "listed": true,
+    "version": "8.0.0"
+  },
+  "Serilog.Formatting.OpenSearch": {
+    "listed": true,
+    "version": "1.0.0"
+  },
   "Serilog.Settings.Configuration": {
     "listed": true,
     "version": "3.0.0"
@@ -1173,6 +1276,10 @@
     "listed": true,
     "version": "1.0.1"
   },
+  "Serilog.Sinks.Elasticsearch": {
+    "listed": true,
+    "version": "8.0.0"
+  },
   "Serilog.Sinks.File": {
     "listed": true,
     "version": "4.1.0"
@@ -1180,6 +1287,14 @@
   "Serilog.Sinks.Graylog": {
     "listed": true,
     "version": "1.1.89"
+  },
+  "Serilog.Sinks.OpenSearch": {
+    "listed": true,
+    "version": "1.0.0"
+  },
+  "Serilog.Sinks.PeriodicBatching": {
+    "listed": true,
+    "version": "2.2.0"
   },
   "Serilog.Sinks.Trace": {
     "listed": true,
@@ -1199,7 +1314,7 @@
   },
   "SixLabors.Fonts": {
     "listed": true,
-    "version": "1.0.0"
+    "version": "[1.0.0,2.0.0)"
   },
   "SixLabors.ImageSharp": {
     "listed": true,
@@ -1267,6 +1382,10 @@
     "listed": true,
     "version": "1.1.0"
   },
+  "Sylvan.Data.Csv": {
+    "listed": true,
+    "version": "0.1.0"
+  },
   "System.Buffers": {
     "listed": true,
     "version": "4.4.0"
@@ -1287,11 +1406,19 @@
     "listed": true,
     "version": "4.4.0"
   },
+  "System.Data.SqlClient": {
+    "listed": true,
+    "version": "4.4.0"
+  },
   "System.Diagnostics.DiagnosticSource": {
     "listed": true,
     "version": "4.5.0"
   },
   "System.Diagnostics.EventLog": {
+    "listed": true,
+    "version": "4.5.0"
+  },
+  "System.Drawing.Common": {
     "listed": true,
     "version": "4.5.0"
   },
@@ -1314,6 +1441,14 @@
   "System.IO.FileSystem.AccessControl": {
     "listed": true,
     "version": "4.4.0"
+  },
+  "System.IO.Hashing": {
+    "listed": false,
+    "version": "6.0.0"
+  },
+  "System.IO.Packaging": {
+    "listed": true,
+    "version": "4.5.0"
   },
   "System.IO.Pipelines": {
     "listed": true,
@@ -1343,6 +1478,10 @@
     "listed": false,
     "version": "4.6.0"
   },
+  "System.Reactive": {
+    "listed": true,
+    "version": "4.0.0"
+  },
   "System.Reflection.DispatchProxy": {
     "listed": true,
     "version": "4.4.0"
@@ -1370,6 +1509,11 @@
   "System.Runtime.CompilerServices.Unsafe": {
     "listed": true,
     "version": "4.4.0"
+  },
+  "System.Runtime.InteropServices.WindowsRuntime": {
+    "listed": false,
+    "version": "4.3.0",
+    "ignore": true
   },
   "System.Security.AccessControl": {
     "listed": true,
@@ -1447,6 +1591,10 @@
     "listed": true,
     "version": "17.2.26"
   },
+  "TxFileManager": {
+    "listed": true,
+    "version": "1.4.0"
+  },
   "UniRxAnalyzer": {
     "listed": true,
     "version": "1.0.4.1",
@@ -1454,15 +1602,19 @@
   },
   "UnitsNet": {
     "listed": true,
-    "version": "4.0.0"
+    "version": "5.28.0"
   },
   "UnitsNet.NumberExtensions": {
     "listed": true,
-    "version": "4.44.0"
+    "version": "5.28.0"
   },
   "UnitsNet.Serialization.JsonNet": {
     "listed": true,
-    "version": "4.0.0"
+    "version": "5.28.0"
+  },
+  "Utf8StringInterpolation": {
+    "listed": true,
+    "version": "1.3.1"
   },
   "Validation": {
     "listed": true,
@@ -1492,8 +1644,24 @@
     "listed": true,
     "version": "1.0.0"
   },
+  "XLParser": {
+    "listed": true,
+    "version": "1.7.0"
+  },
+  "YamlDotNet": {
+    "listed": true,
+    "version": "12.0.0"
+  },
+  "ZLogger": {
+    "listed": true,
+    "version": "2.0.1"
+  },
   "ZstdSharp.Port": {
     "listed": true,
     "version": "0.5.0"
+  },
+  "ZString": {
+    "listed": true,
+    "version": "0.1.0"
   }
 }

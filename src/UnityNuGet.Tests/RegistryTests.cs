@@ -5,7 +5,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.PackageManagement;
 using NuGet.Packaging.Core;
@@ -40,7 +39,7 @@ namespace UnityNuGet.Tests
         [Test]
         public async Task CanParse_PackageWithRuntimes()
         {
-            var logger = NullLogger.Instance;
+            var logger = new NuGetConsoleTestLogger();
             var cancellationToken = CancellationToken.None;
 
             var cache = new SourceCacheContext();
@@ -98,7 +97,7 @@ namespace UnityNuGet.Tests
         {
             var registry = Registry.GetInstance();
 
-            var logger = NullLogger.Instance;
+            var logger = new NuGetConsoleTestLogger();
             var cancellationToken = CancellationToken.None;
 
             var cache = new SourceCacheContext();
@@ -109,9 +108,14 @@ namespace UnityNuGet.Tests
 
             var excludedPackages = new string[] {
                 // All versions target "Any" and not .netstandard2.0 / 2.1
-                @"AWSSDK.S3",
-                // All versions target "Any" and not .netstandard2.0 / 2.1
-                @"AWSSDK.SecurityToken",
+                // It has too many versions, the minimum version is lifted so as not to process so many versions
+                @"AWSSDK.*",
+                // It has too many versions, the minimum version is lifted so as not to process so many versions
+                @"CSharpFunctionalExtensions",
+                // Some versions between 5.6.4 and 6.3.0 doesn't ship .netstandard2.0.
+                @"Elasticsearch.Net",
+                // It has too many versions, the minimum version is lifted so as not to process so many versions
+                @"Google.Apis.AndroidPublisher.v3",
                 // Versions prior to 1.11.24 depend on System.Xml.XPath.XmlDocument which does not target .netstandard2.0
                 @"HtmlAgilityPack",
                 // Although 2.x targets .netstandard2.0 it has an abandoned dependency (Remotion.Linq) that does not target .netstandard2.0.
@@ -129,7 +133,20 @@ namespace UnityNuGet.Tests
                 // Versions < 4.6.0 in theory supports .netstandard2.0 but it doesn't have a lib folder with assemblies and it makes it fail.
                 @"System.Private.ServiceModel",
                 // Versions < 0.8.6 depend on LiteGuard, a deprecated dependency.
-                @"Telnet"
+                @"Telnet",
+                // Version < 1.0.26 depends on Microsoft.Windows.Compatibility, this one has tons of dependencies that don't target .netstandard2.0. And one of them is System.Speech that doesn't work in Unity.
+                @"Dapplo.Windows.Common",
+                @"Dapplo.Windows.Input",
+                @"Dapplo.Windows.Messages",
+                @"Dapplo.Windows.User32",
+                // It has too many versions, the minimum version is lifted so as not to process so many versions
+                @"UnitsNet.*",
+                // Most versions < 1.7.0 don't target .netstandard2.0
+                @"XLParser",
+                // Versions < 1.3.1 has dependencies on PolySharp
+                @"Utf8StringInterpolation",
+                // Versions 2.0.0 has dependencies on Utf8StringInterpolation 1.3.0
+                @"ZLogger"
             };
 
             var excludedPackagesRegex = new Regex(@$"^{string.Join('|', excludedPackages)}$");
@@ -191,7 +208,7 @@ namespace UnityNuGet.Tests
 
             var registry = Registry.GetInstance();
 
-            var logger = NullLogger.Instance;
+            var logger = new NuGetConsoleTestLogger();
             var cancellationToken = CancellationToken.None;
 
             var cache = new SourceCacheContext();
