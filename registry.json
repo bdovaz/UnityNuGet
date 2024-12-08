@@ -1,4 +1,8 @@
 {
+  "AdysTech.CredentialManager": {
+    "listed": true,
+    "version": "2.3.0"
+  },
   "Akka": {
     "listed": true,
     "version": "1.4.1"
@@ -32,6 +36,10 @@
     "listed": true,
     "version": "1.4.15"
   },
+  "Akka.Discovery": {
+    "listed": true,
+    "version": "1.4.29"
+  },
   "Akka.DistributedData": {
     "listed": true,
     "version": "1.4.1"
@@ -60,9 +68,21 @@
     "listed": true,
     "version": "0.1.0"
   },
+  "Akka.Streams": {
+    "listed": true,
+    "version": "1.4.1"
+  },
   "Antlr4.Runtime.Standard": {
     "listed": true,
     "version": "4.9.1"
+  },
+  "Apache.Arrow": {
+    "listed": true,
+    "version": "10.0.0"
+  },
+  "Apache.Arrow.Compression": {
+    "listed": true,
+    "version": "12.0.0"
   },
   "Args": {
     "listed": true,
@@ -137,7 +157,11 @@
   },
   "ClosedXML": {
     "listed": true,
-    "version": "0.92.1"
+    "version": "[0.92.1,0.102.3]"
+  },
+  "ClosedXML.Parser": {
+    "listed": true,
+    "version": "1.0.0"
   },
   "CLSS.Constants.CollectionPool": {
     "listed": true,
@@ -412,6 +436,10 @@
     "listed": false,
     "version": "1.0.6"
   },
+  "Faker.Net": {
+    "listed": true,
+    "version": "1.3.56"
+  },
   "FastEnum": {
     "listed": true,
     "version": "1.0.0"
@@ -443,6 +471,22 @@
     "listed": true,
     "version": "[2.0.0,3.0.0)"
   },
+  "Google.Api.CommonProtos": {
+    "listed": true,
+    "version": "1.7.0"
+  },
+  "Google.Api.Gax": {
+    "listed": true,
+    "version": "2.7.0"
+  },
+  "Google.Api.Gax.Grpc": {
+    "listed": true,
+    "version": "2.7.0"
+  },
+  "Google.Api.Gax.Grpc.GrpcCore": {
+    "listed": true,
+    "version": "3.0.0"
+  },
   "Google.Apis": {
     "listed": true,
     "version": "1.35.0"
@@ -459,13 +503,65 @@
     "listed": true,
     "version": "1.35.0"
   },
+  "Google.Apis.Sheets.v4": {
+    "listed": true,
+    "version": "1.35.1.1303"
+  },
+  "Google.Cloud.Firestore": {
+    "listed": true,
+    "version": "1.0.0"
+  },
+  "Google.Cloud.Firestore.Admin.V1": {
+    "listed": true,
+    "version": "1.0.0"
+  },
+  "Google.Cloud.Firestore.V1": {
+    "listed": true,
+    "version": "1.0.0"
+  },
+  "Google.Cloud.Location": {
+    "listed": true,
+    "version": "1.0.0"
+  },
   "Google.FlatBuffers": {
     "listed": true,
     "version": "22.9.24"
   },
+  "Google.LongRunning": {
+    "listed": true,
+    "version": "2.0.0"
+  },
   "Google.Protobuf": {
     "listed": true,
     "version": "3.8.0"
+  },
+  "GraphQL.Client": {
+    "listed": true,
+    "version": "1.0.0"
+  },
+  "GraphQL.Client.Abstractions": {
+    "listed": true,
+    "version": "2.0.0"
+  },
+  "GraphQL.Client.Abstractions.Websocket": {
+    "listed": true,
+    "version": "2.1.0"
+  },
+  "GraphQL.Client.Serializer.Newtonsoft": {
+    "listed": true,
+    "version": "3.1.9"
+  },
+  "GraphQL.Common": {
+    "listed": true,
+    "version": "1.0.0"
+  },
+  "GraphQL.Primitives": {
+    "listed": true,
+    "version": "2.0.0"
+  },
+  "Grpc.Auth": {
+    "listed": true,
+    "version": "1.20.0"
   },
   "Grpc.Core": {
     "listed": true,
@@ -526,6 +622,10 @@
     "version": "1.0.0",
     "analyzer": true
   },
+  "IndexRange": {
+    "listed": true,
+    "version": "1.0.0"
+  },
   "Injecter": {
     "listed": true,
     "version": "1.0.0"
@@ -542,9 +642,25 @@
     "listed": true,
     "version": "1.4.0"
   },
+  "Jurassic": {
+    "listed": true,
+    "version": "3.0.0"
+  },
+  "JWT": {
+    "listed": true,
+    "version": "5.2.0"
+  },
   "K4os.Compression.LZ4": {
     "listed": true,
     "version": "1.0.2"
+  },
+  "K4os.Compression.LZ4.Streams": {
+    "listed": true,
+    "version": "1.0.2"
+  },
+  "K4os.Hash.xxHash": {
+    "listed": true,
+    "version": "1.0.0"
   },
   "Kdl.NetStandard.x64": {
     "listed": true,
@@ -589,6 +705,11 @@
   "MessagePack.Annotations": {
     "listed": true,
     "version": "2.0.323"
+  },
+  "MessagePackAnalyzer": {
+    "listed": true,
+    "version": "2.5.187",
+    "analyzer": true
   },
   "MessagePipe": {
     "listed": true,
@@ -646,6 +767,10 @@
   "Microsoft.Bcl.AsyncInterfaces": {
     "listed": true,
     "version": "1.0.0"
+  },
+  "Microsoft.Bcl.Cryptography": {
+    "listed": true,
+    "version": "8.0.0"
   },
   "Microsoft.Bcl.HashCode": {
     "listed": true,
@@ -947,7 +1072,7 @@
     "listed": true,
     "version": "1.0.8"
   },
-  "MiniExcel":{
+  "MiniExcel": {
     "listed": true,
     "version": "0.2.0"
   },
@@ -1044,6 +1169,9 @@
     "listed": true,
     "version": "0.1.0"
   },
+  "NETStandard.Library": {
+    "ignore": true
+  },
   "Newtonsoft.Json": {
     "listed": true,
     "version": "11.0.1"
@@ -1081,13 +1209,13 @@
     "listed": true,
     "version": "3.0.205"
   },
-  "OneOf": {
-    "listed": true,
-    "version": "3.0.205"
-  },
   "OpenSearch.Net": {
     "listed": true,
     "version": "1.0.0"
+  },
+  "Parse": {
+    "listed": true,
+    "version": "3.0.0"
   },
   "Polly": {
     "listed": true,
@@ -1113,9 +1241,21 @@
     "listed": true,
     "version": "6.0.0"
   },
+  "Prism.Container.Abstractions": {
+    "listed": true,
+    "version": "9.0.88"
+  },
   "Prism.Core": {
     "listed": true,
     "version": "7.0.0.362"
+  },
+  "Prism.Events": {
+    "listed": true,
+    "version": "9.0.537"
+  },
+  "ProcessX": {
+    "listed": true,
+    "version": "1.0.0"
   },
   "protobuf-net": {
     "listed": true,
@@ -1144,6 +1284,10 @@
   "R3": {
     "listed": true,
     "version": "0.0.3"
+  },
+  "Reactive.Streams": {
+    "listed": true,
+    "version": "1.0.3"
   },
   "ReactiveProperty": {
     "listed": true,
@@ -1228,13 +1372,37 @@
     "listed": true,
     "version": "2.8.0"
   },
+  "Serilog.Enrichers.AssemblyName": {
+    "listed": true,
+    "version": "1.0.6"
+  },
+  "Serilog.Enrichers.Context": {
+    "listed": true,
+    "version": "4.6.5"
+  },
   "Serilog.Enrichers.Demystifier": {
     "listed": true,
     "version": "0.9.0"
   },
+  "Serilog.Enrichers.Environment": {
+    "listed": true,
+    "version": "2.2.0"
+  },
+  "Serilog.Enrichers.GlobalLogContext": {
+    "listed": true,
+    "version": "1.0.0"
+  },
   "Serilog.Enrichers.Memory": {
     "listed": true,
     "version": "1.0.4"
+  },
+  "Serilog.Enrichers.Process": {
+    "listed": true,
+    "version": "2.0.2"
+  },
+  "Serilog.Enrichers.Thread": {
+    "listed": true,
+    "version": "3.1.0"
   },
   "Serilog.Expressions": {
     "listed": true,
@@ -1470,6 +1638,10 @@
     "listed": true,
     "version": "4.4.0"
   },
+  "System.Net.ServerSentEvents": {
+    "listed": true,
+    "version": "9.0.0"
+  },
   "System.Numerics.Vectors": {
     "listed": false,
     "version": "4.4.0"
@@ -1587,6 +1759,10 @@
     "listed": true,
     "version": "17.2.26"
   },
+  "TestableIO.System.IO.Abstractions.TestingHelpers": {
+    "listed": true,
+    "version": "18.0.1"
+  },
   "TestableIO.System.IO.Abstractions.Wrappers": {
     "listed": true,
     "version": "17.2.26"
@@ -1620,6 +1796,10 @@
     "listed": true,
     "version": "2.5.42"
   },
+  "VideoLibrary": {
+    "listed": true,
+    "version": "3.2.2"
+  },
   "VoltRpc": {
     "listed": true,
     "version": "1.0.0"
@@ -1639,6 +1819,10 @@
   "WebDav.Client": {
     "listed": true,
     "version": "2.3.0"
+  },
+  "Websocket.Client": {
+    "listed": true,
+    "version": "1.0.1"
   },
   "Websocketsharp.core": {
     "listed": true,
