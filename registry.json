@@ -551,6 +551,10 @@
     "listed": true,
     "version": "3.1.9"
   },
+  "GraphQL.Client.Serializer.SystemTextJson": {
+    "listed": true,
+    "version": "3.1.9"
+  },
   "GraphQL.Common": {
     "listed": true,
     "version": "1.0.0"
@@ -1348,6 +1352,10 @@
     "listed": true,
     "version": "4.10.0",
     "analyzer": true
+  },
+  "RSG.Promise": {
+    "listed": true,
+    "version": "3.0.1"
   },
   "runtime.native.System.Data.SqlClient.sni": {
     "ignore": true
