@@ -1,4 +1,4 @@
-# UnityNuGet [![Build Status](https://github.com/xoofx/UnityNuGet/workflows/ci/badge.svg?branch=master)](https://github.com/xoofx/UnityNuGet/actions) [![Static Badge](https://img.shields.io/badge/server-status-blue)](https://unitynuget-registry.azurewebsites.net/status) [![Static Badge](https://img.shields.io/badge/server-feed-blue)](https://unitynuget-registry.azurewebsites.net/-/all)
+# UnityNuGet [![Build Status](https://img.shields.io/github/actions/workflow/status/bdovaz/UnityNuGet/ci.yml?branch=master)](https://github.com/xoofx/UnityNuGet/actions) [![Static Badge](https://img.shields.io/badge/server-status-blue)](https://unitynuget-registry.openupm.com/status) [![Static Badge](https://img.shields.io/badge/server-feed-blue)](https://unitynuget-registry.openupm.com/-/all)
 
 <img align="right" width="160px" height="160px" alt="UnityNuGet logo" src="img/unitynuget.png">
 
@@ -7,21 +7,21 @@ This project provides a seamlessly integration of a [curated list](registry.json
 > [!IMPORTANT]
 > DISCLAIMER: This is not an official service provided by Unity Technologies Inc.
 
-> [!WARNING]
-> [Azure feed to be discontinued on March 10th](https://github.com/xoofx/UnityNuGet/issues/480)
+## Usage
 
-## Installation
+> [!NOTE]
+> Feed provided by [OpenUPM](https://medium.com/openupm/openupm-launches-alternative-unitynuget-registry-0b8cc663cc41).
 
 ### Add scope registry (manifest.json)
 
-In order to use this service you simply need to edit the `Packages/manifest.json` in your project and add the following scoped registry:
+In order to use this service you simply need to edit the `Packages/manifest.json` in your project and add the following [scoped registry](https://docs.unity3d.com/Manual/upm-scoped.html):
 
 ```json
 {
   "scopedRegistries": [
     {
       "name": "Unity NuGet",
-      "url": "https://unitynuget-registry.azurewebsites.net",
+      "url": "https://unitynuget-registry.openupm.com",
       "scopes": [
         "org.nuget"
       ]
@@ -40,20 +40,23 @@ Instructions: <https://docs.unity3d.com/Manual/class-PackageManager.html>
 ```yaml
 Name: Unity NuGet
 
-Url: https://unitynuget-registry.azurewebsites.net
+Url: https://unitynuget-registry.openupm.com
 
 Scope(s): org.nuget
 ```
 
 ### Disable Assembly Version Validation
 
+> [!IMPORTANT]
+In Unity 2022.2+, this is the [default behavior](https://discussions.unity.com/t/editor-assembly-loading-issues-unloading-broken-assembly-could-not-load-signature/760376/46), so no action is required.
+
 This step is necessary to ensure that binding redirects for [strongly named assemblies](https://learn.microsoft.com/en-us/dotnet/standard/assembly/strong-named) in NuGet packages resolve correctly to paths _within the Unity project_.
 
-- In Unity 2022.2+, this is the [default behavior](https://forum.unity.com/threads/editor-assembly-loading-issues-unloading-broken-assembly-could-not-load-signature.754508/#post-8647791), so no action is required.
-- For earlier Unity versions, uncheck "Project Settings > Player > Other Settings > Configuration > Assembly Version Validation"
+For earlier Unity versions, uncheck `Project Settings > Player > Other Settings > Configuration > Assembly Version Validation`.
 
-### Verify installation
+### Verify scoped registry installation
 
+> [!WARNING]
 > WARNING: If you are encountering weird compilation errors with UnityNuGet and you have been using UnityNuGet already,
 > it could be that we have updated packages on the server, and in that case, you need to clear the cache containing
 > all Unity NPM packages downloaded from the registry.
@@ -67,22 +70,22 @@ When opening the Package Manager Window, you should see a few packages coming fr
 
 ## Adding a package to the registry
 
-This service provides only a [curated list](registry.json) of NuGet packages
+This service provides only a [curated list](registry.json) of NuGet packages.
 
 Your NuGet package needs to respect a few constraints in order to be listed in the curated list:
 
-- It must have non-preview versions (e.g `1.0.0` but not `1.0.0-preview.1`)
-- It must provide at least `.NETStandard2.0` (and optionally `.NETStandard2.1`) assemblies as part of its package
+- It must have non-preview versions (e.g `1.0.0` but not `1.0.0-preview.1`).
+- It must provide at least `.NETStandard2.0` (and optionally `.NETStandard2.1`) assemblies as part of its package.
 
-You can send a PR to this repository to modify the [registry.json](registry.json) file (don't forget to maintain the alphabetical order)
+You can send a PR to this repository to modify the [registry.json](registry.json) file (don't forget to maintain the alphabetical order and format).
 
 You also need to **specify the lowest version of your package that has support for `.NETStandard2.0`** upward so that other packages depending on your package have a chance to work with.
 
 Beware that **all transitive dependencies of the package** must be **explicitly listed** in the registry as well.
 
-> NOTE:
+> [!NOTE]
 >
-> - We reserve the right to decline a package to be available through this service
+> - We reserve the right to decline a package to be available through this service.
 > - The server will be updated only when a new version tag is pushed on the main branch.
 
 ## Compatibility
@@ -90,39 +93,31 @@ Beware that **all transitive dependencies of the package** must be **explicitly 
 Only compatible with **`Unity 2019.1`** and potentially with newer version.
 
 > [!NOTE]
-> This service is currently only tested with **`Unity 2019.x, 2020.x, 2021.x, 2022.x, 2023.x and 6000.0.x`**.
+> This service is currently tested with **`Unity 2019.x, 2020.x, 2021.x, 2022.x, 2023.x and 6000.0.x`**.
 >
 > It may not work with a more recent version of Unity.
 
-## Docker
+## Self-Hosted installation
 
-> Available in [ghcr (GitHub Container Registry)](https://github.com/xoofx/UnityNuGet/pkgs/container/unitynuget).
->
-> Supported platforms:
->
-> - linux/amd64
-> - linux/arm64
+To have more control of the server, it is recommended to host the service on your own. This way you can decide which specific packages to include in the [registry.json](registry.json) file which makes the server lighter.
 
-Example of a basic docker-compose.yml file:
+This project publishes a [Docker image in ghcr.io](https://github.com/bdovaz/UnityNuGet/pkgs/container/unitynuget) that can be consumed to create a container and host it as you wish:
 
-```yaml
-services:
-  unitynuget:
-    image: ghcr.io/xoofx/unitynuget:latest
-    ports:
-      - 5000:80
-    volumes:
-      - ./unity_packages:/app/unity_packages
-      - ./registry.json:/app/registry.json # (Optional) You can have your own registry.json with a different package list than the one already included in the repository
-```
+- [Local](examples/docker)
+- [Azure Container Apps](https://azure.microsoft.com/en-us/products/container-apps)
+- [AWS Fargate](https://aws.amazon.com/fargate/)
+- [Google Cloud Run](https://cloud.google.com/run)
 
 There is a complete example with all available options in [examples/docker](examples/docker).
 
 ### Accessing a private NuGet feed from Azure DevOps
 
+> [!NOTE]
+> The [Azure DevOps PAT](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate) must have `Packaging (Read)` permissions.
+
 As documented in the example, it is possible to provide a custom NuGet.Config file.
 
-To add a private feed, the following fields must be filled in.
+To add a private feed, the following fields must be filled in:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -141,19 +136,15 @@ To add a private feed, the following fields must be filled in.
 </configuration>
 ```
 
-> **Note**: [The Azure DevOps PAT](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate) must have Packaging (Read) permissions.
-
 ## FAQ
 
 ### **Where is hosted this service?**
 
-On Azure through my own Azure credits coming from my MVP subscription, enjoy!
+It is hosted by [OpenUPM](https://medium.com/openupm/openupm-launches-alternative-unitynuget-registry-0b8cc663cc41).
 
 ### **Why can't you add all NuGet packages?**
 
 The reason is that many NuGet packages are not compatible with Unity, or do not provide `.NETStandard2.0` or `.NETStandard2.1` assemblies or are not relevant for being used within Unity.
-
-Also currently the Package Manager doesn't provide a way to filter easily packages, so the UI is currently not adequate to list lots of packages.
 
 ### **Why does it require .NETStandard2.0?**
 
