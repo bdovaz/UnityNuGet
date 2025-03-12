@@ -493,7 +493,7 @@
     },
     "GeoTimeZone": {
         "listed": true,
-        "version": "6.0.0"
+        "version": "5.0.0"
     },
     "Google.Api.CommonProtos": {
         "listed": true,
@@ -1838,7 +1838,7 @@
     },
     "TimeZoneConverter": {
         "listed": true,
-        "version": "7.0.0"
+        "version": "4.0.0"
     },
     "TxFileManager": {
         "listed": true,
