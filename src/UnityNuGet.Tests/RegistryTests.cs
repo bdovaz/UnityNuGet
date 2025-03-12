@@ -165,12 +165,18 @@ namespace UnityNuGet.Tests
                 // All versions target "Any" and not .netstandard2.0 / 2.1
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
                 @"AWSSDK.*",
+                // They have recently released a version with an old version numbering (0.0.1110)
+                @"Castle.Core",
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
                 @"CSharpFunctionalExtensions",
                 // Some versions between 5.6.4 and 6.3.0 doesn't ship .netstandard2.0.
                 @"Elasticsearch.Net",
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
                 @"Google.Apis.AndroidPublisher.v3",
+                // Version 3.1.8 has dependency on `Panic.StringUtils` which doesn't support .netstandard2.0 or 2.1. Rest of versions are fine.
+                @"GraphQL.Client.Serializer.Newtonsoft",
+                // Version 3.1.8 has dependency on `Panic.StringUtils` which doesn't support .netstandard2.0 or 2.1. Rest of versions are fine.
+                @"GraphQL.Client.Serializer.SystemTextJson",
                 // Versions prior to 1.11.24 depend on System.Xml.XPath.XmlDocument which does not target .netstandard2.0
                 @"HtmlAgilityPack",
                 // Although 2.x targets .netstandard2.0 it has an abandoned dependency (Remotion.Linq) that does not target .netstandard2.0.
@@ -201,11 +207,7 @@ namespace UnityNuGet.Tests
                 // Versions < 1.3.1 has dependencies on PolySharp
                 @"Utf8StringInterpolation",
                 // Versions 2.0.0 has dependencies on Utf8StringInterpolation 1.3.0
-                @"ZLogger",
-                // Version 3.1.8 has dependency on `Panic.StringUtils` which doesn't support .netstandard2.0 or 2.1. Rest of versions are fine.
-                @"GraphQL.Client.Serializer.Newtonsoft",
-                // Version 3.1.8 has dependency on `Panic.StringUtils` which doesn't support .netstandard2.0 or 2.1. Rest of versions are fine.
-                @"GraphQL.Client.Serializer.SystemTextJson"
+                @"ZLogger"
             ];
 
             var excludedPackagesRegex = new Regex(@$"^{string.Join('|', excludedPackages)}$");
