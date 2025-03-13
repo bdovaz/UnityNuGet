@@ -696,6 +696,10 @@
         "listed": true,
         "version": "2.0.0"
     },
+    "KeepAChangeLogParser": {
+        "listed": true,
+        "version": "1.2.7"
+    },
     "LightningDB": {
         "listed": true,
         "version": "0.11.0"
