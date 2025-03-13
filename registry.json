@@ -900,6 +900,10 @@
         "listed": true,
         "version": "2.0.0"
     },
+    "Microsoft.Extensions.Compliance.Abstractions": {
+        "listed": true,
+        "version": "9.0.0"
+    },
     "Microsoft.Extensions.Configuration": {
         "listed": true,
         "version": "2.0.0"
