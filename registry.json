@@ -424,6 +424,17 @@
         "listed": true,
         "version": "6.3.0"
     },
+    "EnvironmentAbstractions": {
+        "listed": true,
+        "version": "2.1.0"
+    },
+    "EnvironmentAbstractions.TestHelpers": {
+        "listed": true,
+        "version": "2.1.0",
+        "defineConstraints": [
+            "UNITY_EDITOR"
+        ]
+    },
     "ErrorProne.NET.CoreAnalyzers": {
         "listed": true,
         "version": "0.1.2",
@@ -700,6 +711,10 @@
         "listed": true,
         "version": "2.0.0"
     },
+    "KeepAChangeLogParser": {
+        "listed": true,
+        "version": "1.2.7"
+    },
     "LightningDB": {
         "listed": true,
         "version": "0.11.0"
@@ -903,6 +918,10 @@
     "Microsoft.Extensions.Caching.Memory": {
         "listed": true,
         "version": "2.0.0"
+    },
+    "Microsoft.Extensions.Compliance.Abstractions": {
+        "listed": true,
+        "version": "9.0.0"
     },
     "Microsoft.Extensions.Configuration": {
         "listed": true,
@@ -1826,7 +1845,10 @@
     },
     "TestableIO.System.IO.Abstractions.TestingHelpers": {
         "listed": true,
-        "version": "18.0.1"
+        "version": "18.0.1",
+        "defineConstraints": [
+            "UNITY_EDITOR"
+        ]
     },
     "TestableIO.System.IO.Abstractions.Wrappers": {
         "listed": true,
