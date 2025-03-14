@@ -424,6 +424,17 @@
         "listed": true,
         "version": "6.3.0"
     },
+    "EnvironmentAbstractions": {
+        "listed": true,
+        "version": "2.1.0"
+    },
+    "EnvironmentAbstractions.TestHelpers": {
+        "listed": true,
+        "version": "2.1.0",
+        "defineConstraints": [
+            "UNITY_EDITOR"
+        ]
+    },
     "ErrorProne.NET.CoreAnalyzers": {
         "listed": true,
         "version": "0.1.2",
@@ -1830,7 +1841,10 @@
     },
     "TestableIO.System.IO.Abstractions.TestingHelpers": {
         "listed": true,
-        "version": "18.0.1"
+        "version": "18.0.1",
+        "defineConstraints": [
+            "UNITY_EDITOR"
+        ]
     },
     "TestableIO.System.IO.Abstractions.Wrappers": {
         "listed": true,
