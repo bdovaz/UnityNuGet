@@ -502,6 +502,10 @@
         "listed": true,
         "version": "[2.0.0,3.0.0)"
     },
+    "GeoTimeZone": {
+        "listed": true,
+        "version": "3.0.0"
+    },
     "Google.Api.CommonProtos": {
         "listed": true,
         "version": "1.7.0"
@@ -1857,6 +1861,10 @@
     "Testably.Abstractions.FileSystem.Interface": {
         "listed": true,
         "version": "0.1.0"
+    },
+    "TimeZoneConverter": {
+        "listed": true,
+        "version": "2.1.0"
     },
     "TxFileManager": {
         "listed": true,
