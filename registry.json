@@ -1314,6 +1314,10 @@
         "listed": true,
         "version": "1.0.0"
     },
+    "ProgressStream": {
+        "listed": true,
+        "version": "1.2.0"
+    },
     "protobuf-net": {
         "listed": true,
         "version": "2.3.6"
