@@ -504,7 +504,7 @@
     },
     "GeoTimeZone": {
         "listed": true,
-        "version": "5.0.0"
+        "version": "3.0.0"
     },
     "Google.Api.CommonProtos": {
         "listed": true,
