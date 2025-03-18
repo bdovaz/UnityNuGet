@@ -36,6 +36,10 @@ namespace UnityNuGet
         [Required]
         [ValidateEnumeratedItems]
         public RegistryTargetFramework[]? TargetFrameworks { get; set; }
+
+        [Required]
+        [ValidateEnumeratedItems]
+        public RoslynAnalyzerVersion[]? RoslynAnalyzerVersions { get; set; }
     }
 
     public class RegistryTargetFramework
@@ -48,5 +52,14 @@ namespace UnityNuGet
 
         [JsonIgnore]
         internal NuGetFramework? Framework { get; set; }
+    }
+
+    public class RoslynAnalyzerVersion
+    {
+        [Required]
+        public string? Name { get; set; }
+
+        [Required]
+        public string[]? DefineConstraints { get; set; }
     }
 }

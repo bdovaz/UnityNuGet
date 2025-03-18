@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
+using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -43,18 +44,36 @@ namespace UnityNuGet
         private readonly string _minimumUnityVersion;
         private readonly string _packageNameNuGetPostFix;
         private readonly RegistryTargetFramework[] _targetFrameworks;
+        private readonly RoslynAnalyzerVersion[] _roslynAnalyzerVersions;
         private readonly ILogger _logger;
         private readonly ISettings _settings;
         private readonly IEnumerable<SourceRepository> _sourceRepositories;
         private readonly SourceCacheContext _sourceCacheContext;
         private readonly NpmPackageRegistry _npmPackageRegistry;
 
-        public RegistryCache(Registry registry, RegistryCache registryCache) : this(registry, registryCache._rootPersistentFolder, registryCache._rootHttpUri, registryCache._unityScope,
-            registryCache._minimumUnityVersion, registryCache._packageNameNuGetPostFix, registryCache._targetFrameworks, registryCache._logger)
-        { }
+        public RegistryCache(Registry registry, RegistryCache registryCache) : this(
+            registry,
+            registryCache._rootPersistentFolder,
+            registryCache._rootHttpUri,
+            registryCache._unityScope,
+            registryCache._minimumUnityVersion,
+            registryCache._packageNameNuGetPostFix,
+            registryCache._targetFrameworks,
+            registryCache._roslynAnalyzerVersions,
+            registryCache._logger)
+        {
+        }
 
-        public RegistryCache(Registry registry, string rootPersistentFolder, Uri rootHttpUri, string unityScope, string minimumUnityVersion,
-            string packageNameNuGetPostFix, RegistryTargetFramework[] targetFrameworks, ILogger logger)
+        public RegistryCache(
+            Registry registry,
+            string rootPersistentFolder,
+            Uri rootHttpUri,
+            string unityScope,
+            string minimumUnityVersion,
+            string packageNameNuGetPostFix,
+            RegistryTargetFramework[] targetFrameworks,
+            RoslynAnalyzerVersion[] roslynAnalyzerVersions,
+            ILogger logger)
         {
             _registry = registry;
             _rootPersistentFolder = rootPersistentFolder ?? throw new ArgumentNullException(nameof(rootPersistentFolder));
@@ -63,6 +82,7 @@ namespace UnityNuGet
             _minimumUnityVersion = minimumUnityVersion ?? throw new ArgumentNullException(nameof(minimumUnityVersion));
             _packageNameNuGetPostFix = packageNameNuGetPostFix ?? throw new ArgumentNullException(nameof(packageNameNuGetPostFix));
             _targetFrameworks = targetFrameworks ?? throw new ArgumentNullException(nameof(targetFrameworks));
+            _roslynAnalyzerVersions = roslynAnalyzerVersions ?? throw new ArgumentNullException(nameof(roslynAnalyzerVersions));
 
             if (!Directory.Exists(_rootPersistentFolder))
             {
@@ -252,7 +272,7 @@ namespace UnityNuGet
                 }
 
                 IEnumerable<IPackageSearchMetadata>? packageMetaIt = await GetMetadataFromSources(packageName, packageEntry.IncludeUnlisted, packageEntry.IncludePrerelease);
-                IPackageSearchMetadata[] packageMetas = packageMetaIt != null ? packageMetaIt.ToArray() : [];
+                IPackageSearchMetadata[] packageMetas = packageMetaIt != null ? [.. packageMetaIt] : [];
                 foreach (IPackageSearchMetadata? packageMeta in packageMetas)
                 {
                     PackageIdentity packageIdentity = packageMeta.Identity;
@@ -376,7 +396,7 @@ namespace UnityNuGet
                             else if (!deps.VersionRange.IsSubSetOrEqualTo(packageEntryDep.Version))
                             {
                                 IEnumerable<IPackageSearchMetadata>? dependencyPackageMetaIt = await GetMetadataFromSources(deps.Id, packageEntryDep.IncludeUnlisted, packageEntryDep.IncludePrerelease);
-                                IPackageSearchMetadata[] dependencyPackageMetas = dependencyPackageMetaIt != null ? dependencyPackageMetaIt.ToArray() : [];
+                                IPackageSearchMetadata[] dependencyPackageMetas = dependencyPackageMetaIt != null ? [.. dependencyPackageMetaIt] : [];
 
                                 PackageDependency? packageDependency = null;
 
@@ -578,11 +598,11 @@ namespace UnityNuGet
                 using var memStream = new MemoryStream();
 
                 using (FileStream outStream = File.Create(unityPackageFilePath))
-                using (var gzoStream = new GZipOutputStream(outStream)
+                using (GZipOutputStream gzoStream = new(outStream)
                 {
                     ModifiedTime = packageMeta.Published?.UtcDateTime
                 })
-                using (var tarArchive = new TarOutputStream(gzoStream, Encoding.UTF8))
+                using (TarOutputStream tarArchive = new(gzoStream, Encoding.UTF8))
                 {
                     // Select the framework version that is the closest or equal to the latest configured framework version
                     IEnumerable<FrameworkSpecificGroup> versions = await packageReader.GetLibItemsAsync(CancellationToken.None);
@@ -619,94 +639,11 @@ namespace UnityNuGet
                         LogInformation($"Package {identity.Id} is a system package for netstandard2.1 and will be only used for netstandard 2.0");
                     }
 
+                    // There are packages that have embedded analyzers, e.g.: CommunityToolkit.Mvvm
+                    await WriteAnalyzerFiles(packageReader, identity, tarArchive, memStream, modTime);
+
                     if (packageEntry.Analyzer)
                     {
-                        IEnumerable<FrameworkSpecificGroup> packageFiles = await packageReader.GetItemsAsync(PackagingConstants.Folders.Analyzers, CancellationToken.None);
-
-                        // https://learn.microsoft.com/en-us/nuget/guides/analyzers-conventions#analyzers-path-format
-                        string[] analyzerFiles = packageFiles
-                            .SelectMany(p => p.Items)
-                            .Where(p => NuGetHelper.IsApplicableUnitySupportedRoslynVersionFolder(p) && (NuGetHelper.IsApplicableAnalyzer(p) || NuGetHelper.IsApplicableAnalyzerResource(p)))
-                            .ToArray();
-
-                        var createdDirectoryList = new List<string>();
-
-                        foreach (string? analyzerFile in analyzerFiles)
-                        {
-                            string folderPrefix = $"{Path.GetDirectoryName(analyzerFile)!.Replace($"analyzers{Path.DirectorySeparatorChar}", string.Empty)}{Path.DirectorySeparatorChar}";
-
-                            // Write folder meta
-                            if (!string.IsNullOrEmpty(folderPrefix))
-                            {
-                                var directoryNameBuilder = new StringBuilder();
-
-                                foreach (string directoryName in folderPrefix.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
-                                {
-                                    directoryNameBuilder.Append(directoryName);
-                                    directoryNameBuilder.Append(Path.DirectorySeparatorChar);
-
-                                    string processedDirectoryName = directoryNameBuilder.ToString()[0..^1];
-
-                                    if (createdDirectoryList.Any(d => d.Equals(processedDirectoryName)))
-                                    {
-                                        continue;
-                                    }
-
-                                    createdDirectoryList.Add(processedDirectoryName);
-
-                                    // write meta file for the folder
-                                    await WriteTextFileToTar(tarArchive, $"{processedDirectoryName}.meta", UnityMeta.GetMetaForFolder(GetStableGuid(identity, processedDirectoryName)), modTime);
-                                }
-                            }
-
-                            string fileInUnityPackage = $"{folderPrefix}{Path.GetFileName(analyzerFile)}";
-                            string? meta;
-
-                            string fileExtension = Path.GetExtension(fileInUnityPackage);
-
-                            if (fileExtension == ".dll")
-                            {
-                                if (NuGetHelper.IsApplicableAnalyzer(analyzerFile))
-                                {
-                                    meta = UnityMeta.GetMetaForDll(
-                                        GetStableGuid(identity, fileInUnityPackage),
-                                        new PlatformDefinition(UnityOs.AnyOs, UnityCpu.None, isEditorConfig: false),
-                                        ["RoslynAnalyzer"],
-                                        []);
-                                }
-                                else
-                                {
-                                    meta = UnityMeta.GetMetaForDll(
-                                        GetStableGuid(identity, fileInUnityPackage),
-                                        new PlatformDefinition(UnityOs.AnyOs, UnityCpu.None, isEditorConfig: false),
-                                        [],
-                                        []);
-                                }
-                            }
-                            else
-                            {
-                                meta = UnityMeta.GetMetaForExtension(GetStableGuid(identity, fileInUnityPackage), fileExtension);
-                            }
-
-                            if (meta == null)
-                            {
-                                continue;
-                            }
-
-                            memStream.Position = 0;
-                            memStream.SetLength(0);
-
-                            using Stream stream = await packageReader.GetStreamAsync(analyzerFile, CancellationToken.None);
-                            await stream.CopyToAsync(memStream);
-                            byte[] buffer = memStream.ToArray();
-
-                            // write content
-                            await WriteBufferToTar(tarArchive, fileInUnityPackage, buffer, modTime);
-
-                            // write meta file
-                            await WriteTextFileToTar(tarArchive, $"{fileInUnityPackage}.meta", meta, modTime);
-                        }
-
                         // Write analyzer asmdef
                         // Check Analyzer Scope section: https://docs.unity3d.com/Manual/roslyn-analyzers.html
                         UnityAsmdef analyzerAsmdef = CreateAnalyzerAmsdef(identity);
@@ -912,60 +849,7 @@ namespace UnityNuGet
                     await WriteTextFileToTar(tarArchive, $"{packageJsonFileName}.meta", UnityMeta.GetMetaForExtension(GetStableGuid(identity, packageJsonFileName), ".json")!, modTime);
 
                     // Write the license to the package if any
-                    string? license = null;
-                    string? licenseUrlText = null;
-
-                    string? licenseUrl = packageMeta.LicenseMetadata?.LicenseUrl.ToString() ?? packageMeta.LicenseUrl?.ToString();
-                    if (!string.IsNullOrEmpty(licenseUrl))
-                    {
-                        try
-                        {
-                            // Try to fetch the license from an URL
-                            using (var httpClient = new HttpClient())
-                            {
-                                licenseUrlText = await httpClient.GetStringAsync(licenseUrl);
-                            }
-
-                            // If the license text is HTML, try to remove all text
-                            if (licenseUrlText != null)
-                            {
-                                licenseUrlText = licenseUrlText.Trim();
-                                if (licenseUrlText.StartsWith('<'))
-                                {
-                                    try
-                                    {
-                                        licenseUrlText = NUglify.Uglify.HtmlToText(licenseUrlText, HtmlToTextOptions.KeepStructure).Code ?? licenseUrlText;
-                                    }
-                                    catch
-                                    {
-                                        // ignored
-                                    }
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(packageMeta.LicenseMetadata?.License))
-                    {
-                        license = packageMeta.LicenseMetadata.License;
-                    }
-
-                    // If the license fetched from the URL is bigger, use that one to put into the file
-                    if (licenseUrlText != null && (license == null || licenseUrlText.Length > license.Length))
-                    {
-                        license = licenseUrlText;
-                    }
-
-                    if (!string.IsNullOrEmpty(license))
-                    {
-                        const string licenseMdFile = "License.md";
-                        await WriteTextFileToTar(tarArchive, licenseMdFile, license, modTime);
-                        await WriteTextFileToTar(tarArchive, $"{licenseMdFile}.meta", UnityMeta.GetMetaForExtension(GetStableGuid(identity, licenseMdFile), ".md")!, modTime);
-                    }
+                    await TryToWriteLicenseFiles(packageMeta, identity, tarArchive, modTime);
                 }
 
                 using (FileStream stream = File.OpenRead(unityPackageFilePath))
@@ -987,6 +871,161 @@ namespace UnityNuGet
                 }
 
                 LogWarning($"Error while processing package `{identity}`. Reason: {ex}");
+            }
+        }
+
+        private async Task WriteAnalyzerFiles(
+            PackageReaderBase packageReader,
+            PackageIdentity identity,
+            TarOutputStream tarArchive,
+            MemoryStream memStream,
+            DateTime modTime)
+        {
+            IEnumerable<FrameworkSpecificGroup> packageFiles = await packageReader.GetItemsAsync(PackagingConstants.Folders.Analyzers, CancellationToken.None);
+
+            // https://learn.microsoft.com/en-us/nuget/guides/analyzers-conventions#analyzers-path-format
+            string[] analyzerFiles = [.. packageFiles
+                .SelectMany(p => p.Items)
+                .Where(p => NuGetHelper.IsApplicableUnitySupportedRoslynVersionFolder(p, _roslynAnalyzerVersions) && (NuGetHelper.IsApplicableAnalyzer(p) || NuGetHelper.IsApplicableAnalyzerResource(p)))];
+
+            var createdDirectoryList = new List<string>();
+
+            foreach (string? analyzerFile in analyzerFiles)
+            {
+                string folderPrefix = $"{Path.GetDirectoryName(analyzerFile)!.Replace($"analyzers{Path.DirectorySeparatorChar}", string.Empty)}{Path.DirectorySeparatorChar}";
+
+                // Write folder meta
+                if (!string.IsNullOrEmpty(folderPrefix))
+                {
+                    var directoryNameBuilder = new StringBuilder();
+
+                    foreach (string directoryName in folderPrefix.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        directoryNameBuilder.Append(directoryName);
+                        directoryNameBuilder.Append(Path.DirectorySeparatorChar);
+
+                        string processedDirectoryName = directoryNameBuilder.ToString()[0..^1];
+
+                        if (createdDirectoryList.Any(d => d.Equals(processedDirectoryName)))
+                        {
+                            continue;
+                        }
+
+                        createdDirectoryList.Add(processedDirectoryName);
+
+                        // write meta file for the folder
+                        await WriteTextFileToTar(tarArchive, $"{processedDirectoryName}.meta", UnityMeta.GetMetaForFolder(GetStableGuid(identity, processedDirectoryName)), modTime);
+                    }
+                }
+
+                string fileInUnityPackage = $"{folderPrefix}{Path.GetFileName(analyzerFile)}";
+                string? meta;
+
+                string fileExtension = Path.GetExtension(fileInUnityPackage);
+
+                if (fileExtension == ".dll")
+                {
+                    if (NuGetHelper.IsApplicableAnalyzer(analyzerFile))
+                    {
+                        meta = UnityMeta.GetMetaForDll(
+                            GetStableGuid(identity, fileInUnityPackage),
+                            new PlatformDefinition(UnityOs.AnyOs, UnityCpu.None, isEditorConfig: false),
+                            ["RoslynAnalyzer"],
+                            []);
+                    }
+                    else
+                    {
+                        meta = UnityMeta.GetMetaForDll(
+                            GetStableGuid(identity, fileInUnityPackage),
+                            new PlatformDefinition(UnityOs.AnyOs, UnityCpu.None, isEditorConfig: false),
+                            [],
+                            []);
+                    }
+                }
+                else
+                {
+                    meta = UnityMeta.GetMetaForExtension(GetStableGuid(identity, fileInUnityPackage), fileExtension);
+                }
+
+                if (meta == null)
+                {
+                    continue;
+                }
+
+                memStream.Position = 0;
+                memStream.SetLength(0);
+
+                using Stream stream = await packageReader.GetStreamAsync(analyzerFile, CancellationToken.None);
+                await stream.CopyToAsync(memStream);
+                byte[] buffer = memStream.ToArray();
+
+                // write content
+                await WriteBufferToTar(tarArchive, fileInUnityPackage, buffer, modTime);
+
+                // write meta file
+                await WriteTextFileToTar(tarArchive, $"{fileInUnityPackage}.meta", meta, modTime);
+            }
+        }
+
+        private static async Task TryToWriteLicenseFiles(
+            IPackageSearchMetadata packageMeta,
+            PackageIdentity identity,
+            TarOutputStream tarArchive,
+            DateTime modTime)
+        {
+            string? license = null;
+            string? licenseUrlText = null;
+
+            string? licenseUrl = packageMeta.LicenseMetadata?.LicenseUrl.ToString() ?? packageMeta.LicenseUrl?.ToString();
+            if (!string.IsNullOrEmpty(licenseUrl))
+            {
+                try
+                {
+                    // Try to fetch the license from an URL
+                    using (var httpClient = new HttpClient())
+                    {
+                        licenseUrlText = await httpClient.GetStringAsync(licenseUrl);
+                    }
+
+                    // If the license text is HTML, try to remove all text
+                    if (licenseUrlText != null)
+                    {
+                        licenseUrlText = licenseUrlText.Trim();
+                        if (licenseUrlText.StartsWith('<'))
+                        {
+                            try
+                            {
+                                licenseUrlText = NUglify.Uglify.HtmlToText(licenseUrlText, HtmlToTextOptions.KeepStructure).Code ?? licenseUrlText;
+                            }
+                            catch
+                            {
+                                // ignored
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+
+            if (!string.IsNullOrEmpty(packageMeta.LicenseMetadata?.License))
+            {
+                license = packageMeta.LicenseMetadata.License;
+            }
+
+            // If the license fetched from the URL is bigger, use that one to put into the file
+            if (licenseUrlText != null && (license == null || licenseUrlText.Length > license.Length))
+            {
+                license = licenseUrlText;
+            }
+
+            if (!string.IsNullOrEmpty(license))
+            {
+                const string licenseMdFile = "License.md";
+                await WriteTextFileToTar(tarArchive, licenseMdFile, license, modTime);
+                await WriteTextFileToTar(tarArchive, $"{licenseMdFile}.meta", UnityMeta.GetMetaForExtension(GetStableGuid(identity, licenseMdFile), ".md")!, modTime);
             }
         }
 

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NuGet.Frameworks;
 using NuGet.Packaging;
-using NuGet.Packaging.Core;
 using NUnit.Framework;
 using static NuGet.Frameworks.FrameworkConstants;
 
@@ -10,6 +8,12 @@ namespace UnityNuGet.Tests
 {
     public class NuGetHelperTests
     {
+        private static readonly IEnumerable<RoslynAnalyzerVersion> s_roslynAnalyzerVersions = new RoslynAnalyzerVersion[]
+        {
+            new() { Name = "roslyn3.8" },
+            new() { Name = "roslyn4.3" }
+        };
+
         [Test]
         [TestCase("analyzers/dotnet/roslyn3.8/cs/Test.resources.dll")]
         [TestCase("analyzers/dotnet/roslyn3.8/Test.resources.dll")]
@@ -43,12 +47,14 @@ namespace UnityNuGet.Tests
         [Test]
         [TestCase("analyzers/dotnet/roslyn3.8/cs/Test.dll")]
         [TestCase("analyzers/dotnet/roslyn3.8/Test.dll")]
+        [TestCase("analyzers/dotnet/roslyn4.3/cs/Test.dll")]
+        [TestCase("analyzers/dotnet/roslyn4.3/Test.dll")]
         [TestCase("analyzers/dotnet/cs/Test.dll")]
         [TestCase("analyzers/dotnet/Test.dll")]
         [TestCase("analyzers/Test.dll")]
         public void IsApplicableUnitySupportedRoslynVersionFolder_Valid(string input)
         {
-            Assert.That(NuGetHelper.IsApplicableUnitySupportedRoslynVersionFolder(input), Is.True);
+            Assert.That(NuGetHelper.IsApplicableUnitySupportedRoslynVersionFolder(input, s_roslynAnalyzerVersions), Is.True);
         }
 
         [Test]
@@ -56,7 +62,7 @@ namespace UnityNuGet.Tests
         [TestCase("analyzers/dotnet/roslyn4.0/Test.dll")]
         public void IsApplicableUnitySupportedRoslynVersionFolder_Invalid(string input)
         {
-            Assert.That(NuGetHelper.IsApplicableUnitySupportedRoslynVersionFolder(input), Is.False);
+            Assert.That(NuGetHelper.IsApplicableUnitySupportedRoslynVersionFolder(input, s_roslynAnalyzerVersions), Is.False);
         }
 
         [Test]

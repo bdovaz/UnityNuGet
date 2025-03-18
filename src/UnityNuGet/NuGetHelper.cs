@@ -11,11 +11,8 @@ namespace UnityNuGet
     static partial class NuGetHelper
     {
         // https://learn.microsoft.com/en-us/visualstudio/extensibility/roslyn-version-support
-        [GeneratedRegex(@"/roslyn(\d+)\.(\d+)\.?(\d*)/")]
+        [GeneratedRegex(@"/(?<roslynVersion>roslyn(\d+)\.(\d+)\.?(\d*))/")]
         private static partial Regex RoslynVersion();
-
-        // https://docs.unity3d.com/Manual/roslyn-analyzers.html
-        private static readonly Version s_unityRoslynSupportedVersion = new(3, 8, 0);
 
         // https://github.com/dotnet/sdk/blob/2838d93742658300698b2194882d57fd978fb168/src/Tasks/Microsoft.NET.Build.Tasks/NuGetUtils.NuGet.cs#L50
         public static bool IsApplicableAnalyzer(string file) => IsApplicableAnalyzer(file, "C#");
@@ -62,14 +59,13 @@ namespace UnityNuGet
             return IsResource() && ((!CS() && !VB()) || (CS() && !VB()));
         }
 
-        public static bool IsApplicableUnitySupportedRoslynVersionFolder(string file)
+        public static bool IsApplicableUnitySupportedRoslynVersionFolder(string file, IEnumerable<RoslynAnalyzerVersion> roslynAnalyzerVersions)
         {
             Match roslynVersionMatch = RoslynVersion().Match(file);
 
             bool hasRoslynVersionFolder = roslynVersionMatch.Success;
             bool hasUnitySupportedRoslynVersionFolder = hasRoslynVersionFolder &&
-                                                        int.Parse(roslynVersionMatch.Groups[1].Value) == s_unityRoslynSupportedVersion.Major &&
-                                                        int.Parse(roslynVersionMatch.Groups[2].Value) == s_unityRoslynSupportedVersion.Minor;
+                                                        roslynAnalyzerVersions.Any(a => a.Name!.Equals(roslynVersionMatch.Groups["roslynVersion"].Value));
 
             return !hasRoslynVersionFolder || hasUnitySupportedRoslynVersionFolder;
         }

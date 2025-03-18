@@ -14,7 +14,10 @@ namespace UnityNuGet
     /// <summary>
     /// Loads the `registry.json` file at startup
     /// </summary>
-    public sealed class Registry(IHostEnvironment hostEnvironment, ILoggerFactory loggerFactory, IOptions<RegistryOptions> registryOptionsAccessor) : IHostedService, IReadOnlyCollection<KeyValuePair<string, RegistryEntry>>, IEnumerable<KeyValuePair<string, RegistryEntry>>
+    public sealed class Registry(
+        IHostEnvironment hostEnvironment,
+        ILoggerFactory loggerFactory,
+        IOptions<RegistryOptions> registryOptionsAccessor) : IHostedService, IReadOnlyCollection<KeyValuePair<string, RegistryEntry>>, IEnumerable<KeyValuePair<string, RegistryEntry>>
     {
         private IDictionary<string, RegistryEntry>? _data;
 

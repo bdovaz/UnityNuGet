@@ -61,7 +61,7 @@ namespace UnityNuGet.Tests
 
             await registry.StartAsync(CancellationToken.None);
 
-            string[] originalPackageNames = registry.Select(r => r.Key).ToArray();
+            string[] originalPackageNames = [.. registry.Select(r => r.Key)];
             string[] sortedPackageNames = [.. originalPackageNames.OrderBy(p => p)];
 
             Assert.That(originalPackageNames, Is.EqualTo(sortedPackageNames));
@@ -80,7 +80,7 @@ namespace UnityNuGet.Tests
 
             await registry.StartAsync(CancellationToken.None);
 
-            string[] packageNames = registry.Select(r => r.Key).Where(DotNetHelper.IsNetStandard20Assembly).ToArray();
+            string[] packageNames = [.. registry.Select(r => r.Key).Where(DotNetHelper.IsNetStandard20Assembly)];
 
             Assert.That(packageNames, Is.Empty);
         }
@@ -212,7 +212,7 @@ namespace UnityNuGet.Tests
 
             var excludedPackagesRegex = new Regex(@$"^{string.Join('|', excludedPackages)}$");
 
-            return registry.Where(r => !r.Value.Analyzer && !r.Value.Ignored).OrderBy((pair) => pair.Key).Select((pair) =>
+            return [.. registry.Where(r => !r.Value.Analyzer && !r.Value.Ignored).OrderBy((pair) => pair.Key).Select((pair) =>
             {
                 return new TestCaseData(
                     resource,
@@ -225,7 +225,7 @@ namespace UnityNuGet.Tests
                     pair.Value.IncludePrerelease,
                     pair.Value.IncludeUnlisted,
                     pair.Value.Version).SetArgDisplayNames(pair.Key, pair.Value.Version!.ToString());
-            }).ToArray();
+            })];
         }
 
         const int MaxAllowedVersions = 100;
@@ -250,7 +250,7 @@ namespace UnityNuGet.Tests
                 logger,
                 CancellationToken.None);
 
-            IPackageSearchMetadata[] versions = dependencyPackageMetas.Where(v => versionRange!.Satisfies(v.Identity.Version)).ToArray();
+            IPackageSearchMetadata[] versions = [.. dependencyPackageMetas.Where(v => versionRange!.Satisfies(v.Identity.Version))];
             Warn.If(versions, Has.Length.GreaterThan(MaxAllowedVersions));
 
             if (excludedPackagesRegex.IsMatch(packageId))
