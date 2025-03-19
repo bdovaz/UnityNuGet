@@ -14,7 +14,7 @@ namespace UnityNuGet
         [GeneratedRegex(@"/(?<roslynVersion>roslyn(\d+)\.(\d+)\.?(\d*))/")]
         private static partial Regex RoslynVersion();
 
-        // https://github.com/dotnet/sdk/blob/2838d93742658300698b2194882d57fd978fb168/src/Tasks/Microsoft.NET.Build.Tasks/NuGetUtils.NuGet.cs#L50
+        // https://github.com/dotnet/sdk/blob/v9.0.202/src/Tasks/Microsoft.NET.Build.Tasks/NuGetUtils.NuGet.cs
         public static bool IsApplicableAnalyzer(string file) => IsApplicableAnalyzer(file, "C#");
 
         private static bool IsApplicableAnalyzer(string file, string projectLanguage)
