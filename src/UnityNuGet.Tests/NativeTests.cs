@@ -45,8 +45,8 @@ namespace UnityNuGet.Tests
                     new() { Name = "netstandard2.1", DefineConstraints = ["UNITY_2021_2_OR_NEWER"] },
                 ],
                 [
-                    new() { Name = "roslyn3.8", DefineConstraints = ["!UNITY_6000_0_OR_NEWER"] },
-                    new() { Name = "roslyn4.3", DefineConstraints = ["UNITY_6000_0_OR_NEWER"] },
+                    new() { Version = new Version(3, 8), DefineConstraints = ["!UNITY_6000_0_OR_NEWER"] },
+                    new() { Version = new Version(4, 3), DefineConstraints = ["UNITY_6000_0_OR_NEWER"] },
                 ],
                 new NuGetConsoleTestLogger())
             {

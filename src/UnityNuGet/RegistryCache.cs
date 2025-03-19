@@ -11,6 +11,9 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.CSharp;
+using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using NuGet.Common;
@@ -34,7 +37,7 @@ namespace UnityNuGet
         public static readonly bool IsRunningOnAzure = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME"));
 
         // Change this version number if the content of the packages are changed by an update of this class
-        private const string CurrentRegistryVersion = "1.8.0";
+        private const string CurrentRegistryVersion = "1.9.0";
 
         private static readonly Encoding s_utf8EncodingNoBom = new UTF8Encoding(false, false);
         private readonly Registry _registry;
@@ -640,7 +643,7 @@ namespace UnityNuGet
                     }
 
                     // There are packages that have embedded analyzers, e.g.: CommunityToolkit.Mvvm
-                    await WriteAnalyzerFiles(packageReader, identity, tarArchive, memStream, modTime);
+                    await TryToWriteAnalyzerFiles(packageReader, identity, tarArchive, memStream, modTime);
 
                     if (packageEntry.Analyzer)
                     {
@@ -874,7 +877,7 @@ namespace UnityNuGet
             }
         }
 
-        private async Task WriteAnalyzerFiles(
+        private async Task TryToWriteAnalyzerFiles(
             PackageReaderBase packageReader,
             PackageIdentity identity,
             TarOutputStream tarArchive,
@@ -883,21 +886,27 @@ namespace UnityNuGet
         {
             IEnumerable<FrameworkSpecificGroup> packageFiles = await packageReader.GetItemsAsync(PackagingConstants.Folders.Analyzers, CancellationToken.None);
 
-            // https://learn.microsoft.com/en-us/nuget/guides/analyzers-conventions#analyzers-path-format
-            string[] analyzerFiles = [.. packageFiles
+            string[] analyzerPackageFileItems = [.. packageFiles
                 .SelectMany(p => p.Items)
-                .Where(p => NuGetHelper.IsApplicableUnitySupportedRoslynVersionFolder(p, _roslynAnalyzerVersions) && (NuGetHelper.IsApplicableAnalyzer(p) || NuGetHelper.IsApplicableAnalyzerResource(p)))];
+                .Where(file =>
+                    RoslynAnalyzersHelper.IsApplicableAnalyzer(file) &&
+                    RoslynAnalyzersHelper.IsApplicableUnitySupportedRoslynVersionFolder(file, _roslynAnalyzerVersions))];
 
-            var createdDirectoryList = new List<string>();
+            if (analyzerPackageFileItems.Length == 0)
+            {
+                return;
+            }
 
-            foreach (string? analyzerFile in analyzerFiles)
+            List<string> createdDirectoryList = [];
+
+            foreach (string? analyzerFile in analyzerPackageFileItems)
             {
                 string folderPrefix = $"{Path.GetDirectoryName(analyzerFile)!.Replace($"analyzers{Path.DirectorySeparatorChar}", string.Empty)}{Path.DirectorySeparatorChar}";
 
                 // Write folder meta
                 if (!string.IsNullOrEmpty(folderPrefix))
                 {
-                    var directoryNameBuilder = new StringBuilder();
+                    StringBuilder directoryNameBuilder = new();
 
                     foreach (string directoryName in folderPrefix.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
                     {
@@ -925,22 +934,11 @@ namespace UnityNuGet
 
                 if (fileExtension == ".dll")
                 {
-                    if (NuGetHelper.IsApplicableAnalyzer(analyzerFile))
-                    {
-                        meta = UnityMeta.GetMetaForDll(
-                            GetStableGuid(identity, fileInUnityPackage),
-                            new PlatformDefinition(UnityOs.AnyOs, UnityCpu.None, isEditorConfig: false),
-                            ["RoslynAnalyzer"],
-                            []);
-                    }
-                    else
-                    {
-                        meta = UnityMeta.GetMetaForDll(
-                            GetStableGuid(identity, fileInUnityPackage),
-                            new PlatformDefinition(UnityOs.AnyOs, UnityCpu.None, isEditorConfig: false),
-                            [],
-                            []);
-                    }
+                    meta = UnityMeta.GetMetaForDll(
+                        GetStableGuid(identity, fileInUnityPackage),
+                        new PlatformDefinition(UnityOs.AnyOs, UnityCpu.None, isEditorConfig: false),
+                        ["RoslynAnalyzer"],
+                        []);
                 }
                 else
                 {
@@ -956,7 +954,9 @@ namespace UnityNuGet
                 memStream.SetLength(0);
 
                 using Stream stream = await packageReader.GetStreamAsync(analyzerFile, CancellationToken.None);
+
                 await stream.CopyToAsync(memStream);
+
                 byte[] buffer = memStream.ToArray();
 
                 // write content

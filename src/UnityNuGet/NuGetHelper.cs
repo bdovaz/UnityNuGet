@@ -1,75 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
 
 namespace UnityNuGet
 {
-    static partial class NuGetHelper
+    static class NuGetHelper
     {
-        // https://learn.microsoft.com/en-us/visualstudio/extensibility/roslyn-version-support
-        [GeneratedRegex(@"/(?<roslynVersion>roslyn(\d+)\.(\d+)\.?(\d*))/")]
-        private static partial Regex RoslynVersion();
-
-        // https://github.com/dotnet/sdk/blob/v9.0.202/src/Tasks/Microsoft.NET.Build.Tasks/NuGetUtils.NuGet.cs
-        public static bool IsApplicableAnalyzer(string file) => IsApplicableAnalyzer(file, "C#");
-
-        private static bool IsApplicableAnalyzer(string file, string projectLanguage)
-        {
-            // This logic is preserved from previous implementations.
-            // See https://github.com/NuGet/Home/issues/6279#issuecomment-353696160 for possible issues with it.
-            bool IsAnalyzer()
-            {
-                return file.StartsWith("analyzers", StringComparison.Ordinal)
-                    && file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
-                    && !file.EndsWith(".resources.dll", StringComparison.OrdinalIgnoreCase);
-            }
-
-            bool CS() => file.Contains("/cs/", StringComparison.OrdinalIgnoreCase);
-            bool VB() => file.Contains("/vb/", StringComparison.OrdinalIgnoreCase);
-
-            bool FileMatchesProjectLanguage()
-            {
-                return projectLanguage switch
-                {
-                    "C#" => CS() || !VB(),
-                    "VB" => VB() || !CS(),
-                    _ => false,
-                };
-            }
-
-            return IsAnalyzer() && FileMatchesProjectLanguage();
-        }
-
-        public static bool IsApplicableAnalyzerResource(string file)
-        {
-            bool IsResource()
-            {
-                return file.StartsWith("analyzers", StringComparison.Ordinal)
-                    && file.EndsWith(".resources.dll", StringComparison.OrdinalIgnoreCase);
-            }
-
-            bool CS() => file.Contains("/cs/", StringComparison.OrdinalIgnoreCase);
-            bool VB() => file.Contains("/vb/", StringComparison.OrdinalIgnoreCase);
-
-            // Czech locale is cs, catch /vb/cs/
-            return IsResource() && ((!CS() && !VB()) || (CS() && !VB()));
-        }
-
-        public static bool IsApplicableUnitySupportedRoslynVersionFolder(string file, IEnumerable<RoslynAnalyzerVersion> roslynAnalyzerVersions)
-        {
-            Match roslynVersionMatch = RoslynVersion().Match(file);
-
-            bool hasRoslynVersionFolder = roslynVersionMatch.Success;
-            bool hasUnitySupportedRoslynVersionFolder = hasRoslynVersionFolder &&
-                                                        roslynAnalyzerVersions.Any(a => a.Name!.Equals(roslynVersionMatch.Groups["roslynVersion"].Value));
-
-            return !hasRoslynVersionFolder || hasUnitySupportedRoslynVersionFolder;
-        }
-
         public static IEnumerable<(FrameworkSpecificGroup, RegistryTargetFramework)> GetClosestFrameworkSpecificGroups(IEnumerable<FrameworkSpecificGroup> versions, IEnumerable<RegistryTargetFramework> targetFrameworks)
         {
             var result = new List<(FrameworkSpecificGroup, RegistryTargetFramework)>();

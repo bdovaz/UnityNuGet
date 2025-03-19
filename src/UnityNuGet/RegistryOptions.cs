@@ -57,7 +57,7 @@ namespace UnityNuGet
     public class RoslynAnalyzerVersion
     {
         [Required]
-        public string? Name { get; set; }
+        public Version? Version { get; set; }
 
         [Required]
         public string[]? DefineConstraints { get; set; }
