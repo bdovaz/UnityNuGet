@@ -29,7 +29,16 @@ namespace UnityNuGet.Server
 
                     _registryCacheReport.Start();
 
-                    var newRegistryCache = new RegistryCache(_registry, _currentRegistryCache.UnityPackageFolder!, _currentRegistryCache.ServerUri!, _registryOptions.UnityScope!, _registryOptions.MinimumUnityVersion!, _registryOptions.PackageNameNuGetPostFix!, _registryOptions.TargetFrameworks!, _currentRegistryCache.NuGetRedirectLogger!)
+                    var newRegistryCache = new RegistryCache(
+                        _registry,
+                        _currentRegistryCache.UnityPackageFolder!,
+                        _currentRegistryCache.ServerUri!,
+                        _registryOptions.UnityScope!,
+                        _registryOptions.MinimumUnityVersion!,
+                        _registryOptions.PackageNameNuGetPostFix!,
+                        _registryOptions.TargetFrameworks!,
+                        _registryOptions.RoslynAnalyzerVersions!,
+                        _currentRegistryCache.NuGetRedirectLogger!)
                     {
                         Filter = _registryOptions.Filter,
                         // Update progress

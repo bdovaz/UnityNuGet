@@ -10,15 +10,15 @@ using UnityNuGet.Server;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Add the registry
 builder.Services.AddSingleton<Registry>();
 builder.Services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<Registry>());
-// Add the registry cache initializer
+
 builder.Services.AddHostedService<RegistryCacheInitializer>();
-// Add the registry cache updater
+
 builder.Services.AddHostedService<RegistryCacheUpdater>();
-// Add the registry cache report
+
 builder.Services.AddSingleton<RegistryCacheReport>();
+
 builder.Services.AddSingleton<RegistryCacheSingleton>();
 
 builder.Services.Configure<RegistryOptions>(builder.Configuration.GetSection("Registry"));

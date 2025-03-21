@@ -31,8 +31,11 @@ namespace UnityNuGet.Server.Tests
 
             HttpResponseMessage response = await client.GetAsync("/");
 
-            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Found));
-            Assert.That(response.Headers.Location, Is.EqualTo(new Uri("/-/all", UriKind.Relative)));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Found));
+                Assert.That(response.Headers.Location, Is.EqualTo(new Uri("/-/all", UriKind.Relative)));
+            }
 
             string responseContent = await response.Content.ReadAsStringAsync();
 
