@@ -1866,6 +1866,14 @@
         "listed": true,
         "version": "2.1.0"
     },
+    "Tomlyn": {
+        "listed": true,
+        "version": "0.1.0"
+    },
+    "Tomlyn.Extensions.Configuration": {
+        "listed": true,
+        "version": "1.0.1"
+    },
     "TxFileManager": {
         "listed": true,
         "version": "1.4.0"
