@@ -60,6 +60,9 @@ namespace UnityNuGet
         public Version? Version { get; set; }
 
         [Required]
+        public string[]? SingleDefineConstraints { get; set; } = [];
+        
+        [Required]
         public string[]? DefineConstraints { get; set; }
     }
 }

@@ -31,18 +31,18 @@ namespace UnityNuGet.Tests
         {
             bool errorsTriggered = false;
 
-            var hostEnvironmentMock = new Mock<IHostEnvironment>();
+            Mock<IHostEnvironment> hostEnvironmentMock = new();
             hostEnvironmentMock.Setup(h => h.EnvironmentName).Returns(Environments.Development);
 
-            var loggerFactory = new LoggerFactory();
+            LoggerFactory loggerFactory = new();
             loggerFactory.AddProvider(new FakeLoggerProvider());
 
             string unityPackages = Path.Combine(Path.GetDirectoryName(typeof(RegistryCacheTests).Assembly.Location)!, "unity_packages");
-            var registry = new Registry(hostEnvironmentMock.Object, loggerFactory, Options.Create(new RegistryOptions { RegistryFilePath = "registry.json" }));
+            Registry registry = new(hostEnvironmentMock.Object, loggerFactory, Options.Create(new RegistryOptions { RegistryFilePath = "registry.json" }));
 
             await registry.StartAsync(CancellationToken.None);
 
-            var registryCache = new RegistryCache(
+            RegistryCache registryCache = new(
                 registry,
                 unityPackages,
                 new Uri("http://localhost/"),
@@ -54,8 +54,8 @@ namespace UnityNuGet.Tests
                     new() { Name = "netstandard2.1", DefineConstraints = ["UNITY_2021_2_OR_NEWER"] },
                 ],
                 [
-                    new() { Version = new Version(3, 8), DefineConstraints = ["!UNITY_6000_0_OR_NEWER"] },
-                    new() { Version = new Version(4, 3), DefineConstraints = ["UNITY_6000_0_OR_NEWER"] },
+                    new() { Version = new Version(3, 8, 0, 0), DefineConstraints = ["!UNITY_6000_0_OR_NEWER"] },
+                    new() { Version = new Version(4, 3, 0, 0), DefineConstraints = ["UNITY_6000_0_OR_NEWER"] },
                 ],
                 new NuGetConsoleTestLogger())
             {

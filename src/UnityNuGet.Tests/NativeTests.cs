@@ -18,10 +18,10 @@ namespace UnityNuGet.Tests
         [Test]
         public async Task TestBuild()
         {
-            var hostEnvironmentMock = new Mock<IHostEnvironment>();
+            Mock<IHostEnvironment> hostEnvironmentMock = new();
             hostEnvironmentMock.Setup(h => h.EnvironmentName).Returns(Environments.Development);
 
-            var loggerFactory = new LoggerFactory();
+            LoggerFactory loggerFactory = new();
             loggerFactory.AddProvider(new FakeLoggerProvider());
 
             string unityPackages = Path.Combine(Path.GetDirectoryName(typeof(RegistryCacheTests).Assembly.Location)!, "unity_packages");
@@ -29,11 +29,11 @@ namespace UnityNuGet.Tests
 
             bool errorsTriggered = false;
 
-            var registry = new Registry(hostEnvironmentMock.Object, loggerFactory, Options.Create(new RegistryOptions { RegistryFilePath = "registry.json" }));
+            Registry registry = new(hostEnvironmentMock.Object, loggerFactory, Options.Create(new RegistryOptions { RegistryFilePath = "registry.json" }));
 
             await registry.StartAsync(CancellationToken.None);
 
-            var registryCache = new RegistryCache(
+            RegistryCache registryCache = new(
                 registry,
                 unityPackages,
                 new Uri("http://localhost/"),
@@ -45,8 +45,8 @@ namespace UnityNuGet.Tests
                     new() { Name = "netstandard2.1", DefineConstraints = ["UNITY_2021_2_OR_NEWER"] },
                 ],
                 [
-                    new() { Version = new Version(3, 8), DefineConstraints = ["!UNITY_6000_0_OR_NEWER"] },
-                    new() { Version = new Version(4, 3), DefineConstraints = ["UNITY_6000_0_OR_NEWER"] },
+                    new() { Version = new Version(3, 8, 0, 0), DefineConstraints = ["!UNITY_6000_0_OR_NEWER"] },
+                    new() { Version = new Version(4, 3, 0, 0), DefineConstraints = ["UNITY_6000_0_OR_NEWER"] },
                 ],
                 new NuGetConsoleTestLogger())
             {
@@ -60,14 +60,18 @@ namespace UnityNuGet.Tests
             await registryCache.Build();
 
             Assert.That(errorsTriggered, Is.False, "The registry failed to build, check the logs");
+
             NpmPackageListAllResponse allResult = registryCache.All();
             string allResultJson = await allResult.ToJson(UnityNugetJsonSerializerContext.Default.NpmPackageListAllResponse);
 
             Assert.That(allResultJson, Does.Contain("org.nuget.rhino3dm"));
 
             NpmPackage? rhinoPackage = registryCache.GetPackage("org.nuget.rhino3dm");
+
             Assert.That(rhinoPackage, Is.Not.Null);
+
             string rhinopackageJson = await rhinoPackage!.ToJson(UnityNugetJsonSerializerContext.Default.NpmPackage);
+
             Assert.That(rhinopackageJson, Does.Contain("org.nuget.rhino3dm"));
             Assert.That(rhinopackageJson, Does.Contain("7.11.0"));
         }

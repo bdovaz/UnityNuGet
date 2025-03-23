@@ -31,13 +31,13 @@ namespace UnityNuGet.Tests
         [TestCase("Scriban")]
         public async Task Make_Sure_That_The_Registry_Is_Case_Insensitive(string packageName)
         {
-            var hostEnvironmentMock = new Mock<IHostEnvironment>();
+            Mock<IHostEnvironment> hostEnvironmentMock = new();
             hostEnvironmentMock.Setup(h => h.EnvironmentName).Returns(Environments.Development);
 
-            var loggerFactory = new LoggerFactory();
+            LoggerFactory loggerFactory = new();
             loggerFactory.AddProvider(new FakeLoggerProvider());
 
-            var registry = new Registry(hostEnvironmentMock.Object, loggerFactory, Options.Create(s_registryOptions));
+            Registry registry = new(hostEnvironmentMock.Object, loggerFactory, Options.Create(s_registryOptions));
 
             await registry.StartAsync(CancellationToken.None);
 
@@ -51,13 +51,13 @@ namespace UnityNuGet.Tests
         [Test]
         public async Task Make_Sure_That_The_Order_In_The_Registry_Is_Respected()
         {
-            var hostEnvironmentMock = new Mock<IHostEnvironment>();
+            Mock<IHostEnvironment> hostEnvironmentMock = new();
             hostEnvironmentMock.Setup(h => h.EnvironmentName).Returns(Environments.Development);
 
-            var loggerFactory = new LoggerFactory();
+            LoggerFactory loggerFactory = new();
             loggerFactory.AddProvider(new FakeLoggerProvider());
 
-            var registry = new Registry(hostEnvironmentMock.Object, loggerFactory, Options.Create(s_registryOptions));
+            Registry registry = new(hostEnvironmentMock.Object, loggerFactory, Options.Create(s_registryOptions));
 
             await registry.StartAsync(CancellationToken.None);
 
@@ -70,13 +70,13 @@ namespace UnityNuGet.Tests
         [Test]
         public async Task Ensure_That_Packages_Already_Included_In_Net_Standard_Are_not_Included_In_The_Registry()
         {
-            var hostEnvironmentMock = new Mock<IHostEnvironment>();
+            Mock<IHostEnvironment> hostEnvironmentMock = new();
             hostEnvironmentMock.Setup(h => h.EnvironmentName).Returns(Environments.Development);
 
-            var loggerFactory = new LoggerFactory();
+            LoggerFactory loggerFactory = new();
             loggerFactory.AddProvider(new FakeLoggerProvider());
 
-            var registry = new Registry(hostEnvironmentMock.Object, loggerFactory, Options.Create(s_registryOptions));
+            Registry registry = new(hostEnvironmentMock.Object, loggerFactory, Options.Create(s_registryOptions));
 
             await registry.StartAsync(CancellationToken.None);
 
@@ -88,10 +88,8 @@ namespace UnityNuGet.Tests
         [Test]
         public async Task CanParse_PackageWithRuntimes()
         {
-            var logger = new NuGetConsoleTestLogger();
-            CancellationToken cancellationToken = CancellationToken.None;
-
-            var cache = new SourceCacheContext();
+            NuGetConsoleTestLogger logger = new();
+            SourceCacheContext cache = new();
             ISettings settings = Settings.LoadDefaultSettings(root: null);
             SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
 
@@ -101,7 +99,7 @@ namespace UnityNuGet.Tests
                     new PackageIdentity("System.Security.Cryptography.ProtectedData", new NuGetVersion(6, 0, 0)),
                     new PackageDownloadContext(cache),
                     SettingsUtility.GetGlobalPackagesFolder(settings),
-                    logger, cancellationToken);
+                    logger, CancellationToken.None);
 
             // Make sure we have runtime libraries
             List<(string file, UnityOs, UnityCpu?)> runtimeLibs = await RuntimeLibraries
@@ -110,7 +108,7 @@ namespace UnityNuGet.Tests
             Assert.That(runtimeLibs, Is.Not.Empty);
 
             // Make sure these runtime libraries are only for Windows
-            var platformDefs = PlatformDefinition.CreateAllPlatforms();
+            PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
             PlatformDefinition? win = platformDefs.Find(UnityOs.Windows);
             foreach ((string file, UnityOs os, UnityCpu? cpu) in runtimeLibs)
             {
@@ -118,7 +116,7 @@ namespace UnityNuGet.Tests
             }
 
             // Get the lib files
-            IEnumerable<FrameworkSpecificGroup> versions = await downloadResult.PackageReader.GetLibItemsAsync(cancellationToken);
+            IEnumerable<FrameworkSpecificGroup> versions = await downloadResult.PackageReader.GetLibItemsAsync(CancellationToken.None);
             IEnumerable<(FrameworkSpecificGroup, RegistryTargetFramework)> closestVersions = NuGetHelper.GetClosestFrameworkSpecificGroups(
                 versions,
                 [
@@ -127,39 +125,36 @@ namespace UnityNuGet.Tests
                         Framework = CommonFrameworks.NetStandard20,
                     },
                 ]);
-            var libFiles = closestVersions
+            HashSet<string> libFiles = [.. closestVersions
                 .Single()
                 .Item1.Items
-                .Select(i => Path.GetFileName(i))
-                .ToHashSet();
+                .Select(i => Path.GetFileName(i))];
 
             // Make sure the runtime files fully replace the lib files (note that this is generally not a requirement)
-            var runtimeFiles = runtimeLibs
-                .Select(l => Path.GetFileName(l.file))
-                .ToHashSet();
+            HashSet<string> runtimeFiles = [.. runtimeLibs.Select(l => Path.GetFileName(l.file))];
+
             Assert.That(libFiles.SetEquals(runtimeFiles), Is.True);
         }
 
         static async Task<TestCaseData[]> AllRegistries()
         {
-            var hostEnvironmentMock = new Mock<IHostEnvironment>();
+            Mock<IHostEnvironment> hostEnvironmentMock = new ();
             hostEnvironmentMock.Setup(h => h.EnvironmentName).Returns(Environments.Development);
 
-            var loggerFactory = new LoggerFactory();
+            LoggerFactory loggerFactory = new ();
             loggerFactory.AddProvider(new FakeLoggerProvider());
 
-            var registry = new Registry(hostEnvironmentMock.Object, loggerFactory, Options.Create(s_registryOptions));
+            Registry registry = new (hostEnvironmentMock.Object, loggerFactory, Options.Create(s_registryOptions));
 
-            var logger = new NuGetConsoleTestLogger();
-            CancellationToken cancellationToken = CancellationToken.None;
+            NuGetConsoleTestLogger logger = new ();
 
-            await registry.StartAsync(cancellationToken);
+            await registry.StartAsync(CancellationToken.None);
 
-            var cache = new SourceCacheContext();
+            SourceCacheContext cache = new ();
             SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
             PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>();
 
-            var nuGetFrameworks = new RegistryTargetFramework[] { new() { Framework = CommonFrameworks.NetStandard20 } };
+            RegistryTargetFramework[] nuGetFrameworks = [new() { Framework = CommonFrameworks.NetStandard20 }];
 
             string[] excludedPackages = [
                 // All versions target "Any" and not .netstandard2.0 / 2.1
@@ -210,7 +205,7 @@ namespace UnityNuGet.Tests
                 @"ZLogger"
             ];
 
-            var excludedPackagesRegex = new Regex(@$"^{string.Join('|', excludedPackages)}$");
+            Regex excludedPackagesRegex = new(@$"^{string.Join('|', excludedPackages)}$");
 
             return [.. registry.Where(r => !r.Value.Analyzer && !r.Value.Ignored).OrderBy((pair) => pair.Key).Select((pair) =>
             {

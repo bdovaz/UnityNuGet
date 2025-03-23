@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
@@ -10,7 +11,7 @@ namespace UnityNuGet.Tests
         [Test]
         public void GetMetaForDll_FormatsDefineConstraintsProperly_WithoutConstraints()
         {
-            var platformDefs = PlatformDefinition.CreateAllPlatforms();
+            PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
             PlatformDefinition? anyOs = platformDefs.Find(UnityOs.AnyOs, UnityCpu.AnyCpu);
             string output = UnityMeta.GetMetaForDll(Guid.NewGuid(), anyOs!, [], []);
             Assert.That(output, Does.Not.Contain("defineConstraints"));
@@ -22,7 +23,7 @@ namespace UnityNuGet.Tests
         [Test]
         public void GetMetaForDll_FormatsLabelsProperly_WithoutLabels()
         {
-            var platformDefs = PlatformDefinition.CreateAllPlatforms();
+            PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
             PlatformDefinition? anyOs = platformDefs.Find(UnityOs.AnyOs, UnityCpu.AnyCpu);
             string output = UnityMeta.GetMetaForDll(Guid.NewGuid(), anyOs!, [], []);
             Assert.That(output, Does.Not.Contain("labels"));
@@ -36,7 +37,7 @@ namespace UnityNuGet.Tests
         public void GetMetaForDll_FormatsDefineConstraintsProperly_WithConstraints(
             string[] constraints, string expected)
         {
-            var platformDefs = PlatformDefinition.CreateAllPlatforms();
+            PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
             PlatformDefinition? anyOs = platformDefs.Find(UnityOs.AnyOs, UnityCpu.AnyCpu);
             string output = UnityMeta.GetMetaForDll(Guid.NewGuid(), anyOs!, [], constraints);
 
@@ -51,7 +52,7 @@ namespace UnityNuGet.Tests
         public void GetMetaForDll_FormatsLabelsProperly_WithLabels(
             string[] labels, string expected)
         {
-            var platformDefs = PlatformDefinition.CreateAllPlatforms();
+            PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
             PlatformDefinition? anyOs = platformDefs.Find(UnityOs.AnyOs, UnityCpu.AnyCpu);
             string output = UnityMeta.GetMetaForDll(Guid.NewGuid(), anyOs!, labels, []);
 
@@ -69,7 +70,7 @@ namespace UnityNuGet.Tests
 
             if (value)
             {
-                var platformDefs = PlatformDefinition.CreateAllPlatforms();
+                PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
                 platformDef = platformDefs.Find(UnityOs.AnyOs, UnityCpu.AnyCpu);
             }
             else
@@ -85,7 +86,7 @@ namespace UnityNuGet.Tests
         [Test]
         public void GetMetaForDll_ContainsNoWindowsNewlines()
         {
-            var platformDefs = PlatformDefinition.CreateAllPlatforms();
+            PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
             PlatformDefinition? anyOs = platformDefs.Find(UnityOs.AnyOs, UnityCpu.AnyCpu);
             string output = UnityMeta.GetMetaForDll(Guid.NewGuid(), anyOs!, [], ["TEST"]);
             Assert.That(output, Does.Not.Contain("\r"));
@@ -96,7 +97,7 @@ namespace UnityNuGet.Tests
         [TestCase(UnityOs.iOS, "iPhone", "iOS")]
         public void GetMetaForDll_NonEditor(UnityOs os, string platformName, string osName)
         {
-            var platformDefs = PlatformDefinition.CreateAllPlatforms();
+            PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
             string output = UnityMeta.GetMetaForDll(
                 Guid.NewGuid(),
                 platformDefs.Find(os)!,
@@ -104,7 +105,7 @@ namespace UnityNuGet.Tests
                 []);
 
             // There should be a single 'Exclude Android: 0' match
-            var excludeRegex = new Regex("Exclude (.*): 0");
+            Regex excludeRegex = new("Exclude (.*): 0");
             MatchCollection excludeMatches = excludeRegex.Matches(output);
             Assert.That(excludeMatches, Is.Not.Null);
             Assert.That(excludeMatches, Has.Count.EqualTo(1));
@@ -115,7 +116,7 @@ namespace UnityNuGet.Tests
             });
 
             // There should be a single 'enabled: 1' match
-            var enableRegex = new Regex("enabled: 1");
+            Regex enableRegex = new("enabled: 1");
             MatchCollection enableMatches = enableRegex.Matches(output);
             Assert.That(enableMatches, Is.Not.Null);
             Assert.Multiple(() =>
@@ -131,7 +132,7 @@ namespace UnityNuGet.Tests
         [TestCase(UnityOs.OSX, new[] { "OSXUniversal" })]
         public void GetMetaForDll_Editor(UnityOs os, string[] osNames)
         {
-            var platformDefs = PlatformDefinition.CreateAllPlatforms();
+            PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
             PlatformDefinition? pDef = platformDefs.Find(os);
             string output = UnityMeta.GetMetaForDll(
                 Guid.NewGuid(),
@@ -140,21 +141,20 @@ namespace UnityNuGet.Tests
                 []);
 
             // There should be only 'Exclude Editor: 0' and 'Exclude {{ osName }}: 0' matches
-            var excludeRegex = new Regex("Exclude (.*): 0");
+            Regex excludeRegex = new ("Exclude (.*): 0");
             MatchCollection excludeMatches = excludeRegex.Matches(output);
-            Assert.That(excludeMatches, Is.Not.Null);
-            var actualExcludes = excludeMatches
-                .Select(match => match.Groups[1].Value)
-                .ToHashSet();
 
-            var expectedExcludes = osNames
-                .Append("Editor")
-                .ToHashSet();
+            Assert.That(excludeMatches, Is.Not.Null);
+
+            HashSet<string> actualExcludes = [.. excludeMatches.Select(match => match.Groups[1].Value)];
+            HashSet<string> expectedExcludes = [.. osNames, "Editor"];
+
             Assert.That(actualExcludes.SetEquals(expectedExcludes), Is.True);
 
             // There should be as many 'enabled: 1' matches as exclude matches
-            var enableRegex = new Regex("enabled: 1");
+            Regex enableRegex = new ("enabled: 1");
             MatchCollection enableMatches = enableRegex.Matches(output);
+
             Assert.Multiple(() =>
             {
                 Assert.That(enableMatches, Is.Not.Null);
