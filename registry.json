@@ -100,6 +100,10 @@
         "listed": true,
         "version": "5.0.2"
     },
+    "AsyncIO": {
+        "listed": true,
+        "version": "0.1.69"
+    },
     "AsyncKeyedLock": {
         "listed": true,
         "version": "1.0.0"
@@ -1214,6 +1218,10 @@
         "listed": true,
         "version": "2.0.0"
     },
+    "NaCl.Net": {
+        "listed": true,
+        "version": "0.1.12"
+    },
     "NAudio.Core": {
         "listed": true,
         "version": "2.0.0"
@@ -1229,6 +1237,10 @@
     "NeoSmart.Caching.Sqlite": {
         "listed": true,
         "version": "0.1.0"
+    },
+    "NetMQ": {
+        "listed": true,
+        "version": "4.0.0.207"
     },
     "NETStandard.Library": {
         "ignore": true
