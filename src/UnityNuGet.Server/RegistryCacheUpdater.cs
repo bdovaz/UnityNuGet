@@ -11,8 +11,9 @@ namespace UnityNuGet.Server
     /// <summary>
     /// Update the RegistryCache at a regular interval
     /// </summary>
-    internal sealed class RegistryCacheUpdater(RegistryCacheReport registryCacheReport, RegistryCacheSingleton currentRegistryCache, ILogger<RegistryCacheUpdater> logger, IOptions<RegistryOptions> registryOptionsAccessor) : BackgroundService
+    internal sealed class RegistryCacheUpdater(Registry registry, RegistryCacheReport registryCacheReport, RegistryCacheSingleton currentRegistryCache, ILogger<RegistryCacheUpdater> logger, IOptions<RegistryOptions> registryOptionsAccessor) : BackgroundService
     {
+        private readonly Registry _registry = registry;
         private readonly RegistryCacheReport _registryCacheReport = registryCacheReport;
         private readonly RegistryCacheSingleton _currentRegistryCache = currentRegistryCache;
         private readonly ILogger _logger = logger;
@@ -28,17 +29,27 @@ namespace UnityNuGet.Server
 
                     _registryCacheReport.Start();
 
-                    var newRegistryCache = new RegistryCache(_currentRegistryCache.UnityPackageFolder!, _currentRegistryCache.ServerUri!, _registryOptions.UnityScope!, _registryOptions.MinimumUnityVersion!, _registryOptions.PackageNameNuGetPostFix!, _registryOptions.TargetFrameworks!, _currentRegistryCache.NuGetRedirectLogger!)
+                    var newRegistryCache = new RegistryCache(
+                        _registry,
+                        _currentRegistryCache.UnityPackageFolder!,
+                        _currentRegistryCache.ServerUri!,
+                        _registryOptions.UnityScope!,
+                        _registryOptions.MinimumUnityVersion!,
+                        _registryOptions.PackageNameNuGetPostFix!,
+                        _registryOptions.TargetFrameworks!,
+                        _registryOptions.RoslynAnalyzerVersions!,
+                        _currentRegistryCache.NuGetRedirectLogger!)
                     {
+                        Filter = _registryOptions.Filter,
                         // Update progress
                         OnProgress = (current, total) =>
                         {
                             _currentRegistryCache.ProgressTotalPackageCount = total;
                             _currentRegistryCache.ProgressPackageIndex = current;
                         },
-                        OnInformation = message => _registryCacheReport.AddInformation(message),
-                        OnWarning = message => _registryCacheReport.AddWarning(message),
-                        OnError = message => _registryCacheReport.AddError(message)
+                        OnInformation = _registryCacheReport.AddInformation,
+                        OnWarning = _registryCacheReport.AddWarning,
+                        OnError = _registryCacheReport.AddError
                     };
 
                     await newRegistryCache.Build();

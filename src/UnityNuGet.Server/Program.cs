@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -6,14 +8,17 @@ using Microsoft.Extensions.Options;
 using UnityNuGet;
 using UnityNuGet.Server;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Add the registry cache initializer
+builder.Services.AddSingleton<Registry>();
+builder.Services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<Registry>());
+
 builder.Services.AddHostedService<RegistryCacheInitializer>();
-// Add the registry cache updater
+
 builder.Services.AddHostedService<RegistryCacheUpdater>();
-// Add the registry cache report
+
 builder.Services.AddSingleton<RegistryCacheReport>();
+
 builder.Services.AddSingleton<RegistryCacheSingleton>();
 
 builder.Services.Configure<RegistryOptions>(builder.Configuration.GetSection("Registry"));
@@ -22,10 +27,17 @@ builder.Services.AddOptionsWithValidateOnStart<RegistryOptions, ValidateRegistry
 
 builder.Services.AddApplicationInsightsTelemetry();
 
-// Also enable NewtonsoftJson serialization
-builder.Services.AddControllers().AddNewtonsoftJson();
+builder.Services.Configure<JsonOptions>(options =>
+{
+    foreach (JsonConverter converter in UnityNugetJsonSerializerContext.Default.Options.Converters)
+    {
+        options.SerializerOptions.Converters.Add(converter);
+    }
+});
 
-var app = builder.Build();
+builder.Services.AddHealthChecks();
+
+WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
@@ -38,7 +50,11 @@ else
     app.UseHsts();
 }
 app.UseRouting();
-app.MapControllers();
-app.MapStatus();
+app.MapHealthChecks("/health");
+app.MapUnityNuGetEndpoints();
 
 app.Run();
+
+public partial class Program
+{
+}

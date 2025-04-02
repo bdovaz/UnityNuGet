@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using NuGet.Frameworks;
 
 namespace UnityNuGet
@@ -10,6 +10,8 @@ namespace UnityNuGet
     {
         [Required]
         public Uri? RootHttpUrl { get; set; }
+
+        public string? Filter { get; set; }
 
         [Required]
         [RegularExpression(@"[a-z]+\.[a-z]+")]
@@ -23,6 +25,9 @@ namespace UnityNuGet
         public string? PackageNameNuGetPostFix { get; set; }
 
         [Required]
+        public string? RegistryFilePath { get; set; }
+
+        [Required]
         public string? RootPersistentFolder { get; set; }
 
         [Required]
@@ -31,6 +36,10 @@ namespace UnityNuGet
         [Required]
         [ValidateEnumeratedItems]
         public RegistryTargetFramework[]? TargetFrameworks { get; set; }
+
+        [Required]
+        [ValidateEnumeratedItems]
+        public RoslynAnalyzerVersion[]? RoslynAnalyzerVersions { get; set; }
     }
 
     public class RegistryTargetFramework
@@ -43,5 +52,17 @@ namespace UnityNuGet
 
         [JsonIgnore]
         internal NuGetFramework? Framework { get; set; }
+    }
+
+    public class RoslynAnalyzerVersion
+    {
+        [Required]
+        public Version? Version { get; set; }
+
+        [Required]
+        public string[]? SingleDefineConstraints { get; set; } = [];
+        
+        [Required]
+        public string[]? DefineConstraints { get; set; }
     }
 }

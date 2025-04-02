@@ -6,12 +6,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
-using Newtonsoft.Json;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Frameworks;
@@ -33,35 +33,55 @@ namespace UnityNuGet
         public static readonly bool IsRunningOnAzure = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME"));
 
         // Change this version number if the content of the packages are changed by an update of this class
-        private const string CurrentRegistryVersion = "1.8.0";
+        private const string CurrentRegistryVersion = "1.9.0";
 
-        private static readonly Encoding Utf8EncodingNoBom = new UTF8Encoding(false, false);
+        private static readonly Encoding s_utf8EncodingNoBom = new UTF8Encoding(false, false);
+        private readonly Registry _registry;
         private readonly string _rootPersistentFolder;
         private readonly Uri _rootHttpUri;
         private readonly string _unityScope;
         private readonly string _minimumUnityVersion;
         private readonly string _packageNameNuGetPostFix;
         private readonly RegistryTargetFramework[] _targetFrameworks;
+        private readonly RoslynAnalyzerVersion[] _roslynAnalyzerVersions;
         private readonly ILogger _logger;
         private readonly ISettings _settings;
         private readonly IEnumerable<SourceRepository> _sourceRepositories;
         private readonly SourceCacheContext _sourceCacheContext;
-        private readonly Registry _registry;
         private readonly NpmPackageRegistry _npmPackageRegistry;
 
-        public RegistryCache(RegistryCache registryCache) : this(registryCache._rootPersistentFolder, registryCache._rootHttpUri, registryCache._unityScope,
-            registryCache._minimumUnityVersion, registryCache._packageNameNuGetPostFix, registryCache._targetFrameworks, registryCache._logger)
-        { }
-
-        public RegistryCache(string rootPersistentFolder, Uri rootHttpUri, string unityScope, string minimumUnityVersion,
-            string packageNameNuGetPostFix, RegistryTargetFramework[] targetFrameworks, ILogger logger)
+        public RegistryCache(Registry registry, RegistryCache registryCache) : this(
+            registry,
+            registryCache._rootPersistentFolder,
+            registryCache._rootHttpUri,
+            registryCache._unityScope,
+            registryCache._minimumUnityVersion,
+            registryCache._packageNameNuGetPostFix,
+            registryCache._targetFrameworks,
+            registryCache._roslynAnalyzerVersions,
+            registryCache._logger)
         {
+        }
+
+        public RegistryCache(
+            Registry registry,
+            string rootPersistentFolder,
+            Uri rootHttpUri,
+            string unityScope,
+            string minimumUnityVersion,
+            string packageNameNuGetPostFix,
+            RegistryTargetFramework[] targetFrameworks,
+            RoslynAnalyzerVersion[] roslynAnalyzerVersions,
+            ILogger logger)
+        {
+            _registry = registry;
             _rootPersistentFolder = rootPersistentFolder ?? throw new ArgumentNullException(nameof(rootPersistentFolder));
             _rootHttpUri = rootHttpUri ?? throw new ArgumentNullException(nameof(rootHttpUri));
             _unityScope = unityScope ?? throw new ArgumentNullException(nameof(unityScope));
             _minimumUnityVersion = minimumUnityVersion ?? throw new ArgumentNullException(nameof(minimumUnityVersion));
             _packageNameNuGetPostFix = packageNameNuGetPostFix ?? throw new ArgumentNullException(nameof(packageNameNuGetPostFix));
             _targetFrameworks = targetFrameworks ?? throw new ArgumentNullException(nameof(targetFrameworks));
+            _roslynAnalyzerVersions = roslynAnalyzerVersions ?? throw new ArgumentNullException(nameof(roslynAnalyzerVersions));
 
             if (!Directory.Exists(_rootPersistentFolder))
             {
@@ -71,7 +91,7 @@ namespace UnityNuGet
             // Force NuGet packages to be in the same directory to avoid storage full on Azure.
             if (IsRunningOnAzure)
             {
-                var nugetFolder = Path.Combine(_rootPersistentFolder, ".nuget");
+                string nugetFolder = Path.Combine(_rootPersistentFolder, ".nuget");
                 Environment.SetEnvironmentVariable("NUGET_PACKAGES", nugetFolder);
             }
 
@@ -79,10 +99,9 @@ namespace UnityNuGet
             var sourceRepositoryProvider = new SourceRepositoryProvider(new PackageSourceProvider(_settings), Repository.Provider.GetCoreV3());
             _sourceRepositories = sourceRepositoryProvider.GetRepositories();
             _logger = logger;
-            _registry = Registry.GetInstance();
 
             // Initialize target framework
-            foreach (var registryTargetFramework in _targetFrameworks)
+            foreach (RegistryTargetFramework registryTargetFramework in _targetFrameworks)
             {
                 registryTargetFramework.Framework = NuGetFramework.Parse(registryTargetFramework.Name!);
             }
@@ -136,7 +155,7 @@ namespace UnityNuGet
         public NpmPackage? GetPackage(string packageId)
         {
             ArgumentNullException.ThrowIfNull(packageId);
-            _npmPackageRegistry.Packages.TryGetValue(packageId, out var package);
+            _npmPackageRegistry.Packages.TryGetValue(packageId, out NpmPackage? package);
             return package;
         }
 
@@ -149,7 +168,7 @@ namespace UnityNuGet
         {
             ArgumentNullException.ThrowIfNull(packageFileName);
             packageFileName = packageFileName.Replace("/", packageFileName.Replace(".", string.Empty));
-            var packageFilePath = Path.Combine(_rootPersistentFolder, packageFileName);
+            string packageFilePath = Path.Combine(_rootPersistentFolder, packageFileName);
             return packageFilePath;
         }
 
@@ -168,13 +187,23 @@ namespace UnityNuGet
             }
         }
 
-        private async Task<IEnumerable<IPackageSearchMetadata>?> GetMetadataFromSources(string packageName)
+        private async Task<IEnumerable<IPackageSearchMetadata>?> GetMetadataFromSources(
+            string packageName,
+            bool includeUnlisted,
+            bool includePrerelease,
+            CancellationToken cancellationToken = default)
         {
-            foreach (var source in _sourceRepositories)
+            foreach (SourceRepository source in _sourceRepositories)
             {
-                var packageMetadataResource = source.GetResource<PackageMetadataResource>();
+                PackageMetadataResource packageMetadataResource = source.GetResource<PackageMetadataResource>();
 
-                var result = await packageMetadataResource.GetMetadataAsync(packageName, includePrerelease: false, includeUnlisted: false, _sourceCacheContext, _logger, CancellationToken.None);
+                IEnumerable<IPackageSearchMetadata> result = await packageMetadataResource.GetMetadataAsync(
+                    packageName,
+                    includePrerelease,
+                    includeUnlisted,
+                    _sourceCacheContext,
+                    _logger,
+                    cancellationToken);
 
                 if (result.Any())
                 {
@@ -185,23 +214,27 @@ namespace UnityNuGet
             return null;
         }
 
-        private async Task<DownloadResourceResult> GetPackageDownloadResourceResult(PackageIdentity packageIdentity)
+        private async Task<DownloadResourceResult> GetPackageDownloadResourceResult(
+            PackageIdentity packageIdentity,
+            CancellationToken cancellationToken = default)
         {
             return await PackageDownloader.GetDownloadResourceResultAsync(
                 _sourceRepositories,
                 packageIdentity,
                 new PackageDownloadContext(_sourceCacheContext),
                 SettingsUtility.GetGlobalPackagesFolder(_settings),
-                _logger, CancellationToken.None);
+                _logger,
+                cancellationToken);
         }
 
         /// <summary>
         /// For each package in our registry.json, query NuGet, extract package metadata, and convert them to unity packages.
         /// </summary>
-        private async Task BuildInternal()
+        private async Task BuildInternal(CancellationToken cancellationToken = default)
         {
-            var versionPath = Path.Combine(_rootPersistentFolder, "version.txt");
-            var forceUpdate = !File.Exists(versionPath) || await File.ReadAllTextAsync(versionPath) != CurrentRegistryVersion;
+            string versionPath = Path.Combine(_rootPersistentFolder, "version.txt");
+            bool forceUpdate = !File.Exists(versionPath) || await File.ReadAllTextAsync(versionPath, cancellationToken) != CurrentRegistryVersion;
+
             if (forceUpdate)
             {
                 LogInformation($"Registry version changed to {CurrentRegistryVersion} - Regenerating all packages");
@@ -210,21 +243,23 @@ namespace UnityNuGet
                 _npmPackageRegistry.Reset();
             }
 
-            var regexFilter = Filter != null ? new Regex(Filter, RegexOptions.IgnoreCase) : null;
-            if (Filter != null)
+            Regex? regexFilter = !string.IsNullOrEmpty(Filter) ? new Regex(Filter, RegexOptions.IgnoreCase) : null;
+
+            if (regexFilter != null)
             {
                 LogInformation($"Filtering with regex: {Filter}");
             }
 
-            var onProgress = OnProgress;
+            Action<int, int>? onProgress = OnProgress;
 
-            var globalPackagesFolder = SettingsUtility.GetGlobalPackagesFolder(_settings);
+            string globalPackagesFolder = SettingsUtility.GetGlobalPackagesFolder(_settings);
 
-            var progressCount = 0;
-            foreach (var packageDesc in _registry)
+            int progressCount = 0;
+
+            foreach (KeyValuePair<string, RegistryEntry> packageDesc in _registry)
             {
-                var packageName = packageDesc.Key;
-                var packageEntry = packageDesc.Value;
+                string packageName = packageDesc.Key;
+                RegistryEntry packageEntry = packageDesc.Value;
 
                 // Log progress count
                 onProgress?.Invoke(++progressCount, _registry.Count);
@@ -235,8 +270,8 @@ namespace UnityNuGet
                     continue;
                 }
 
-                var packageId = packageName.ToLowerInvariant();
-                var npmPackageId = $"{_unityScope}.{packageId}";
+                string packageId = packageName.ToLowerInvariant();
+                string npmPackageId = $"{_unityScope}.{packageId}";
                 NpmPackageCacheEntry? cacheEntry = null;
                 NpmPackage? npmPackage = null;
                 NpmPackageInfo? npmPackageInfo = null;
@@ -251,13 +286,18 @@ namespace UnityNuGet
                     }
                 }
 
-                var packageMetaIt = await GetMetadataFromSources(packageName);
-                var packageMetas = packageMetaIt != null ? packageMetaIt.ToArray() : Array.Empty<IPackageSearchMetadata>();
-                foreach (var packageMeta in packageMetas)
+                IEnumerable<IPackageSearchMetadata>? packageMetaIt = await GetMetadataFromSources(
+                    packageName,
+                    packageEntry.IncludeUnlisted,
+                    packageEntry.IncludePrerelease,
+                    cancellationToken);
+                IPackageSearchMetadata[] packageMetas = packageMetaIt != null ? [.. packageMetaIt] : [];
+
+                foreach (IPackageSearchMetadata? packageMeta in packageMetas)
                 {
-                    var packageIdentity = packageMeta.Identity;
+                    PackageIdentity packageIdentity = packageMeta.Identity;
                     // Update latest version
-                    var currentVersion = packageIdentity.Version;
+                    NuGetVersion currentVersion = packageIdentity.Version;
                     string npmCurrentVersion = GetNpmVersion(currentVersion);
 
                     if (packageEntry.Version == null || !packageEntry.Version.Satisfies(packageMeta.Identity.Version))
@@ -266,7 +306,7 @@ namespace UnityNuGet
                     }
 
                     // If the package id is cached already, we don't need to generate it again
-                    if (npmPackage != null && npmPackage.Versions.TryGetValue(npmCurrentVersion, out var existingVersion))
+                    if (npmPackage != null && npmPackage.Versions.TryGetValue(npmCurrentVersion, out NpmPackageVersion? existingVersion))
                     {
                         // If the package tgz exists, we don't need to regenerate it again
                         var packageTgz = new FileInfo(GetUnityPackagePath(packageIdentity, existingVersion));
@@ -282,9 +322,11 @@ namespace UnityNuGet
 
                     if (!packageEntry.Analyzer && resolvedDependencyGroups.Count == 0)
                     {
-                        using var downloadResult = await GetPackageDownloadResourceResult(packageIdentity);
+                        using DownloadResourceResult downloadResult = await GetPackageDownloadResourceResult(packageIdentity, cancellationToken);
 
-                        var hasNativeLib = await NativeLibraries.GetSupportedNativeLibsAsync(downloadResult.PackageReader, _logger).AnyAsync();
+                        bool hasNativeLib = await NativeLibraries
+                            .GetSupportedNativeLibsAsync(downloadResult.PackageReader, _logger)
+                            .AnyAsync(cancellationToken);
 
                         if (!hasNativeLib)
                         {
@@ -296,7 +338,7 @@ namespace UnityNuGet
                     npmPackage ??= new NpmPackage();
                     npmPackageInfo ??= new NpmPackageInfo();
 
-                    var update = !npmPackage.DistTags.TryGetValue("latest", out var latestVersion)
+                    bool update = !npmPackage.DistTags.TryGetValue("latest", out string? latestVersion)
                                  || (currentVersion > NuGetVersion.Parse(latestVersion))
                                  || forceUpdate;
 
@@ -344,16 +386,18 @@ namespace UnityNuGet
                         Name = npmPackageId,
                         Description = packageMeta.Description,
                         Author = npmPackageInfo.Author,
-                        DisplayName = packageMeta.Title + _packageNameNuGetPostFix
+                        DisplayName = packageMeta.Title + _packageNameNuGetPostFix,
+                        Repository = npmPackage.Repository
                     };
                     npmVersion.Distribution.Tarball = new Uri(_rootHttpUri, $"{npmPackage.Id}/-/{GetUnityPackageFileName(packageIdentity, npmVersion)}");
                     npmVersion.Unity = _minimumUnityVersion;
                     npmPackage.Versions[npmVersion.Version] = npmVersion;
 
                     bool hasDependencyErrors = false;
-                    foreach (var resolvedDependencyGroup in resolvedDependencyGroups)
+
+                    foreach (PackageDependencyGroup? resolvedDependencyGroup in resolvedDependencyGroups)
                     {
-                        foreach (var deps in resolvedDependencyGroup.Packages)
+                        foreach (PackageDependency? deps in resolvedDependencyGroup.Packages)
                         {
                             if (DotNetHelper.IsNetStandard20Assembly(deps.Id))
                             {
@@ -362,7 +406,7 @@ namespace UnityNuGet
 
                             PackageDependency resolvedDeps = deps;
 
-                            if (!_registry.TryGetValue(deps.Id, out var packageEntryDep))
+                            if (!_registry.TryGetValue(deps.Id, out RegistryEntry? packageEntryDep))
                             {
                                 LogError($"The package `{packageIdentity}` has a dependency on `{deps.Id}` which is not in the registry. You must add this dependency to the registry.json file.");
                                 hasDependencyErrors = true;
@@ -374,20 +418,24 @@ namespace UnityNuGet
                             }
                             else if (!deps.VersionRange.IsSubSetOrEqualTo(packageEntryDep.Version))
                             {
-                                var dependencyPackageMetaIt = await GetMetadataFromSources(deps.Id);
-                                var dependencyPackageMetas = dependencyPackageMetaIt != null ? dependencyPackageMetaIt.ToArray() : Array.Empty<IPackageSearchMetadata>();
+                                IEnumerable<IPackageSearchMetadata>? dependencyPackageMetaIt = await GetMetadataFromSources(
+                                    deps.Id,
+                                    packageEntryDep.IncludeUnlisted,
+                                    packageEntryDep.IncludePrerelease,
+                                    cancellationToken);
+                                IPackageSearchMetadata[] dependencyPackageMetas = dependencyPackageMetaIt != null ? [.. dependencyPackageMetaIt] : [];
 
                                 PackageDependency? packageDependency = null;
 
-                                foreach (var dependencyPackageMeta in dependencyPackageMetas)
+                                foreach (IPackageSearchMetadata? dependencyPackageMeta in dependencyPackageMetas)
                                 {
-                                    var dependencyResolvedDependencyGroups = NuGetHelper.GetCompatiblePackageDependencyGroups(dependencyPackageMeta.DependencySets, _targetFrameworks, includeAny: false);
+                                    IEnumerable<PackageDependencyGroup> dependencyResolvedDependencyGroups = NuGetHelper.GetCompatiblePackageDependencyGroups(dependencyPackageMeta.DependencySets, _targetFrameworks, includeAny: false);
 
                                     if (dependencyResolvedDependencyGroups.Any())
                                     {
-                                        _registry.TryGetValue(dependencyPackageMeta.Identity.Id, out var registryEntry);
+                                        _registry.TryGetValue(dependencyPackageMeta.Identity.Id, out RegistryEntry? registryEntry);
 
-                                        var registryMinimumVersion = registryEntry?.Version?.MinVersion!;
+                                        NuGetVersion registryMinimumVersion = registryEntry?.Version?.MinVersion!;
 
                                         NuGetVersion newVersion = registryMinimumVersion > dependencyPackageMeta.Identity.Version ? registryMinimumVersion : dependencyPackageMeta.Identity.Version;
 
@@ -420,8 +468,9 @@ namespace UnityNuGet
                             }
 
                             // Otherwise add the package as a dependency
-                            var depsId = resolvedDeps.Id.ToLowerInvariant();
-                            var key = $"{_unityScope}.{depsId}";
+                            string depsId = resolvedDeps.Id.ToLowerInvariant();
+                            string key = $"{_unityScope}.{depsId}";
+
                             if (!npmVersion.Dependencies.ContainsKey(key))
                             {
                                 npmVersion.Dependencies.Add(key, GetNpmVersion(resolvedDeps.VersionRange.MinVersion!));
@@ -432,7 +481,15 @@ namespace UnityNuGet
                     // If we don't have any dependencies error, generate the package
                     if (!hasDependencyErrors)
                     {
-                        bool packageConverted = await ConvertNuGetToUnityPackageIfDoesNotExist(packageIdentity, npmPackageInfo, npmVersion, packageMeta, forceUpdate, packageEntry);
+                        bool packageConverted = await ConvertNuGetToUnityPackageIfDoesNotExist(
+                            packageIdentity,
+                            npmPackageInfo,
+                            npmVersion,
+                            packageMeta,
+                            forceUpdate,
+                            packageEntry,
+                            cancellationToken);
+
                         npmPackage.Time[npmCurrentVersion] = packageMeta.Published?.UtcDateTime ?? GetUnityPackageFileInfo(packageIdentity, npmVersion).CreationTimeUtc;
 
                         // Copy repository info if necessary
@@ -442,7 +499,7 @@ namespace UnityNuGet
                         }
 
                         // Update the cache entry
-                        await WritePackageCacheEntry(packageId, cacheEntry);
+                        await WritePackageCacheEntry(packageId, cacheEntry, cancellationToken);
 
                         if (packageConverted && IsRunningOnAzure)
                         {
@@ -463,33 +520,59 @@ namespace UnityNuGet
 
             if (forceUpdate)
             {
-                await File.WriteAllTextAsync(versionPath, CurrentRegistryVersion);
+                await File.WriteAllTextAsync(
+                    versionPath,
+                    CurrentRegistryVersion,
+                    cancellationToken);
             }
         }
 
-        private static string GetNpmVersion(NuGetVersion currentVersion)
+        // Unity only supports the SemVer format: https://docs.unity3d.com/6000.1/Documentation/Manual/upm-lifecycle.html
+        internal static string GetNpmVersion(NuGetVersion currentVersion)
         {
             string npmCurrentVersion = $"{currentVersion.Major}.{currentVersion.Minor}.{currentVersion.Patch}";
 
-            if (currentVersion.Revision != 0)
+            if (currentVersion.IsPrerelease || currentVersion.Revision != 0)
             {
-                npmCurrentVersion += $"-{currentVersion.Revision}";
+                StringBuilder stringBuilder = new();
+
+                if (currentVersion.Revision != 0)
+                {
+                    stringBuilder.Append(currentVersion.Revision);
+                }
+
+                if (currentVersion.IsPrerelease)
+                {
+                    if (stringBuilder.Length > 0)
+                    {
+                        stringBuilder.Append('.');
+                    }
+
+                    stringBuilder.Append(currentVersion.Release);
+                }
+
+                if (stringBuilder.Length > 0)
+                {
+                    stringBuilder.Insert(0, '-');
+                }
+
+                npmCurrentVersion += stringBuilder.ToString();
             }
+
             return npmCurrentVersion;
         }
 
         /// <summary>
         /// Converts a NuGet package to Unity package if not already
         /// </summary>
-        private async Task<bool> ConvertNuGetToUnityPackageIfDoesNotExist
-        (
+        private async Task<bool> ConvertNuGetToUnityPackageIfDoesNotExist(
             PackageIdentity identity,
             NpmPackageInfo npmPackageInfo,
             NpmPackageVersion npmPackageVersion,
             IPackageSearchMetadata packageMeta,
             bool forceUpdate,
-            RegistryEntry packageEntry
-        )
+            RegistryEntry packageEntry,
+            CancellationToken cancellationToken = default)
         {
             // If we need to force the update, we delete the previous package+sha1 files
             if (forceUpdate)
@@ -499,13 +582,22 @@ namespace UnityNuGet
 
             if (!IsUnityPackageValid(identity, npmPackageVersion) || !IsUnityPackageSha1Valid(identity, npmPackageVersion))
             {
-                await ConvertNuGetPackageToUnity(identity, npmPackageInfo, npmPackageVersion, packageMeta, packageEntry);
+                await ConvertNuGetPackageToUnity(
+                    identity,
+                    npmPackageInfo,
+                    npmPackageVersion,
+                    packageMeta,
+                    packageEntry,
+                    cancellationToken);
 
                 return true;
             }
             else
             {
-                npmPackageVersion.Distribution.Shasum = await ReadUnityPackageSha1(identity, npmPackageVersion);
+                npmPackageVersion.Distribution.Shasum = await ReadUnityPackageSha1(
+                    identity,
+                    npmPackageVersion,
+                    cancellationToken);
 
                 return false;
             }
@@ -514,26 +606,26 @@ namespace UnityNuGet
         /// <summary>
         /// Converts a NuGet package to a Unity package.
         /// </summary>
-        private async Task ConvertNuGetPackageToUnity
-        (
+        internal async Task ConvertNuGetPackageToUnity(
             PackageIdentity identity,
             NpmPackageInfo npmPackageInfo,
             NpmPackageVersion npmPackageVersion,
             IPackageSearchMetadata packageMeta,
-            RegistryEntry packageEntry
-        )
+            RegistryEntry packageEntry,
+            CancellationToken cancellationToken = default)
         {
-            var unityPackageFileName = GetUnityPackageFileName(identity, npmPackageVersion);
-            var unityPackageFilePath = Path.Combine(_rootPersistentFolder, unityPackageFileName);
+            string unityPackageFileName = GetUnityPackageFileName(identity, npmPackageVersion);
+            string unityPackageFilePath = Path.Combine(_rootPersistentFolder, unityPackageFileName);
 
             LogInformation($"Converting NuGet package {identity} to Unity `{unityPackageFileName}`");
 
-            using var downloadResult = await GetPackageDownloadResourceResult(identity);
+            using DownloadResourceResult downloadResult = await GetPackageDownloadResourceResult(identity, cancellationToken);
 
-            using var packageReader = downloadResult.PackageReader;
+            using PackageReaderBase packageReader = downloadResult.PackageReader;
 
             // Update Repository metadata if necessary
-            var repoMeta = packageReader.NuspecReader.GetRepositoryMetadata();
+            RepositoryMetadata repoMeta = packageReader.NuspecReader.GetRepositoryMetadata();
+
             if (repoMeta != null && repoMeta.Url != null && repoMeta.Commit != null && repoMeta.Type != null)
             {
                 npmPackageVersion.Repository = new NpmSourceRepository()
@@ -552,23 +644,23 @@ namespace UnityNuGet
             {
                 using var memStream = new MemoryStream();
 
-                using (var outStream = File.Create(unityPackageFilePath))
-                using (var gzoStream = new GZipOutputStream(outStream)
+                using (FileStream outStream = File.Create(unityPackageFilePath))
+                using (GZipOutputStream gzoStream = new(outStream)
                 {
                     ModifiedTime = packageMeta.Published?.UtcDateTime
                 })
-                using (var tarArchive = new TarOutputStream(gzoStream, Encoding.UTF8))
+                using (TarOutputStream tarArchive = new(gzoStream, Encoding.UTF8))
                 {
                     // Select the framework version that is the closest or equal to the latest configured framework version
-                    var versions = await packageReader.GetLibItemsAsync(CancellationToken.None);
+                    IEnumerable<FrameworkSpecificGroup> versions = await packageReader.GetLibItemsAsync(cancellationToken);
 
-                    var closestVersions = NuGetHelper.GetClosestFrameworkSpecificGroups(versions, _targetFrameworks);
+                    IEnumerable<(FrameworkSpecificGroup, RegistryTargetFramework)> closestVersions = NuGetHelper.GetClosestFrameworkSpecificGroups(versions, _targetFrameworks);
 
                     var collectedItems = new Dictionary<FrameworkSpecificGroup, HashSet<RegistryTargetFramework>>();
 
-                    foreach (var (item, targetFramework) in closestVersions)
+                    foreach ((FrameworkSpecificGroup item, RegistryTargetFramework targetFramework) in closestVersions)
                     {
-                        if (!collectedItems.TryGetValue(item, out var frameworksPerGroup))
+                        if (!collectedItems.TryGetValue(item, out HashSet<RegistryTargetFramework>? frameworksPerGroup))
                         {
                             frameworksPerGroup = [];
                             collectedItems.Add(item, frameworksPerGroup);
@@ -581,136 +673,86 @@ namespace UnityNuGet
                         throw new InvalidOperationException($"The package does not contain a compatible .NET assembly {string.Join(",", _targetFrameworks.Select(x => x.Name))}");
                     }
 
-                    var isPackageNetStandard21Assembly = DotNetHelper.IsNetStandard21Assembly(identity.Id);
-                    var hasMultiNetStandard = collectedItems.Count > 1;
-                    var hasOnlyNetStandard21 = collectedItems.Count == 1 && collectedItems.Values.First().All(x => x.Name == "netstandard2.1");
-                    var modTime = packageMeta.Published?.DateTime ?? DateTime.UnixEpoch;
+                    bool isPackageNetStandard21Assembly = DotNetHelper.IsNetStandard21Assembly(identity.Id);
+                    bool hasMultiNetStandard = collectedItems.Count > 1;
+                    bool hasOnlyNetStandard21 = collectedItems.Count == 1 && collectedItems.Values.First().All(x => x.Name == "netstandard2.1");
+
+                    // https://learn.microsoft.com/en-us/nuget/api/registration-base-url-resource#catalog-entry
+                    // Unlisted packages published value is set to 1900
+                    DateTime modTime = packageMeta.IsListed ? packageMeta.Published?.DateTime ?? DateTime.UnixEpoch : DateTime.UnixEpoch;
 
                     if (isPackageNetStandard21Assembly)
                     {
                         LogInformation($"Package {identity.Id} is a system package for netstandard2.1 and will be only used for netstandard 2.0");
                     }
 
+                    // There are packages that have embedded analyzers, e.g.: CommunityToolkit.Mvvm
+                    await TryToWriteAnalyzerFiles(
+                        packageReader,
+                        identity,
+                        tarArchive,
+                        memStream,
+                        modTime,
+                        cancellationToken);
+
                     if (packageEntry.Analyzer)
                     {
-                        var packageFiles = await packageReader.GetItemsAsync(PackagingConstants.Folders.Analyzers, CancellationToken.None);
-
-                        // https://learn.microsoft.com/en-us/nuget/guides/analyzers-conventions#analyzers-path-format
-                        var analyzerFiles = packageFiles
-                            .SelectMany(p => p.Items)
-                            .Where(p => NuGetHelper.IsApplicableUnitySupportedRoslynVersionFolder(p) && (NuGetHelper.IsApplicableAnalyzer(p) || NuGetHelper.IsApplicableAnalyzerResource(p)))
-                            .ToArray();
-
-                        var createdDirectoryList = new List<string>();
-
-                        foreach (var analyzerFile in analyzerFiles)
-                        {
-                            var folderPrefix = $"{Path.GetDirectoryName(analyzerFile)!.Replace($"analyzers{Path.DirectorySeparatorChar}", string.Empty)}{Path.DirectorySeparatorChar}";
-
-                            // Write folder meta
-                            if (!string.IsNullOrEmpty(folderPrefix))
-                            {
-                                var directoryNameBuilder = new StringBuilder();
-
-                                foreach (var directoryName in folderPrefix.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
-                                {
-                                    directoryNameBuilder.Append(directoryName);
-                                    directoryNameBuilder.Append(Path.DirectorySeparatorChar);
-
-                                    var processedDirectoryName = directoryNameBuilder.ToString()[0..^1];
-
-                                    if (createdDirectoryList.Any(d => d.Equals(processedDirectoryName)))
-                                    {
-                                        continue;
-                                    }
-
-                                    createdDirectoryList.Add(processedDirectoryName);
-
-                                    // write meta file for the folder
-                                    await WriteTextFileToTar(tarArchive, $"{processedDirectoryName}.meta", UnityMeta.GetMetaForFolder(GetStableGuid(identity, processedDirectoryName)), modTime);
-                                }
-                            }
-
-                            var fileInUnityPackage = $"{folderPrefix}{Path.GetFileName(analyzerFile)}";
-                            string? meta;
-
-                            string fileExtension = Path.GetExtension(fileInUnityPackage);
-
-                            if (fileExtension == ".dll")
-                            {
-                                if (NuGetHelper.IsApplicableAnalyzer(analyzerFile))
-                                {
-                                    meta = UnityMeta.GetMetaForDll(
-                                        GetStableGuid(identity, fileInUnityPackage),
-                                        new PlatformDefinition(UnityOs.AnyOs, UnityCpu.None, isEditorConfig: false),
-                                        ["RoslynAnalyzer"],
-                                        []);
-                                }
-                                else
-                                {
-                                    meta = UnityMeta.GetMetaForDll(
-                                        GetStableGuid(identity, fileInUnityPackage),
-                                        new PlatformDefinition(UnityOs.AnyOs, UnityCpu.None, isEditorConfig: false),
-                                        [],
-                                        []);
-                                }
-                            }
-                            else
-                            {
-                                meta = UnityMeta.GetMetaForExtension(GetStableGuid(identity, fileInUnityPackage), fileExtension);
-                            }
-
-                            if (meta == null)
-                            {
-                                continue;
-                            }
-
-                            memStream.Position = 0;
-                            memStream.SetLength(0);
-
-                            using var stream = await packageReader.GetStreamAsync(analyzerFile, CancellationToken.None);
-                            await stream.CopyToAsync(memStream);
-                            var buffer = memStream.ToArray();
-
-                            // write content
-                            await WriteBufferToTar(tarArchive, fileInUnityPackage, buffer, modTime);
-
-                            // write meta file
-                            await WriteTextFileToTar(tarArchive, $"{fileInUnityPackage}.meta", meta, modTime);
-                        }
-
                         // Write analyzer asmdef
                         // Check Analyzer Scope section: https://docs.unity3d.com/Manual/roslyn-analyzers.html
-                        var analyzerAsmdef = CreateAnalyzerAmsdef(identity);
-                        var analyzerAsmdefAsJson = analyzerAsmdef.ToJson();
+                        UnityAsmdef analyzerAsmdef = CreateAnalyzerAmsdef(identity);
+                        string analyzerAsmdefAsJson = await analyzerAsmdef.ToJson(
+                            UnityNugetJsonSerializerContext.Default.UnityAsmdef,
+                            cancellationToken);
                         string analyzerAsmdefFileName = $"{identity.Id}.asmdef";
-                        await WriteTextFileToTar(tarArchive, analyzerAsmdefFileName, analyzerAsmdefAsJson, modTime);
-                        await WriteTextFileToTar(tarArchive, $"{analyzerAsmdefFileName}.meta", UnityMeta.GetMetaForExtension(GetStableGuid(identity, analyzerAsmdefFileName), ".asmdef")!, modTime);
+
+                        await WriteTextFileToTar(
+                            tarArchive,
+                            analyzerAsmdefFileName,
+                            analyzerAsmdefAsJson,
+                            modTime,
+                            cancellationToken);
+                        await WriteTextFileToTar(
+                            tarArchive,
+                            $"{analyzerAsmdefFileName}.meta",
+                            UnityMeta.GetMetaForExtension(GetStableGuid(identity, analyzerAsmdefFileName), ".asmdef")!,
+                            modTime,
+                            cancellationToken);
 
                         // Write empty script (Necessary to compile the asmdef file)
-                        var emptyScriptContent = UnityScript.GetEmptyScript();
+                        string emptyScriptContent = UnityScript.GetEmptyScript();
                         const string emptyScriptFileName = "EmptyScript.cs";
-                        await WriteTextFileToTar(tarArchive, emptyScriptFileName, emptyScriptContent, modTime);
-                        await WriteTextFileToTar(tarArchive, $"{emptyScriptFileName}.meta", UnityMeta.GetMetaForExtension(GetStableGuid(identity, emptyScriptFileName), ".cs")!, modTime);
+
+                        await WriteTextFileToTar(
+                            tarArchive,
+                            emptyScriptFileName,
+                            emptyScriptContent,
+                            modTime,
+                            cancellationToken);
+                        await WriteTextFileToTar(
+                            tarArchive,
+                            $"{emptyScriptFileName}.meta",
+                            UnityMeta.GetMetaForExtension(GetStableGuid(identity, emptyScriptFileName), ".cs")!,
+                            modTime,
+                            cancellationToken);
                     }
 
                     // Get all known platform definitions
                     var platformDefs = PlatformDefinition.CreateAllPlatforms();
                     var packageFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                    foreach (var (item, frameworks) in collectedItems)
+                    foreach ((FrameworkSpecificGroup item, HashSet<RegistryTargetFramework> frameworks) in collectedItems)
                     {
-                        var folderPrefix = hasMultiNetStandard ? $"{frameworks.First().Name}/" : "";
+                        string folderPrefix = $"{PackagingConstants.Folders.Lib}{Path.DirectorySeparatorChar}{frameworks.First().Name}{Path.DirectorySeparatorChar}";
                         var filesToWrite = new List<PlatformFile>();
 
                         // Get any available runtime library groups
-                        var runtimeLibs = await RuntimeLibraries
+                        List<(string file, UnityOs, UnityCpu?)> runtimeLibs = await RuntimeLibraries
                             .GetSupportedRuntimeLibsAsync(packageReader, item.TargetFramework, _logger)
-                            .ToListAsync();
+                            .ToListAsync(cancellationToken);
 
                         // Mark-up the platforms of all runtime libraries
                         var runtimePlatforms = new HashSet<PlatformDefinition>();
-                        foreach (var (file, os, cpu) in runtimeLibs)
+                        foreach ((string file, UnityOs os, UnityCpu? cpu) in runtimeLibs)
                         {
                             // Reject resource dlls since Unity can't use them and we're not handling paths
                             if (file.EndsWith(".resources.dll", StringComparison.OrdinalIgnoreCase))
@@ -718,7 +760,7 @@ namespace UnityNuGet
                                 continue;
                             }
 
-                            var platformDef = platformDefs.Find(os, cpu);
+                            PlatformDefinition? platformDef = platformDefs.Find(os, cpu);
                             if (platformDef == null)
                             {
                                 LogInformation($"Failed to find a platform definition for: {os}, {cpu}");
@@ -731,12 +773,12 @@ namespace UnityNuGet
                         }
 
                         // Compute the set of platforms covered by the lib dlls
-                        var libPlatforms = platformDefs.GetRemainingPlatforms(runtimePlatforms);
+                        HashSet<PlatformDefinition> libPlatforms = platformDefs.GetRemainingPlatforms(runtimePlatforms);
 
                         // Add the lib files
-                        foreach (var libPlatform in libPlatforms)
+                        foreach (PlatformDefinition libPlatform in libPlatforms)
                         {
-                            foreach (var file in item.Items)
+                            foreach (string? file in item.Items)
                             {
                                 // Reject resource dlls since Unity can't use them and we're not handling paths
                                 if (file.EndsWith(".resources.dll", StringComparison.OrdinalIgnoreCase))
@@ -749,10 +791,10 @@ namespace UnityNuGet
                         }
 
                         // Write the files
-                        foreach (var file in filesToWrite)
+                        foreach (PlatformFile file in filesToWrite)
                         {
                             // Get the destination path
-                            var fileInUnityPackage = file.GetDestinationPath(folderPrefix);
+                            string fileInUnityPackage = file.GetDestinationPath(folderPrefix);
 
                             // Collect the folders' metas
                             {
@@ -770,7 +812,7 @@ namespace UnityNuGet
 
                                 string folder = string.Empty;
 
-                                foreach (var relative in folders)
+                                foreach (string relative in folders)
                                 {
                                     folder = Path.Combine(folder, relative);
                                     packageFolders.Add(folder);
@@ -787,15 +829,15 @@ namespace UnityNuGet
                                 // We will use the define coming from the configuration file
                                 // Otherwise, it means that the assembly is compatible with whatever netstandard, and we can simply
                                 // use NET_STANDARD
-                                var defineConstraints = hasMultiNetStandard
+                                string[]? defineConstraints = hasMultiNetStandard
                                     || hasOnlyNetStandard21
                                     || isPackageNetStandard21Assembly ? frameworks.First(x => x.Framework == item.TargetFramework).DefineConstraints : [];
 
                                 meta = UnityMeta.GetMetaForDll(
                                     GetStableGuid(identity, fileInUnityPackage),
                                     file.Platform,
-                                    Array.Empty<string>(),
-                                    defineConstraints != null ? defineConstraints.Concat(packageEntry.DefineConstraints) : Array.Empty<string>());
+                                    [],
+                                    defineConstraints != null ? defineConstraints.Concat(packageEntry.DefineConstraints) : []);
                             }
                             else
                             {
@@ -810,15 +852,27 @@ namespace UnityNuGet
                             memStream.Position = 0;
                             memStream.SetLength(0);
 
-                            using var stream = await packageReader.GetStreamAsync(file.SourcePath, CancellationToken.None);
-                            await stream.CopyToAsync(memStream);
-                            var buffer = memStream.ToArray();
+                            using Stream stream = await packageReader.GetStreamAsync(file.SourcePath, cancellationToken);
+
+                            await stream.CopyToAsync(memStream, cancellationToken);
+
+                            byte[] buffer = memStream.ToArray();
 
                             // write content
-                            await WriteBufferToTar(tarArchive, fileInUnityPackage, buffer, modTime);
+                            await WriteBufferToTar(
+                                tarArchive,
+                                fileInUnityPackage,
+                                buffer,
+                                modTime,
+                                cancellationToken);
 
                             // write meta file
-                            await WriteTextFileToTar(tarArchive, $"{fileInUnityPackage}.meta", meta, modTime);
+                            await WriteTextFileToTar(
+                                tarArchive,
+                                $"{fileInUnityPackage}.meta",
+                                meta,
+                                modTime,
+                                cancellationToken);
                         }
                     }
 
@@ -828,11 +882,11 @@ namespace UnityNuGet
                     }
 
                     // Write the native libraries
-                    var nativeFiles = NativeLibraries.GetSupportedNativeLibsAsync(packageReader, _logger);
+                    IAsyncEnumerable<(string file, string[] folders, UnityOs os, UnityCpu cpu)> nativeFiles = NativeLibraries.GetSupportedNativeLibsAsync(packageReader, _logger);
 
-                    await foreach (var (file, folders, os, cpu) in nativeFiles)
+                    await foreach ((string file, string[] folders, UnityOs os, UnityCpu cpu) in nativeFiles)
                     {
-                        var platformDef = platformDefs.Find(os, cpu);
+                        PlatformDefinition? platformDef = platformDefs.Find(os, cpu);
                         if (platformDef == null)
                         {
                             LogInformation($"Failed to find a platform definition for: {os}, {cpu}");
@@ -840,10 +894,10 @@ namespace UnityNuGet
                         }
 
                         string extension = Path.GetExtension(file);
-                        var guid = GetStableGuid(identity, file);
+                        Guid guid = GetStableGuid(identity, file);
                         string? meta = extension switch
                         {
-                            ".dll" or ".so" or ".dylib" => UnityMeta.GetMetaForDll(guid, platformDef!, Array.Empty<string>(), Array.Empty<string>()),
+                            ".dll" or ".so" or ".dylib" => UnityMeta.GetMetaForDll(guid, platformDef!, [], []),
                             _ => UnityMeta.GetMetaForExtension(guid, extension)
                         };
 
@@ -854,96 +908,86 @@ namespace UnityNuGet
                         }
 
                         memStream.SetLength(0);
-                        using var stream = await packageReader.GetStreamAsync(file, CancellationToken.None);
-                        await stream.CopyToAsync(memStream);
-                        var buffer = memStream.ToArray();
 
-                        await WriteBufferToTar(tarArchive, file, buffer, modTime);
-                        await WriteTextFileToTar(tarArchive, $"{file}.meta", meta, modTime);
+                        using Stream stream = await packageReader.GetStreamAsync(file, cancellationToken);
+
+                        await stream.CopyToAsync(memStream, cancellationToken);
+
+                        byte[] buffer = memStream.ToArray();
+
+                        await WriteBufferToTar(
+                            tarArchive,
+                            file,
+                            buffer,
+                            modTime,
+                            cancellationToken);
+
+                        await WriteTextFileToTar(
+                            tarArchive,
+                            $"{file}.meta",
+                            meta,
+                            modTime,
+                            cancellationToken);
 
                         // Remember all folders for meta files
                         string folder = string.Empty;
 
-                        foreach (var relative in folders)
+                        foreach (string relative in folders)
                         {
                             folder = Path.Combine(folder, relative);
                             packageFolders.Add(folder);
                         }
                     }
 
-                    foreach (var folder in packageFolders)
+                    foreach (string folder in packageFolders)
                     {
-                        await WriteTextFileToTar(tarArchive, $"{folder}.meta", UnityMeta.GetMetaForFolder(GetStableGuid(identity, folder)), modTime);
+                        await WriteTextFileToTar(
+                            tarArchive,
+                            $"{folder}.meta",
+                            UnityMeta.GetMetaForFolder(GetStableGuid(identity, folder)),
+                            modTime,
+                            cancellationToken);
                     }
 
                     // Write the package,json
-                    var unityPackage = CreateUnityPackage(npmPackageInfo, npmPackageVersion);
-                    var unityPackageAsJson = unityPackage.ToJson();
+                    UnityPackage unityPackage = CreateUnityPackage(npmPackageInfo, npmPackageVersion);
+                    string unityPackageAsJson = await unityPackage.ToJson(
+                        UnityNugetJsonSerializerContext.Default.UnityPackage,
+                        cancellationToken);
                     const string packageJsonFileName = "package.json";
-                    await WriteTextFileToTar(tarArchive, packageJsonFileName, unityPackageAsJson, modTime);
-                    await WriteTextFileToTar(tarArchive, $"{packageJsonFileName}.meta", UnityMeta.GetMetaForExtension(GetStableGuid(identity, packageJsonFileName), ".json")!, modTime);
+
+                    await WriteTextFileToTar(
+                        tarArchive,
+                        packageJsonFileName,
+                        unityPackageAsJson,
+                        modTime,
+                        cancellationToken);
+                    await WriteTextFileToTar(
+                        tarArchive,
+                        $"{packageJsonFileName}.meta",
+                        UnityMeta.GetMetaForExtension(GetStableGuid(identity, packageJsonFileName), ".json")!,
+                        modTime,
+                        cancellationToken);
 
                     // Write the license to the package if any
-                    string? license = null;
-                    string? licenseUrlText = null;
-
-                    var licenseUrl = packageMeta.LicenseMetadata?.LicenseUrl.ToString() ?? packageMeta.LicenseUrl?.ToString();
-                    if (!string.IsNullOrEmpty(licenseUrl))
-                    {
-                        try
-                        {
-                            // Try to fetch the license from an URL
-                            using (var httpClient = new HttpClient())
-                            {
-                                licenseUrlText = await httpClient.GetStringAsync(licenseUrl);
-                            }
-
-                            // If the license text is HTML, try to remove all text
-                            if (licenseUrlText != null)
-                            {
-                                licenseUrlText = licenseUrlText.Trim();
-                                if (licenseUrlText.StartsWith('<'))
-                                {
-                                    try
-                                    {
-                                        licenseUrlText = NUglify.Uglify.HtmlToText(licenseUrlText, HtmlToTextOptions.KeepStructure).Code ?? licenseUrlText;
-                                    }
-                                    catch
-                                    {
-                                        // ignored
-                                    }
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(packageMeta.LicenseMetadata?.License))
-                    {
-                        license = packageMeta.LicenseMetadata.License;
-                    }
-
-                    // If the license fetched from the URL is bigger, use that one to put into the file
-                    if (licenseUrlText != null && (license == null || licenseUrlText.Length > license.Length))
-                    {
-                        license = licenseUrlText;
-                    }
-
-                    if (!string.IsNullOrEmpty(license))
-                    {
-                        const string licenseMdFile = "License.md";
-                        await WriteTextFileToTar(tarArchive, licenseMdFile, license, modTime);
-                        await WriteTextFileToTar(tarArchive, $"{licenseMdFile}.meta", UnityMeta.GetMetaForExtension(GetStableGuid(identity, licenseMdFile), ".md")!, modTime);
-                    }
+                    await TryToWriteLicenseFiles(
+                        packageMeta,
+                        identity,
+                        tarArchive,
+                        modTime,
+                        cancellationToken);
                 }
 
-                using (var stream = File.OpenRead(unityPackageFilePath))
+                using (FileStream stream = File.OpenRead(unityPackageFilePath))
                 {
-                    var sha1 = Sha1sum(stream);
-                    await WriteUnityPackageSha1(identity, npmPackageVersion, sha1);
+                    string sha1 = Sha1sum(stream);
+
+                    await WriteUnityPackageSha1(
+                        identity,
+                        npmPackageVersion,
+                        sha1,
+                        cancellationToken);
+
                     npmPackageVersion.Distribution.Shasum = sha1;
                 }
             }
@@ -962,7 +1006,164 @@ namespace UnityNuGet
             }
         }
 
-        private static Guid GetStableGuid(PackageIdentity identity, string name)
+        private async Task TryToWriteAnalyzerFiles(
+            PackageReaderBase packageReader,
+            PackageIdentity identity,
+            TarOutputStream tarArchive,
+            MemoryStream memStream,
+            DateTime modTime,
+            CancellationToken cancellationToken = default)
+        {
+            IDictionary<string, string> supportedFiles = await RoslynAnalyzersHelper.GetUnitySupportedFiles(
+                packageReader,
+                _roslynAnalyzerVersions,
+                cancellationToken);
+
+            List<string> createdDirectoryList = [];
+
+            foreach (KeyValuePair<string, string> supportedFile in supportedFiles)
+            {
+                string filePath = supportedFile.Key;
+                string meta = supportedFile.Value;
+
+                string folderPrefix = Path.GetDirectoryName(filePath)!;
+
+                // Write folder meta
+                if (!string.IsNullOrEmpty(folderPrefix))
+                {
+                    StringBuilder directoryNameBuilder = new();
+
+                    foreach (string directoryName in folderPrefix.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        directoryNameBuilder.Append(directoryName);
+                        directoryNameBuilder.Append(Path.DirectorySeparatorChar);
+
+                        string processedDirectoryName = directoryNameBuilder.ToString()[0..^1];
+
+                        if (createdDirectoryList.Any(d => d.Equals(processedDirectoryName)))
+                        {
+                            continue;
+                        }
+
+                        createdDirectoryList.Add(processedDirectoryName);
+
+                        // write meta file for the folder
+                        await WriteTextFileToTar(
+                            tarArchive,
+                            $"{processedDirectoryName}.meta",
+                            UnityMeta.GetMetaForFolder(GetStableGuid(identity, processedDirectoryName)),
+                            modTime,
+                            cancellationToken);
+                    }
+                }
+
+                string fileInUnityPackage = $"{folderPrefix}{Path.DirectorySeparatorChar}{Path.GetFileName(filePath)}";
+
+                memStream.Position = 0;
+                memStream.SetLength(0);
+
+                using Stream stream = await packageReader.GetStreamAsync(filePath, cancellationToken);
+
+                await stream.CopyToAsync(memStream, cancellationToken);
+
+                byte[] buffer = memStream.ToArray();
+
+                // write content
+                await WriteBufferToTar(
+                    tarArchive,
+                    fileInUnityPackage,
+                    buffer,
+                    modTime,
+                    cancellationToken);
+
+                // write meta file
+                await WriteTextFileToTar(
+                    tarArchive,
+                    $"{fileInUnityPackage}.meta",
+                    meta,
+                    modTime,
+                    cancellationToken);
+            }
+        }
+
+        private static async Task TryToWriteLicenseFiles(
+            IPackageSearchMetadata packageMeta,
+            PackageIdentity identity,
+            TarOutputStream tarArchive,
+            DateTime modTime,
+            CancellationToken cancellationToken = default)
+        {
+            string? license = null;
+            string? licenseUrlText = null;
+
+            string? licenseUrl = packageMeta.LicenseMetadata?.LicenseUrl.ToString() ?? packageMeta.LicenseUrl?.ToString();
+
+            if (!string.IsNullOrEmpty(licenseUrl))
+            {
+                try
+                {
+                    // Try to fetch the license from an URL
+                    using (var httpClient = new HttpClient())
+                    {
+                        licenseUrlText = await httpClient.GetStringAsync(licenseUrl, cancellationToken);
+                    }
+
+                    // If the license text is HTML, try to remove all text
+                    if (licenseUrlText != null)
+                    {
+                        licenseUrlText = licenseUrlText.Trim();
+
+                        if (licenseUrlText.StartsWith('<'))
+                        {
+                            try
+                            {
+                                licenseUrlText = NUglify.Uglify.HtmlToText(licenseUrlText, HtmlToTextOptions.KeepStructure).Code ?? licenseUrlText;
+                            }
+                            catch
+                            {
+                                // ignored
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+
+            if (!string.IsNullOrEmpty(packageMeta.LicenseMetadata?.License))
+            {
+                license = packageMeta.LicenseMetadata.License;
+            }
+
+            // If the license fetched from the URL is bigger, use that one to put into the file
+            if (licenseUrlText != null && (license == null || licenseUrlText.Length > license.Length))
+            {
+                license = licenseUrlText;
+            }
+
+            if (!string.IsNullOrEmpty(license))
+            {
+                const string licenseMdFile = "License.md";
+
+                await WriteTextFileToTar(
+                    tarArchive,
+                    licenseMdFile,
+                    license,
+                    modTime,
+                    cancellationToken);
+
+                await WriteTextFileToTar(
+                    tarArchive,
+                    $"{licenseMdFile}.meta",
+                    UnityMeta.GetMetaForExtension(GetStableGuid(identity, licenseMdFile), ".md")!,
+                    modTime,
+                    cancellationToken);
+            }
+        }
+
+        internal static Guid GetStableGuid(PackageIdentity identity, string name)
         {
             return StringToGuid($"{identity.Id}/{name}*");
         }
@@ -990,11 +1191,13 @@ namespace UnityNuGet
         private void DeleteUnityPackage(PackageIdentity identity, NpmPackageVersion packageVersion)
         {
             var packageFile = new FileInfo(GetUnityPackagePath(identity, packageVersion));
+
             if (packageFile.Exists)
             {
                 packageFile.Delete();
             }
             var sha1File = new FileInfo(GetUnityPackageSha1Path(identity, packageVersion));
+
             if (sha1File.Exists)
             {
                 sha1File.Delete();
@@ -1004,23 +1207,32 @@ namespace UnityNuGet
         private bool IsUnityPackageValid(PackageIdentity identity, NpmPackageVersion packageVersion)
         {
             var packageFile = new FileInfo(GetUnityPackagePath(identity, packageVersion));
+
             return packageFile.Exists && packageFile.Length > 0;
         }
 
         private bool IsUnityPackageSha1Valid(PackageIdentity identity, NpmPackageVersion packageVersion)
         {
             var sha1File = new FileInfo(GetUnityPackageSha1Path(identity, packageVersion));
+
             return sha1File.Exists && sha1File.Length > 0;
         }
 
-        private async Task<string> ReadUnityPackageSha1(PackageIdentity identity, NpmPackageVersion packageVersion)
+        private async Task<string> ReadUnityPackageSha1(
+            PackageIdentity identity,
+            NpmPackageVersion packageVersion,
+            CancellationToken cancellationToken = default)
         {
-            return await File.ReadAllTextAsync(GetUnityPackageSha1Path(identity, packageVersion));
+            return await File.ReadAllTextAsync(GetUnityPackageSha1Path(identity, packageVersion), cancellationToken);
         }
 
-        private async Task WriteUnityPackageSha1(PackageIdentity identity, NpmPackageVersion packageVersion, string sha1)
+        private async Task WriteUnityPackageSha1(
+            PackageIdentity identity,
+            NpmPackageVersion packageVersion,
+            string sha1,
+            CancellationToken cancellationToken = default)
         {
-            await File.WriteAllTextAsync(GetUnityPackageSha1Path(identity, packageVersion), sha1);
+            await File.WriteAllTextAsync(GetUnityPackageSha1Path(identity, packageVersion), sha1, cancellationToken);
         }
 
         private string GetUnityPackagePath(PackageIdentity identity, NpmPackageVersion packageVersion) => Path.Combine(_rootPersistentFolder, GetUnityPackageFileName(identity, packageVersion));
@@ -1032,18 +1244,21 @@ namespace UnityNuGet
         private bool TryReadPackageCacheEntry(string packageName, [NotNullWhen(true)] out NpmPackageCacheEntry? cacheEntry)
         {
             cacheEntry = null;
-            var path = GetUnityPackageDescPath(packageName);
+
+            string path = GetUnityPackageDescPath(packageName);
 
             if (!File.Exists(path)) return false;
 
             try
             {
-                var cacheEntryAsJson = File.ReadAllText(path);
-                cacheEntry = JsonConvert.DeserializeObject<NpmPackageCacheEntry>(cacheEntryAsJson, JsonCommonExtensions.Settings);
+                string cacheEntryAsJson = File.ReadAllText(path);
+                cacheEntry = JsonSerializer.Deserialize(cacheEntryAsJson, UnityNugetJsonSerializerContext.Default.NpmPackageCacheEntry);
+
                 if (cacheEntry != null)
                 {
                     cacheEntry.Json = cacheEntryAsJson;
                 }
+
                 return cacheEntry != null;
             }
             catch
@@ -1054,14 +1269,21 @@ namespace UnityNuGet
             return false;
         }
 
-        private async Task WritePackageCacheEntry(string packageName, NpmPackageCacheEntry cacheEntry)
+        private async Task WritePackageCacheEntry(
+            string packageName,
+            NpmPackageCacheEntry cacheEntry,
+            CancellationToken cancellationToken = default)
         {
-            var path = GetUnityPackageDescPath(packageName);
-            var newJson = cacheEntry.ToJson();
+            string path = GetUnityPackageDescPath(packageName);
+            string newJson = await cacheEntry.ToJson(UnityNugetJsonSerializerContext.Default.NpmPackageCacheEntry, cancellationToken);
+
             // Only update if entry is different
             if (!string.Equals(newJson, cacheEntry.Json, StringComparison.InvariantCulture))
             {
-                await File.WriteAllTextAsync(path, cacheEntry.ToJson());
+                await File.WriteAllTextAsync(
+                    path,
+                    await cacheEntry.ToJson(UnityNugetJsonSerializerContext.Default.NpmPackageCacheEntry, cancellationToken),
+                    cancellationToken);
             }
         }
 
@@ -1071,7 +1293,8 @@ namespace UnityNuGet
             ArgumentNullException.ThrowIfNull(filePath);
             ArgumentNullException.ThrowIfNull(content);
 
-            var buffer = Utf8EncodingNoBom.GetBytes(content);
+            byte[] buffer = s_utf8EncodingNoBom.GetBytes(content);
+
             await WriteBufferToTar(tarOut, filePath, buffer, modTime, cancellationToken);
         }
 
@@ -1087,6 +1310,7 @@ namespace UnityNuGet
             var tarEntry = TarEntry.CreateTarEntry($"package/{filePath}");
             tarEntry.ModTime = modTime;
             tarEntry.Size = buffer.Length;
+
             await tarOut.PutNextEntryAsync(tarEntry, cancellationToken);
             await tarOut.WriteAsync(buffer, cancellationToken);
             await tarOut.CloseEntryAsync(cancellationToken);
@@ -1104,6 +1328,7 @@ namespace UnityNuGet
             };
             unityPackage.Dependencies.AddRange(npmPackageVersion.Dependencies);
             unityPackage.Keywords.AddRange(npmPackageInfo.Keywords);
+
             return unityPackage;
         }
 
@@ -1118,21 +1343,23 @@ namespace UnityNuGet
 
         private static Guid StringToGuid(string text)
         {
-            var guid = new byte[16];
-            var inputBytes = Encoding.UTF8.GetBytes(text);
-            var hash = SHA1.HashData(inputBytes);
+            byte[] guid = new byte[16];
+            byte[] inputBytes = Encoding.UTF8.GetBytes(text);
+            byte[] hash = SHA1.HashData(inputBytes);
+
             Array.Copy(hash, 0, guid, 0, guid.Length);
 
             // Follow UUID for SHA1 based GUID
             const int version = 5; // SHA1 (3 for MD5)
             guid[6] = (byte)((guid[6] & 0x0F) | (version << 4));
             guid[8] = (byte)((guid[8] & 0x3F) | 0x80);
+
             return new Guid(guid);
         }
 
         private static string Sha1sum(Stream stream)
         {
-            var hash = SHA1.HashData(stream);
+            byte[] hash = SHA1.HashData(stream);
             var sb = new StringBuilder(hash.Length * 2);
 
             foreach (byte b in hash)
@@ -1172,7 +1399,7 @@ namespace UnityNuGet
 
             char[] separators = [',', ';'];
 
-            foreach (var entry in input.Split(separators, StringSplitOptions.RemoveEmptyEntries))
+            foreach (string entry in input.Split(separators, StringSplitOptions.RemoveEmptyEntries))
             {
                 list.Add(entry.Trim());
             }

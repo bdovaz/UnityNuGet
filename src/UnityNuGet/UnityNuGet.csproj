@@ -21,9 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ICSharpCode.Decompiler" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="NuGet.PackageManagement" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="NUglify" />
     <PackageReference Include="Scriban" />
     <PackageReference Include="SharpZipLib" />
