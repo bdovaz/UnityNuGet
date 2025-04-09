@@ -1955,6 +1955,15 @@
         "listed": true,
         "version": "12.0.0"
     },
+    "ZLinq": {
+        "listed": true,
+        "version": "0.5.0"
+    },
+    "ZLinq.DropInGenerator": {
+        "listed": true,
+        "version": "0.5.0",
+        "analyzer": true
+    },
     "ZLogger": {
         "listed": true,
         "version": "2.0.1"
@@ -1966,13 +1975,5 @@
     "ZString": {
         "listed": true,
         "version": "0.1.0"
-    },
-    "ZLinq": {
-        "listed": true,
-        "version": "1.0.0"
-    },
-    "ZLinq.DropInGenerator": {
-        "listed": true,
-        "version": "1.0.0"
     }
 }
