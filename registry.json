@@ -413,12 +413,12 @@
         "version": "0.7.0"
     },
     "Duende.IdentityModel": {
-      "listed": true,
-      "version": "7.0.0"
+        "listed": true,
+        "version": "7.0.0"
     },
     "Duende.IdentityModel.OidcClient": {
-      "listed": true,
-      "version": "6.0.0"
+        "listed": true,
+        "version": "6.0.0"
     },
     "Eflatun.Expansions": {
         "listed": true,
@@ -1966,5 +1966,13 @@
     "ZString": {
         "listed": true,
         "version": "0.1.0"
+    },
+    "ZLinq": {
+        "listed": true,
+        "version": "1.0.0"
+    },
+    "ZLinq.DropInGenerator": {
+        "listed": true,
+        "version": "1.0.0"
     }
 }
