@@ -413,12 +413,12 @@
         "version": "0.7.0"
     },
     "Duende.IdentityModel": {
-        "listed": true,
-        "version": "7.0.0"
+      "listed": true,
+      "version": "7.0.0"
     },
     "Duende.IdentityModel.OidcClient": {
-        "listed": true,
-        "version": "6.0.0"
+      "listed": true,
+      "version": "6.0.0"
     },
     "Eflatun.Expansions": {
         "listed": true,
