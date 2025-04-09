@@ -25,8 +25,6 @@ builder.Services.Configure<RegistryOptions>(builder.Configuration.GetSection("Re
 builder.Services.AddSingleton<IValidateOptions<RegistryOptions>, ValidateRegistryOptions>();
 builder.Services.AddOptionsWithValidateOnStart<RegistryOptions, ValidateRegistryOptions>();
 
-builder.Services.AddApplicationInsightsTelemetry();
-
 builder.Services.Configure<JsonOptions>(options =>
 {
     foreach (JsonConverter converter in UnityNugetJsonSerializerContext.Default.Options.Converters)
