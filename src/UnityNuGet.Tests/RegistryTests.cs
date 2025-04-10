@@ -172,8 +172,6 @@ namespace UnityNuGet.Tests
                 @"GraphQL.Client.Serializer.Newtonsoft",
                 // Version 3.1.8 has dependency on `Panic.StringUtils` which doesn't support .netstandard2.0 or 2.1. Rest of versions are fine.
                 @"GraphQL.Client.Serializer.SystemTextJson",
-                // Versions prior to 1.11.24 depend on System.Xml.XPath.XmlDocument which does not target .netstandard2.0
-                @"HtmlAgilityPack",
                 // Although 2.x targets .netstandard2.0 it has an abandoned dependency (Remotion.Linq) that does not target .netstandard2.0.
                 // 3.1.0 is set because 3.0.x only targets .netstandard2.1.
                 @"Microsoft.EntityFrameworkCore.*",
