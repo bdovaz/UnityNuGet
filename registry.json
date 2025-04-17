@@ -1979,5 +1979,9 @@
     "ZString": {
         "listed": true,
         "version": "0.1.0"
+    },
+    "ZXing.Net": {
+        "listed": true,
+        "version": "0.16.4"
     }
 }
