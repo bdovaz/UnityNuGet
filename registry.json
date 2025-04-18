@@ -330,7 +330,8 @@
     },
     "CommunityToolkit.Mvvm": {
         "listed": true,
-        "version": "7.0.1"
+        "version": "7.0.1",
+        "analyzer": true
     },
     "ComradeVanti.CSharpTools.Opt": {
         "listed": true,
@@ -1037,7 +1038,8 @@
     },
     "Microsoft.Extensions.Logging.Abstractions": {
         "listed": true,
-        "version": "2.0.0"
+        "version": "2.0.0",
+        "analyzer": true
     },
     "Microsoft.Extensions.Logging.Configuration": {
         "listed": true,
@@ -1833,7 +1835,8 @@
     },
     "System.Text.Json": {
         "listed": true,
-        "version": "4.6.0"
+        "version": "4.6.0",
+        "analyzer": true
     },
     "System.Threading.Channels": {
         "listed": true,
