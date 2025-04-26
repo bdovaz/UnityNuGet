@@ -755,6 +755,27 @@
         "listed": true,
         "version": "1.6.0"
     },
+    "MemoryPack": {
+        "listed": true,
+        "version": "1.21.1"
+    },
+    "MemoryPack.Core": {
+        "listed": true,
+        "version": "1.21.1"
+    },
+    "MemoryPack.Generator": {
+        "listed": true,
+        "version": "1.21.1",
+        "analyzer": true
+    },
+    "MemoryPack.Streaming": {
+        "listed": true,
+        "version": "1.21.1"
+    },
+    "MemoryPack.UnityShims": {
+        "listed": true,
+        "version": "1.21.1"
+    },
     "MessagePack": {
         "listed": true,
         "version": "1.7.0"
