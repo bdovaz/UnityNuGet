@@ -175,11 +175,11 @@ namespace UnityNuGet
         /// <summary>
         /// Build the registry cache.
         /// </summary>
-        public async Task Build()
+        public async Task Build(CancellationToken cancellationToken = default)
         {
             try
             {
-                await BuildInternal();
+                await BuildInternal(cancellationToken);
             }
             catch (Exception ex)
             {

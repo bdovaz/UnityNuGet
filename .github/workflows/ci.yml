@@ -1,9 +1,6 @@
 ---
 name: ci
 
-env:
-  PROJECT_NAME: UnityNuGet
-
 on:
   push:
     branches:
@@ -22,7 +19,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout

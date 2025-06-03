@@ -5,7 +5,7 @@ using NuGet.Common;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using LogLevel = NuGet.Common.LogLevel;
 
-namespace UnityNuGet.Server
+namespace UnityNuGet
 {
     /// <summary>
     /// A NuGet logger redirecting to a <see cref="ILogger"/>

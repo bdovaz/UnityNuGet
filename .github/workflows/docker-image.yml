@@ -7,7 +7,6 @@ on:
   pull_request:
 
 env:
-  PROJECT_NAME: UnityNuGet
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
