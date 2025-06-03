@@ -55,7 +55,7 @@ namespace UnityNuGet.Server.Tests
 
             string responseContent = await response.Content.ReadAsStringAsync();
 
-            NpmPackageListAllResponse npmPackageListAllResponse = JsonSerializer.Deserialize(responseContent, UnityNugetJsonSerializerContext.Default.NpmPackageListAllResponse)!;
+            NpmPackageListAllResponse npmPackageListAllResponse = JsonSerializer.Deserialize(responseContent, UnityNuGetJsonSerializerContext.Default.NpmPackageListAllResponse)!;
 
             Assert.That(npmPackageListAllResponse.Packages, Has.Count.EqualTo(1));
 
@@ -83,7 +83,7 @@ namespace UnityNuGet.Server.Tests
 
             string responseContent = await response.Content.ReadAsStringAsync();
 
-            NpmError npmError = JsonSerializer.Deserialize(responseContent, UnityNugetJsonSerializerContext.Default.NpmError)!;
+            NpmError npmError = JsonSerializer.Deserialize(responseContent, UnityNuGetJsonSerializerContext.Default.NpmError)!;
 
             Assert.That(npmError.Error, Is.EqualTo("not_found"));
         }
@@ -103,7 +103,7 @@ namespace UnityNuGet.Server.Tests
 
             string responseContent = await response.Content.ReadAsStringAsync();
 
-            NpmPackage npmPackage = JsonSerializer.Deserialize(responseContent, UnityNugetJsonSerializerContext.Default.NpmPackage)!;
+            NpmPackage npmPackage = JsonSerializer.Deserialize(responseContent, UnityNuGetJsonSerializerContext.Default.NpmPackage)!;
 
             Assert.Multiple(() =>
             {
@@ -132,7 +132,7 @@ namespace UnityNuGet.Server.Tests
 
             string responseContent = await response.Content.ReadAsStringAsync();
 
-            NpmError npmError = JsonSerializer.Deserialize(responseContent, UnityNugetJsonSerializerContext.Default.NpmError)!;
+            NpmError npmError = JsonSerializer.Deserialize(responseContent, UnityNuGetJsonSerializerContext.Default.NpmError)!;
 
             Assert.That(npmError.Error, Is.EqualTo("not_found"));
         }
