@@ -27,7 +27,7 @@ builder.Services.AddOptionsWithValidateOnStart<RegistryOptions, ValidateRegistry
 
 builder.Services.Configure<JsonOptions>(options =>
 {
-    foreach (JsonConverter converter in UnityNugetJsonSerializerContext.Default.Options.Converters)
+    foreach (JsonConverter converter in UnityNuGetJsonSerializerContext.Default.Options.Converters)
     {
         options.SerializerOptions.Converters.Add(converter);
     }

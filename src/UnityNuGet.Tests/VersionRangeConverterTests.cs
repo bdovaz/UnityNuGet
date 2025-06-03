@@ -12,14 +12,14 @@ namespace UnityNuGet.Tests
         {
             string json = @"{""ignore"":false,""listed"":false,""version"":""[1.2.3, )"",""defineConstraints"":[],""analyzer"":false,""includePrerelease"":false,""includeUnlisted"":false}";
 
-            RegistryEntry registryEntry = JsonSerializer.Deserialize(json, UnityNugetJsonSerializerContext.Default.RegistryEntry)!;
+            RegistryEntry registryEntry = JsonSerializer.Deserialize(json, UnityNuGetJsonSerializerContext.Default.RegistryEntry)!;
 
             Assert.That(registryEntry, Is.EqualTo(new RegistryEntry
             {
                 Version = new VersionRange(new NuGetVersion(1, 2, 3))
             }).Using(new RegistryEntryEqualityComparer()));
 
-            string newJson = JsonSerializer.Serialize(registryEntry, UnityNugetJsonSerializerContext.Default.RegistryEntry)!;
+            string newJson = JsonSerializer.Serialize(registryEntry, UnityNuGetJsonSerializerContext.Default.RegistryEntry)!;
 
             Assert.That(newJson, Is.EqualTo(json));
         }
