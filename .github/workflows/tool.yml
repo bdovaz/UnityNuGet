@@ -44,11 +44,11 @@ jobs:
 
       - name: Pack
         if: ${{ success() && env.UNITYNUGET_DEPLOY != 1 }}
-        run: dotnet pack src/UnityNuGet.Tool -c Release -o ${{ runner.temp }}
+        run: dotnet pack src/UnityNuGet.Tool.csproj -c Release -o ${{ runner.temp }}
 
       - name: Pack (Release)
         if: ${{ success() && env.UNITYNUGET_DEPLOY == 1 }}
-        run: dotnet pack src/UnityNuGet.Tool -c Release -p:PackageVersion=$UNITYNUGET_VERSION -o ${{ runner.temp }}
+        run: dotnet pack src/UnityNuGet.Tool.csproj -c Release -p:PackageVersion=$UNITYNUGET_VERSION -o ${{ runner.temp }}
 
       - name: Publish (Release)
         if: ${{ success() && env.UNITYNUGET_DEPLOY == 1 }}
