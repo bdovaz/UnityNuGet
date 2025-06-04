@@ -1,4 +1,4 @@
-# UnityNuGet [![Build Status](https://img.shields.io/github/actions/workflow/status/bdovaz/UnityNuGet/ci.yml?branch=master)](https://github.com/xoofx/UnityNuGet/actions) [![Static Badge](https://img.shields.io/badge/server-status-blue)](https://unitynuget-registry.openupm.com/status) [![Static Badge](https://img.shields.io/badge/server-feed-blue)](https://unitynuget-registry.openupm.com/-/all)
+# UnityNuGet [![Build Status](https://img.shields.io/github/actions/workflow/status/bdovaz/UnityNuGet/ci.yml?branch=master)](https://github.com/xoofx/UnityNuGet/actions) [![Server Status](https://img.shields.io/badge/server-status-blue)](https://unitynuget-registry.openupm.com/status) [![Server Feed](https://img.shields.io/badge/server-feed-blue)](https://unitynuget-registry.openupm.com/-/all) [![NuGet Package](https://img.shields.io/nuget/v/UnityNuGet.Tool)](https://www.nuget.org/packages/UnityNuGet.Tool)
 
 <img align="right" width="160px" height="160px" alt="UnityNuGet logo" src="img/unitynuget.png">
 
