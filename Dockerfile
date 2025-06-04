@@ -2,19 +2,24 @@ FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG TARGETARCH
 WORKDIR /app
 
-RUN mkdir -p src/UnityNuGet && mkdir -p src/UnityNuGet.Server && mkdir -p src/UnityNuGet.Tests && mkdir -p src/UnityNuGet.Server.Tests
+RUN mkdir -p src/UnityNuGet && \
+    mkdir -p src/UnityNuGet.Server && \
+    mkdir -p src/UnityNuGet.Server.Tests && \
+    mkdir -p src/UnityNuGet.Tests && \
+    mkdir -p src/UnityNuGet.Tool
 
 COPY src/Directory.Build.props src/Directory.Build.props
 COPY src/Directory.Packages.props src/Directory.Packages.props
 COPY src/*.sln src
 COPY src/UnityNuGet/*.csproj src/UnityNuGet
 COPY src/UnityNuGet.Server/*.csproj src/UnityNuGet.Server
-COPY src/UnityNuGet.Tests/*.csproj src/UnityNuGet.Tests
 COPY src/UnityNuGet.Server.Tests/*.csproj src/UnityNuGet.Server.Tests
-RUN dotnet restore src -a $TARGETARCH
+COPY src/UnityNuGet.Tests/*.csproj src/UnityNuGet.Tests
+COPY src/UnityNuGet.Tool/*.csproj src/UnityNuGet.Tool
+RUN dotnet restore src -a "$TARGETARCH"
 
 COPY . ./
-RUN dotnet publish src/UnityNuGet.Server -a $TARGETARCH -c Release -o /app/src/out
+RUN dotnet publish src/UnityNuGet.Server -a "$TARGETARCH" -c Release -o /app/src/out
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:9.0

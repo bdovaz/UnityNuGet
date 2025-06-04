@@ -12,14 +12,14 @@ namespace UnityNuGet.Tests
         {
             string json = @"{""TestPackage"":{""name"":""TestPackage"",""description"":null,""maintainers"":[],""versions"":{},""time"":null,""keywords"":[],""author"":null}}";
 
-            NpmPackageListAllResponse response = JsonSerializer.Deserialize(json, UnityNugetJsonSerializerContext.Default.NpmPackageListAllResponse)!;
+            NpmPackageListAllResponse response = JsonSerializer.Deserialize(json, UnityNuGetJsonSerializerContext.Default.NpmPackageListAllResponse)!;
 
             Assert.That(response.Packages, Is.EquivalentTo(new Dictionary<string, NpmPackageInfo>
             {
                 { "TestPackage", new NpmPackageInfo { Name = "TestPackage" } }
             }).Using(new NpmPackageInfoEqualityComparer()));
 
-            string newJson = JsonSerializer.Serialize(response, UnityNugetJsonSerializerContext.Default.NpmPackageListAllResponse)!;
+            string newJson = JsonSerializer.Serialize(response, UnityNuGetJsonSerializerContext.Default.NpmPackageListAllResponse)!;
 
             Assert.That(newJson, Is.EqualTo(json));
         }

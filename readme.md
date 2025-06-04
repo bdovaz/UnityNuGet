@@ -136,6 +136,16 @@ To add a private feed, the following fields must be filled in:
 </configuration>
 ```
 
+## dotnet tool installation
+
+UnityNuGet is also distributed as a dotnet tool. The difference is that in this case it does not act as a server but as a process that processes all the packages in `registry.json` in one pass.
+
+This use case is useful when you simply don't want to depend on an external server and want your dependencies to be [local packages](https://docs.unity3d.com/6000.1/Documentation/Manual/upm-localpath.html).
+
+To use it, once installed with `dotnet install -g UnityNuGet.Tool` simply run the command `unityNuGet`.
+
+> Note that an `appsettings.json` file must exist in the working directory from which the command is executed.
+
 ## FAQ
 
 ### **Where is hosted this service?**

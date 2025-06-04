@@ -122,15 +122,15 @@
     },
     "AWSSDK.Core": {
         "listed": true,
-        "version": "3.7.302.8"
+        "version": "4.0.0"
     },
     "AWSSDK.S3": {
         "listed": true,
-        "version": "3.7.302.8"
+        "version": "4.0.0"
     },
     "AWSSDK.SecurityToken": {
         "listed": true,
-        "version": "3.7.302.8"
+        "version": "4.0.0"
     },
     "Ben.Demystifier": {
         "listed": true,
@@ -741,7 +741,7 @@
     },
     "log4net": {
         "listed": true,
-        "version": "2.0.9"
+        "version": "2.0.10"
     },
     "MathNet.Numerics": {
         "listed": true,

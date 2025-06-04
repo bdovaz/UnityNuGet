@@ -36,11 +36,11 @@ namespace Microsoft.AspNetCore.Builder
             {
                 if (!TryGetInstance(registryCacheSingleton, registryCacheReport, out RegistryCache? instance, out NpmError? error))
                 {
-                    return Results.Json(error, UnityNugetJsonSerializerContext.Default);
+                    return Results.Json(error, UnityNuGetJsonSerializerContext.Default);
                 }
 
                 NpmPackageListAllResponse? result = instance?.All();
-                return Results.Json(result, UnityNugetJsonSerializerContext.Default);
+                return Results.Json(result, UnityNuGetJsonSerializerContext.Default);
             });
         }
 
@@ -50,16 +50,16 @@ namespace Microsoft.AspNetCore.Builder
             {
                 if (!TryGetInstance(registryCacheSingleton, registryCacheReport, out RegistryCache? instance, out NpmError? error))
                 {
-                    return Results.Json(error, UnityNugetJsonSerializerContext.Default);
+                    return Results.Json(error, UnityNuGetJsonSerializerContext.Default);
                 }
 
                 NpmPackage? package = instance?.GetPackage(id);
                 if (package == null)
                 {
-                    return Results.Json(NpmError.NotFound, UnityNugetJsonSerializerContext.Default);
+                    return Results.Json(NpmError.NotFound, UnityNuGetJsonSerializerContext.Default);
                 }
 
-                return Results.Json(package, UnityNugetJsonSerializerContext.Default);
+                return Results.Json(package, UnityNuGetJsonSerializerContext.Default);
             });
         }
 
@@ -69,24 +69,24 @@ namespace Microsoft.AspNetCore.Builder
             {
                 if (!TryGetInstance(registryCacheSingleton, registryCacheReport, out RegistryCache? instance, out NpmError? error))
                 {
-                    return Results.Json(error, UnityNugetJsonSerializerContext.Default);
+                    return Results.Json(error, UnityNuGetJsonSerializerContext.Default);
                 }
 
                 NpmPackage? package = instance?.GetPackage(id);
                 if (package == null)
                 {
-                    return Results.Json(NpmError.NotFound, UnityNugetJsonSerializerContext.Default);
+                    return Results.Json(NpmError.NotFound, UnityNuGetJsonSerializerContext.Default);
                 }
 
                 if (!file.StartsWith(id + "-") || !file.EndsWith(".tgz"))
                 {
-                    return Results.Json(NpmError.NotFound, UnityNugetJsonSerializerContext.Default);
+                    return Results.Json(NpmError.NotFound, UnityNuGetJsonSerializerContext.Default);
                 }
 
                 string? filePath = instance?.GetPackageFilePath(file);
                 if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
                 {
-                    return Results.Json(NpmError.NotFound, UnityNugetJsonSerializerContext.Default);
+                    return Results.Json(NpmError.NotFound, UnityNuGetJsonSerializerContext.Default);
                 }
 
                 // This method can be called with HEAD request, so in that case we just calculate the content length

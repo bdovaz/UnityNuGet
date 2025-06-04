@@ -62,7 +62,7 @@ namespace UnityNuGet.Tests
             Assert.That(errorsTriggered, Is.False, "The registry failed to build, check the logs");
 
             NpmPackageListAllResponse allResult = registryCache.All();
-            string allResultJson = await allResult.ToJson(UnityNugetJsonSerializerContext.Default.NpmPackageListAllResponse);
+            string allResultJson = await allResult.ToJson(UnityNuGetJsonSerializerContext.Default.NpmPackageListAllResponse);
 
             Assert.That(allResultJson, Does.Contain("org.nuget.rhino3dm"));
 
@@ -70,7 +70,7 @@ namespace UnityNuGet.Tests
 
             Assert.That(rhinoPackage, Is.Not.Null);
 
-            string rhinopackageJson = await rhinoPackage!.ToJson(UnityNugetJsonSerializerContext.Default.NpmPackage);
+            string rhinopackageJson = await rhinoPackage!.ToJson(UnityNuGetJsonSerializerContext.Default.NpmPackage);
 
             Assert.That(rhinopackageJson, Does.Contain("org.nuget.rhino3dm"));
             Assert.That(rhinopackageJson, Does.Contain("7.11.0"));

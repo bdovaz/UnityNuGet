@@ -65,7 +65,7 @@ namespace UnityNuGet
 
             using Stream stream = File.OpenRead(registryFilePath);
 
-            IDictionary<string, RegistryEntry>? data = await JsonSerializer.DeserializeAsync(stream, UnityNugetJsonSerializerContext.Default.IDictionaryStringRegistryEntry, cancellationToken);
+            IDictionary<string, RegistryEntry>? data = await JsonSerializer.DeserializeAsync(stream, UnityNuGetJsonSerializerContext.Default.IDictionaryStringRegistryEntry, cancellationToken);
 
             _data = new Dictionary<string, RegistryEntry>(data!, StringComparer.OrdinalIgnoreCase);
         }

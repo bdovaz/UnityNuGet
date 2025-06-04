@@ -175,11 +175,11 @@ namespace UnityNuGet
         /// <summary>
         /// Build the registry cache.
         /// </summary>
-        public async Task Build()
+        public async Task Build(CancellationToken cancellationToken = default)
         {
             try
             {
-                await BuildInternal();
+                await BuildInternal(cancellationToken);
             }
             catch (Exception ex)
             {
@@ -701,7 +701,7 @@ namespace UnityNuGet
                         // Check Analyzer Scope section: https://docs.unity3d.com/Manual/roslyn-analyzers.html
                         UnityAsmdef analyzerAsmdef = CreateAnalyzerAmsdef(identity);
                         string analyzerAsmdefAsJson = await analyzerAsmdef.ToJson(
-                            UnityNugetJsonSerializerContext.Default.UnityAsmdef,
+                            UnityNuGetJsonSerializerContext.Default.UnityAsmdef,
                             cancellationToken);
                         string analyzerAsmdefFileName = $"{identity.Id}.asmdef";
 
@@ -952,7 +952,7 @@ namespace UnityNuGet
                     // Write the package,json
                     UnityPackage unityPackage = CreateUnityPackage(npmPackageInfo, npmPackageVersion);
                     string unityPackageAsJson = await unityPackage.ToJson(
-                        UnityNugetJsonSerializerContext.Default.UnityPackage,
+                        UnityNuGetJsonSerializerContext.Default.UnityPackage,
                         cancellationToken);
                     const string packageJsonFileName = "package.json";
 
@@ -1252,7 +1252,7 @@ namespace UnityNuGet
             try
             {
                 string cacheEntryAsJson = File.ReadAllText(path);
-                cacheEntry = JsonSerializer.Deserialize(cacheEntryAsJson, UnityNugetJsonSerializerContext.Default.NpmPackageCacheEntry);
+                cacheEntry = JsonSerializer.Deserialize(cacheEntryAsJson, UnityNuGetJsonSerializerContext.Default.NpmPackageCacheEntry);
 
                 if (cacheEntry != null)
                 {
@@ -1275,14 +1275,14 @@ namespace UnityNuGet
             CancellationToken cancellationToken = default)
         {
             string path = GetUnityPackageDescPath(packageName);
-            string newJson = await cacheEntry.ToJson(UnityNugetJsonSerializerContext.Default.NpmPackageCacheEntry, cancellationToken);
+            string newJson = await cacheEntry.ToJson(UnityNuGetJsonSerializerContext.Default.NpmPackageCacheEntry, cancellationToken);
 
             // Only update if entry is different
             if (!string.Equals(newJson, cacheEntry.Json, StringComparison.InvariantCulture))
             {
                 await File.WriteAllTextAsync(
                     path,
-                    await cacheEntry.ToJson(UnityNugetJsonSerializerContext.Default.NpmPackageCacheEntry, cancellationToken),
+                    await cacheEntry.ToJson(UnityNuGetJsonSerializerContext.Default.NpmPackageCacheEntry, cancellationToken),
                     cancellationToken);
             }
         }

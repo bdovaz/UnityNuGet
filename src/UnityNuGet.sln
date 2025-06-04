@@ -26,6 +26,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityNuGet.Server.Tests", "UnityNuGet.Server.Tests\UnityNuGet.Server.Tests.csproj", "{5733BC0F-D7E2-494C-AC40-67051FD921DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityNuGet.Tool", "UnityNuGet.Tool\UnityNuGet.Tool.csproj", "{6C9FF298-2022-42B4-8A89-28F81EF47037}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,6 +50,10 @@ Global
 		{5733BC0F-D7E2-494C-AC40-67051FD921DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5733BC0F-D7E2-494C-AC40-67051FD921DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5733BC0F-D7E2-494C-AC40-67051FD921DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C9FF298-2022-42B4-8A89-28F81EF47037}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C9FF298-2022-42B4-8A89-28F81EF47037}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C9FF298-2022-42B4-8A89-28F81EF47037}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C9FF298-2022-42B4-8A89-28F81EF47037}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

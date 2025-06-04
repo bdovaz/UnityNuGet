@@ -1,0 +1,58 @@
+---
+name: tool
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - doc/**
+      - img/**
+      - changelog.md
+      - readme.md
+  pull_request:
+    paths-ignore:
+      - doc/**
+      - img/**
+      - changelog.md
+      - readme.md
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Should Deploy?
+        if: ${{ success() && github.event_name == 'push' }}
+        shell: pwsh
+        run: |
+          if ("${{github.ref}}" -match "^refs/tags/([0-9]+\.[0-9]+\.[0-9]+)")
+          {
+              $version = $Matches[1]
+
+              echo "UNITYNUGET_DEPLOY=1" >> $env:GITHUB_ENV
+              echo "UNITYNUGET_VERSION=$version" >> $env:GITHUB_ENV
+          }
+
+      - name: Pack
+        if: ${{ success() && env.UNITYNUGET_DEPLOY != 1 }}
+        run: dotnet pack src/UnityNuGet.Tool/UnityNuGet.Tool.csproj -c Release -o ${{ runner.temp }}
+
+      - name: Pack (Release)
+        if: ${{ success() && env.UNITYNUGET_DEPLOY == 1 }}
+        run: dotnet pack src/UnityNuGet.Tool/UnityNuGet.Tool.csproj -c Release -p:PackageVersion=$UNITYNUGET_VERSION -o ${{ runner.temp }}
+
+      - name: Publish (Release)
+        if: ${{ success() && env.UNITYNUGET_DEPLOY == 1 }}
+        run: |
+          dotnet nuget push ${{ runner.temp }}/UnityNuGet.Tool.${{ env.UNITYNUGET_VERSION }}.nupkg \
+            --source https://api.nuget.org/v3/index.json \
+            --api-key ${{ secrets.NUGET_API_KEY }}
