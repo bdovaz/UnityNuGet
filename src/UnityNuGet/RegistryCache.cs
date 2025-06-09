@@ -99,7 +99,7 @@ namespace UnityNuGet
                 Environment.SetEnvironmentVariable("NUGET_PACKAGES", nugetFolder);
             }
 
-            _settings = Settings.LoadDefaultSettings(root: null);
+            _settings = Settings.LoadDefaultSettings(root: Directory.GetCurrentDirectory());
             var sourceRepositoryProvider = new SourceRepositoryProvider(new PackageSourceProvider(_settings), Repository.Provider.GetCoreV3());
             _sourceRepositories = sourceRepositoryProvider.GetRepositories();
             _logger = logger;
