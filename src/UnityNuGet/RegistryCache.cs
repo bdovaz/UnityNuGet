@@ -42,6 +42,7 @@ namespace UnityNuGet
         private readonly string _unityScope;
         private readonly string _minimumUnityVersion;
         private readonly string _packageNameNuGetPostFix;
+        private readonly string[] _packageKeywords;
         private readonly RegistryTargetFramework[] _targetFrameworks;
         private readonly RoslynAnalyzerVersion[] _roslynAnalyzerVersions;
         private readonly ILogger _logger;
@@ -57,6 +58,7 @@ namespace UnityNuGet
             registryCache._unityScope,
             registryCache._minimumUnityVersion,
             registryCache._packageNameNuGetPostFix,
+            registryCache._packageKeywords,
             registryCache._targetFrameworks,
             registryCache._roslynAnalyzerVersions,
             registryCache._logger)
@@ -70,6 +72,7 @@ namespace UnityNuGet
             string unityScope,
             string minimumUnityVersion,
             string packageNameNuGetPostFix,
+            string[] packageKeywords,
             RegistryTargetFramework[] targetFrameworks,
             RoslynAnalyzerVersion[] roslynAnalyzerVersions,
             ILogger logger)
@@ -80,6 +83,7 @@ namespace UnityNuGet
             _unityScope = unityScope ?? throw new ArgumentNullException(nameof(unityScope));
             _minimumUnityVersion = minimumUnityVersion ?? throw new ArgumentNullException(nameof(minimumUnityVersion));
             _packageNameNuGetPostFix = packageNameNuGetPostFix ?? throw new ArgumentNullException(nameof(packageNameNuGetPostFix));
+            _packageKeywords = packageKeywords ?? throw new ArgumentNullException(nameof(packageKeywords));
             _targetFrameworks = targetFrameworks ?? throw new ArgumentNullException(nameof(targetFrameworks));
             _roslynAnalyzerVersions = roslynAnalyzerVersions ?? throw new ArgumentNullException(nameof(roslynAnalyzerVersions));
 
@@ -368,7 +372,7 @@ namespace UnityNuGet
                         if (packageMeta.Tags != null)
                         {
                             npmPackageInfo.Keywords.Clear();
-                            npmPackageInfo.Keywords.Add("nuget");
+                            npmPackageInfo.Keywords.AddRange(_packageKeywords);
                             npmPackageInfo.Keywords.AddRange(SplitCommaSeparatedString(packageMeta.Tags));
                         }
                     }

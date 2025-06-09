@@ -41,6 +41,9 @@ namespace UnityNuGet.Tests
                 "2019.1",
                 " (NuGet)",
                 [
+                    "nuget"
+                ],
+                [
                     new() { Name = "netstandard2.0", DefineConstraints = ["!UNITY_2021_2_OR_NEWER"] },
                     new() { Name = "netstandard2.1", DefineConstraints = ["UNITY_2021_2_OR_NEWER"] },
                 ],
