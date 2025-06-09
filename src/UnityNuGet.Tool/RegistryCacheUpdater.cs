@@ -17,11 +17,15 @@ namespace UnityNuGet.Server
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            int exitCode = 0;
+
             try
             {
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     _logger.LogInformation("Starting to update RegistryCache");
+
+                    int errorCount = 0;
 
                     var newRegistryCache = new RegistryCache(
                         _registry,
@@ -30,6 +34,7 @@ namespace UnityNuGet.Server
                         _registryOptions.UnityScope!,
                         _registryOptions.MinimumUnityVersion!,
                         _registryOptions.PackageNameNuGetPostFix!,
+                        _registryOptions.PackageKeywords!,
                         _registryOptions.TargetFrameworks!,
                         _registryOptions.RoslynAnalyzerVersions!,
                         _currentRegistryCache.NuGetRedirectLogger!)
@@ -43,10 +48,17 @@ namespace UnityNuGet.Server
                         },
                         OnInformation = message => _logger.LogInformation("{Message}", message),
                         OnWarning = message => _logger.LogWarning("{Message}", message),
-                        OnError = message => _logger.LogError("{Message}", message)
+                        OnError = message =>
+                        {
+                            _logger.LogError("{Message}", message);
+
+                            errorCount++;
+                        }
                     };
 
                     await newRegistryCache.Build(stoppingToken);
+
+                    exitCode = errorCount == 0 ? 0 : -1;
 
                     break;
                 }
@@ -56,13 +68,19 @@ namespace UnityNuGet.Server
                 string message = "RegistryCache update canceled";
 
                 _logger.LogInformation("{Message}", message);
+
+                exitCode = -1;
             }
             catch (Exception ex)
             {
                 string message = "Error while building a new registry cache";
 
                 _logger.LogError(ex, "{Message}", message);
+
+                exitCode = -1;
             }
+
+            Environment.ExitCode = exitCode;
 
             _hostApplicationLifetime.StopApplication();
         }
