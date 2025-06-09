@@ -24,6 +24,8 @@ namespace UnityNuGet
         [Required]
         public string? PackageNameNuGetPostFix { get; set; }
 
+        public string[] PackageKeywords { get; set; } = [];
+
         [Required]
         public string? RegistryFilePath { get; set; }
 
