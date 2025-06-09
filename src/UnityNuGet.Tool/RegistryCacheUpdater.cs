@@ -34,7 +34,6 @@ namespace UnityNuGet.Server
                         _registryOptions.UnityScope!,
                         _registryOptions.MinimumUnityVersion!,
                         _registryOptions.PackageNameNuGetPostFix!,
-                        _registryOptions.PackageKeywords!,
                         _registryOptions.TargetFrameworks!,
                         _registryOptions.RoslynAnalyzerVersions!,
                         _currentRegistryCache.NuGetRedirectLogger!)
