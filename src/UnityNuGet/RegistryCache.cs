@@ -295,9 +295,15 @@ namespace UnityNuGet
                     packageEntry.IncludeUnlisted,
                     packageEntry.IncludePrerelease,
                     cancellationToken);
-                IPackageSearchMetadata[] packageMetas = packageMetaIt != null ? [.. packageMetaIt] : [];
 
-                foreach (IPackageSearchMetadata? packageMeta in packageMetas)
+                if (packageMetaIt == null)
+                {
+                    LogError($"The package was not found in any registry: {packageName}");
+
+                    continue;
+                }
+
+                foreach (IPackageSearchMetadata? packageMeta in packageMetaIt)
                 {
                     PackageIdentity packageIdentity = packageMeta.Identity;
                     // Update latest version
