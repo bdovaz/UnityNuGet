@@ -46,14 +46,7 @@ namespace UnityNuGet.Server
                             _currentRegistryCache.ProgressTotalPackageCount = total;
                             _currentRegistryCache.ProgressPackageIndex = current;
                         },
-                        OnInformation = message => _logger.LogInformation("{Message}", message),
-                        OnWarning = message => _logger.LogWarning("{Message}", message),
-                        OnError = message =>
-                        {
-                            _logger.LogError("{Message}", message);
-
-                            errorCount++;
-                        }
+                        OnError = message => errorCount++
                     };
 
                     await newRegistryCache.Build(stoppingToken);
