@@ -157,6 +157,8 @@ namespace UnityNuGet.Tests
             RegistryTargetFramework[] nuGetFrameworks = [new() { Framework = CommonFrameworks.NetStandard20 }];
 
             string[] excludedPackages = [
+                // Versions 1.4.23 - 1.4.25 depend on a package that no longer exists: LightningDB.Vendored.Akka
+                @"Akka.DistributedData.LightningDB",
                 // All versions target "Any" and not .netstandard2.0 / 2.1
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
                 @"AWSSDK.*",
