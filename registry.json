@@ -723,10 +723,6 @@
         "listed": true,
         "version": "0.11.0"
     },
-    "LightningDB.Vendored.Akka": {
-        "listed": true,
-        "version": "0.14.0"
-    },
     "LiteDB": {
         "listed": true,
         "version": "4.0.0"
@@ -1113,11 +1109,6 @@
     },
     "Microsoft.NETCore.Platforms": {
         "ignore": true
-    },
-    "Microsoft.Toolkit.Mvvm": {
-        "listed": true,
-        "version": "7.0.0",
-        "analyzer": true
     },
     "Microsoft.Unity.Analyzers": {
         "listed": true,
