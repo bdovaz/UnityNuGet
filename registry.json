@@ -892,6 +892,13 @@
             "UNITY_EDITOR"
         ]
     },
+    "Microsoft.CodeAnalysis.Scripting.Common": {
+        "listed": true,
+        "version": "3.0.0",
+        "defineConstraints": [
+            "UNITY_EDITOR"
+        ]
+    },
     "Microsoft.CSharp": {
         "ignore": true
     },
