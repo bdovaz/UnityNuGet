@@ -46,7 +46,7 @@
     },
     "Akka.DistributedData.LightningDB": {
         "listed": true,
-        "version": "1.4.7"
+        "version": "1.5.0"
     },
     "Akka.Hosting": {
         "listed": true,
@@ -122,15 +122,15 @@
     },
     "AWSSDK.Core": {
         "listed": true,
-        "version": "3.7.302.8"
+        "version": "4.0.0"
     },
     "AWSSDK.S3": {
         "listed": true,
-        "version": "3.7.302.8"
+        "version": "4.0.0"
     },
     "AWSSDK.SecurityToken": {
         "listed": true,
-        "version": "3.7.302.8"
+        "version": "4.0.0"
     },
     "Ben.Demystifier": {
         "listed": true,
@@ -650,7 +650,7 @@
     },
     "HtmlAgilityPack": {
         "listed": true,
-        "version": "1.11.24"
+        "version": "1.5.3"
     },
     "Hyperion": {
         "listed": true,
@@ -723,10 +723,6 @@
         "listed": true,
         "version": "0.11.0"
     },
-    "LightningDB.Vendored.Akka": {
-        "listed": true,
-        "version": "0.14.0"
-    },
     "LiteDB": {
         "listed": true,
         "version": "4.0.0"
@@ -741,7 +737,7 @@
     },
     "log4net": {
         "listed": true,
-        "version": "2.0.9"
+        "version": "2.0.10"
     },
     "MathNet.Numerics": {
         "listed": true,
@@ -1113,11 +1109,6 @@
     },
     "Microsoft.NETCore.Platforms": {
         "ignore": true
-    },
-    "Microsoft.Toolkit.Mvvm": {
-        "listed": true,
-        "version": "7.0.0",
-        "analyzer": true
     },
     "Microsoft.Unity.Analyzers": {
         "listed": true,
@@ -1851,6 +1842,10 @@
         "listed": false,
         "version": "4.4.0"
     },
+    "System.Xml.XPath.XmlDocument": {
+        "listed": true,
+        "version": "4.7.0"
+    },
     "Telnet": {
         "listed": true,
         "version": "0.8.6"
@@ -1955,6 +1950,15 @@
         "listed": true,
         "version": "12.0.0"
     },
+    "ZLinq": {
+        "listed": true,
+        "version": "0.5.0"
+    },
+    "ZLinq.DropInGenerator": {
+        "listed": true,
+        "version": "0.5.0",
+        "analyzer": true
+    },
     "ZLogger": {
         "listed": true,
         "version": "2.0.1"
@@ -1966,5 +1970,9 @@
     "ZString": {
         "listed": true,
         "version": "0.1.0"
+    },
+    "ZXing.Net": {
+        "listed": true,
+        "version": "0.16.4"
     }
 }

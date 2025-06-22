@@ -13,7 +13,7 @@ namespace UnityNuGet
     [JsonSerializable(typeof(UnityAsmdef))]
     [JsonSerializable(typeof(UnityPackage))]
     [JsonSerializable(typeof(IDictionary<string, RegistryEntry>))]
-    public sealed partial class UnityNugetJsonSerializerContext : JsonSerializerContext
+    public sealed partial class UnityNuGetJsonSerializerContext : JsonSerializerContext
     {
     }
 }

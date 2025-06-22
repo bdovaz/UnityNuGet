@@ -22,7 +22,7 @@ namespace UnityNuGet
                 switch (reader.TokenType)
                 {
                     case JsonTokenType.StartObject:
-                        result.Packages.Add(currentPropertyName!, JsonSerializer.Deserialize(ref reader, UnityNugetJsonSerializerContext.Default.NpmPackageInfo)!);
+                        result.Packages.Add(currentPropertyName!, JsonSerializer.Deserialize(ref reader, UnityNuGetJsonSerializerContext.Default.NpmPackageInfo)!);
                         break;
                     case JsonTokenType.PropertyName:
                         currentPropertyName = reader.GetString();
@@ -41,7 +41,7 @@ namespace UnityNuGet
             {
                 writer.WritePropertyName(kvp.Key);
 
-                JsonSerializer.Serialize(writer, kvp.Value, UnityNugetJsonSerializerContext.Default.NpmPackageInfo);
+                JsonSerializer.Serialize(writer, kvp.Value, UnityNuGetJsonSerializerContext.Default.NpmPackageInfo);
             }
 
             writer.WriteEndObject();

@@ -50,6 +50,9 @@ namespace UnityNuGet.Tests
                 "2019.1",
                 " (NuGet)",
                 [
+                    "nuget"
+                ],
+                [
                     new() { Name = "netstandard2.0", DefineConstraints = ["!UNITY_2021_2_OR_NEWER"] },
                     new() { Name = "netstandard2.1", DefineConstraints = ["UNITY_2021_2_OR_NEWER"] },
                 ],
@@ -74,14 +77,14 @@ namespace UnityNuGet.Tests
 
             NpmPackageListAllResponse allResult = registryCache.All();
             Assert.That(allResult.Packages, Has.Count.GreaterThanOrEqualTo(3));
-            string allResultJson = await allResult.ToJson(UnityNugetJsonSerializerContext.Default.NpmPackageListAllResponse);
+            string allResultJson = await allResult.ToJson(UnityNuGetJsonSerializerContext.Default.NpmPackageListAllResponse);
 
             Assert.That(allResultJson, Does.Contain("org.nuget.scriban"));
             Assert.That(allResultJson, Does.Contain("org.nuget.system.runtime.compilerservices.unsafe"));
 
             NpmPackage? scribanPackage = registryCache.GetPackage("org.nuget.scriban");
             Assert.That(scribanPackage, Is.Not.Null);
-            string scribanPackageJson = await scribanPackage!.ToJson(UnityNugetJsonSerializerContext.Default.NpmPackage);
+            string scribanPackageJson = await scribanPackage!.ToJson(UnityNuGetJsonSerializerContext.Default.NpmPackage);
             Assert.That(scribanPackageJson, Does.Contain("org.nuget.scriban"));
             Assert.That(scribanPackageJson, Does.Contain("2.1.0"));
         }

@@ -1,4 +1,4 @@
-# UnityNuGet [![Build Status](https://img.shields.io/github/actions/workflow/status/bdovaz/UnityNuGet/ci.yml?branch=master)](https://github.com/xoofx/UnityNuGet/actions) [![Static Badge](https://img.shields.io/badge/server-status-blue)](https://unitynuget-registry.openupm.com/status) [![Static Badge](https://img.shields.io/badge/server-feed-blue)](https://unitynuget-registry.openupm.com/-/all)
+# UnityNuGet [![Build Status](https://img.shields.io/github/actions/workflow/status/bdovaz/UnityNuGet/ci.yml?branch=master)](https://github.com/xoofx/UnityNuGet/actions) [![Server Status](https://img.shields.io/badge/server-status-blue)](https://unitynuget-registry.openupm.com/status) [![Server Feed](https://img.shields.io/badge/server-feed-blue)](https://unitynuget-registry.openupm.com/-/all) [![NuGet Package](https://img.shields.io/nuget/v/UnityNuGet.Tool)](https://www.nuget.org/packages/UnityNuGet.Tool)
 
 <img align="right" width="160px" height="160px" alt="UnityNuGet logo" src="img/unitynuget.png">
 
@@ -135,6 +135,16 @@ To add a private feed, the following fields must be filled in:
   </packageSourceCredentials>
 </configuration>
 ```
+
+## dotnet tool installation
+
+UnityNuGet is also distributed as a dotnet tool. The difference is that in this case it does not act as a server but as a process that processes all the packages in `registry.json` in one pass.
+
+This use case is useful when you simply don't want to depend on an external server and want your dependencies to be [local packages](https://docs.unity3d.com/6000.1/Documentation/Manual/upm-localpath.html).
+
+To use it, once installed with `dotnet install -g UnityNuGet.Tool` simply run the command `unityNuGet`.
+
+> Note that an `appsettings.json` file must exist in the working directory from which the command is executed.
 
 ## FAQ
 

@@ -42,6 +42,7 @@ namespace UnityNuGet
         private readonly string _unityScope;
         private readonly string _minimumUnityVersion;
         private readonly string _packageNameNuGetPostFix;
+        private readonly string[] _packageKeywords;
         private readonly RegistryTargetFramework[] _targetFrameworks;
         private readonly RoslynAnalyzerVersion[] _roslynAnalyzerVersions;
         private readonly ILogger _logger;
@@ -57,6 +58,7 @@ namespace UnityNuGet
             registryCache._unityScope,
             registryCache._minimumUnityVersion,
             registryCache._packageNameNuGetPostFix,
+            registryCache._packageKeywords,
             registryCache._targetFrameworks,
             registryCache._roslynAnalyzerVersions,
             registryCache._logger)
@@ -70,6 +72,7 @@ namespace UnityNuGet
             string unityScope,
             string minimumUnityVersion,
             string packageNameNuGetPostFix,
+            string[] packageKeywords,
             RegistryTargetFramework[] targetFrameworks,
             RoslynAnalyzerVersion[] roslynAnalyzerVersions,
             ILogger logger)
@@ -80,6 +83,7 @@ namespace UnityNuGet
             _unityScope = unityScope ?? throw new ArgumentNullException(nameof(unityScope));
             _minimumUnityVersion = minimumUnityVersion ?? throw new ArgumentNullException(nameof(minimumUnityVersion));
             _packageNameNuGetPostFix = packageNameNuGetPostFix ?? throw new ArgumentNullException(nameof(packageNameNuGetPostFix));
+            _packageKeywords = packageKeywords ?? throw new ArgumentNullException(nameof(packageKeywords));
             _targetFrameworks = targetFrameworks ?? throw new ArgumentNullException(nameof(targetFrameworks));
             _roslynAnalyzerVersions = roslynAnalyzerVersions ?? throw new ArgumentNullException(nameof(roslynAnalyzerVersions));
 
@@ -95,7 +99,7 @@ namespace UnityNuGet
                 Environment.SetEnvironmentVariable("NUGET_PACKAGES", nugetFolder);
             }
 
-            _settings = Settings.LoadDefaultSettings(root: null);
+            _settings = Settings.LoadDefaultSettings(root: Directory.GetCurrentDirectory());
             var sourceRepositoryProvider = new SourceRepositoryProvider(new PackageSourceProvider(_settings), Repository.Provider.GetCoreV3());
             _sourceRepositories = sourceRepositoryProvider.GetRepositories();
             _logger = logger;
@@ -175,11 +179,11 @@ namespace UnityNuGet
         /// <summary>
         /// Build the registry cache.
         /// </summary>
-        public async Task Build()
+        public async Task Build(CancellationToken cancellationToken = default)
         {
             try
             {
-                await BuildInternal();
+                await BuildInternal(cancellationToken);
             }
             catch (Exception ex)
             {
@@ -291,9 +295,15 @@ namespace UnityNuGet
                     packageEntry.IncludeUnlisted,
                     packageEntry.IncludePrerelease,
                     cancellationToken);
-                IPackageSearchMetadata[] packageMetas = packageMetaIt != null ? [.. packageMetaIt] : [];
 
-                foreach (IPackageSearchMetadata? packageMeta in packageMetas)
+                if (packageMetaIt == null)
+                {
+                    LogError($"The package was not found in any registry: {packageName}");
+
+                    continue;
+                }
+
+                foreach (IPackageSearchMetadata? packageMeta in packageMetaIt)
                 {
                     PackageIdentity packageIdentity = packageMeta.Identity;
                     // Update latest version
@@ -368,7 +378,7 @@ namespace UnityNuGet
                         if (packageMeta.Tags != null)
                         {
                             npmPackageInfo.Keywords.Clear();
-                            npmPackageInfo.Keywords.Add("nuget");
+                            npmPackageInfo.Keywords.AddRange(_packageKeywords);
                             npmPackageInfo.Keywords.AddRange(SplitCommaSeparatedString(packageMeta.Tags));
                         }
                     }
@@ -701,7 +711,7 @@ namespace UnityNuGet
                         // Check Analyzer Scope section: https://docs.unity3d.com/Manual/roslyn-analyzers.html
                         UnityAsmdef analyzerAsmdef = CreateAnalyzerAmsdef(identity);
                         string analyzerAsmdefAsJson = await analyzerAsmdef.ToJson(
-                            UnityNugetJsonSerializerContext.Default.UnityAsmdef,
+                            UnityNuGetJsonSerializerContext.Default.UnityAsmdef,
                             cancellationToken);
                         string analyzerAsmdefFileName = $"{identity.Id}.asmdef";
 
@@ -952,7 +962,7 @@ namespace UnityNuGet
                     // Write the package,json
                     UnityPackage unityPackage = CreateUnityPackage(npmPackageInfo, npmPackageVersion);
                     string unityPackageAsJson = await unityPackage.ToJson(
-                        UnityNugetJsonSerializerContext.Default.UnityPackage,
+                        UnityNuGetJsonSerializerContext.Default.UnityPackage,
                         cancellationToken);
                     const string packageJsonFileName = "package.json";
 
@@ -1252,7 +1262,7 @@ namespace UnityNuGet
             try
             {
                 string cacheEntryAsJson = File.ReadAllText(path);
-                cacheEntry = JsonSerializer.Deserialize(cacheEntryAsJson, UnityNugetJsonSerializerContext.Default.NpmPackageCacheEntry);
+                cacheEntry = JsonSerializer.Deserialize(cacheEntryAsJson, UnityNuGetJsonSerializerContext.Default.NpmPackageCacheEntry);
 
                 if (cacheEntry != null)
                 {
@@ -1275,14 +1285,14 @@ namespace UnityNuGet
             CancellationToken cancellationToken = default)
         {
             string path = GetUnityPackageDescPath(packageName);
-            string newJson = await cacheEntry.ToJson(UnityNugetJsonSerializerContext.Default.NpmPackageCacheEntry, cancellationToken);
+            string newJson = await cacheEntry.ToJson(UnityNuGetJsonSerializerContext.Default.NpmPackageCacheEntry, cancellationToken);
 
             // Only update if entry is different
             if (!string.Equals(newJson, cacheEntry.Json, StringComparison.InvariantCulture))
             {
                 await File.WriteAllTextAsync(
                     path,
-                    await cacheEntry.ToJson(UnityNugetJsonSerializerContext.Default.NpmPackageCacheEntry, cancellationToken),
+                    await cacheEntry.ToJson(UnityNuGetJsonSerializerContext.Default.NpmPackageCacheEntry, cancellationToken),
                     cancellationToken);
             }
         }

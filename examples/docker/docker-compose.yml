@@ -8,6 +8,7 @@ services:
         - Registry:UnityScope=org.custom # Packages prefix, default is "org.nuget" but it can be modified to be able to have several containers with different prefixes and to be able to add several scope registries.
         - Registry:MinimumUnityVersion=2020.1 # Minimum version of Unity required to install packages, default is "2019.1".
         - Registry:PackageNameNuGetPostFix= (Custom NuGet) # Suffix of the package title, useful in case of having several containers and several scope registries, default is " (NuGet)".
+        - Registry:PackageKeywords:0=customKeyword # NuGet default package keywords, default is "nuget"
         - Registry:RegistryFilePath=/data/registry.json # Path to the file (relative or absolute) where the packages registry file will be stored, default is "registry.json".
         - Registry:RootPersistentFolder=/data/unity_packages # Path to the folder (relative or absolute) where the packages cache will be stored, default is "unity_packages".
         - Registry:UpdateInterval=00:01:00 # Packages update interval, default is "00:10:00" (10 minutes).

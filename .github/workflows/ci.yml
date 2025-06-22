@@ -1,9 +1,6 @@
 ---
 name: ci
 
-env:
-  PROJECT_NAME: UnityNuGet
-
 on:
   push:
     branches:
@@ -22,6 +19,7 @@ on:
 
 jobs:
   build:
+    # In Ubuntu, there are problems with disk space and resources in general
     runs-on: windows-latest
 
     steps:

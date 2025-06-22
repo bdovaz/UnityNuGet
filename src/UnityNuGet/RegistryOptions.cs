@@ -21,8 +21,10 @@ namespace UnityNuGet
         [RegularExpression(@"\d+\.\d+")]
         public string? MinimumUnityVersion { get; set; }
 
-        [Required]
+        [Required(AllowEmptyStrings = true)]
         public string? PackageNameNuGetPostFix { get; set; }
+
+        public string[] PackageKeywords { get; set; } = [];
 
         [Required]
         public string? RegistryFilePath { get; set; }
