@@ -878,6 +878,13 @@
         "version": "2.9.0",
         "analyzer": true
     },
+    "Microsoft.CodeAnalysis.Scripting": {
+        "listed": true,
+        "version": "3.0.0",
+        "defineConstraints": [
+            "UNITY_EDITOR"
+        ]
+    },
     "Microsoft.CSharp": {
         "ignore": true
     },
