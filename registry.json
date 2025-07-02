@@ -1961,7 +1961,7 @@
     },
     "VYaml.Annotations": {
         "listed": true,
-        "version": "1.1.0"
+        "version": "0.28.0"
     },
     "WebDav.Client": {
         "listed": true,
