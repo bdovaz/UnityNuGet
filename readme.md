@@ -5,20 +5,27 @@
 This project provides a seamlessly integration of a [curated list](registry.json) of NuGet packages within the Unity Package Manager.
 
 > [!IMPORTANT]
-> DISCLAIMER: This is not an official service provided by Unity Technologies Inc.
+> This is not an official service provided by Unity Technologies Inc.
 
 ## Usage
 
 > [!NOTE]
 > Feed provided by [OpenUPM](https://medium.com/openupm/openupm-launches-alternative-unitynuget-registry-0b8cc663cc41).
 
-### Add scope registry (manifest.json)
+### Add scoped registry
 
-In order to use this service you simply need to edit the `Packages/manifest.json` in your project and add the following [scoped registry](https://docs.unity3d.com/Manual/upm-scoped.html):
+In order to use this service you simply need to add a UPM [scoped registry](https://docs.unity3d.com/Manual/upm-scoped.html).
+
+You can do this in several ways:
+
+#### Via manifest.json
+
+Manually edit your project's `Packages/manifest.json` file to look like the following:
 
 ```json
 {
   "scopedRegistries": [
+    // Other registries...
     {
       "name": "Unity NuGet",
       "url": "https://unitynuget-registry.openupm.com",
@@ -28,14 +35,16 @@ In order to use this service you simply need to edit the `Packages/manifest.json
     }
   ],
   "dependencies": {
+    // Other dependencies...
     "org.nuget.scriban": "2.1.0"
   }
 }
 ```
 
-### Add scope registry (Package Manager UI)
+#### Via Package Manager UI
 
-Instructions: <https://docs.unity3d.com/Manual/class-PackageManager.html>
+Alternatively, follow Unity's [instructions](https://docs.unity3d.com/Manual/class-PackageManager.html)
+to add the scoped registry via the Package Manager UI, with the following values:
 
 ```yaml
 Name: Unity NuGet
@@ -57,14 +66,23 @@ For earlier Unity versions, uncheck `Project Settings > Player > Other Settings 
 ### Verify scoped registry installation
 
 > [!WARNING]
-> WARNING: If you are encountering weird compilation errors with UnityNuGet and you have been using UnityNuGet already,
+> If you are encountering weird compilation errors with UnityNuGet and you have been using UnityNuGet already,
 > it could be that we have updated packages on the server, and in that case, you need to clear the cache containing
 > all Unity NPM packages downloaded from the registry.
 > On Windows, this cache by default is located at: `%LOCALAPPDATA%\Unity\cache\npm`
 >
-> Cache locations by OS: <https://docs.unity3d.com/Manual/upm-cache.html>
+> See the [cache locations by OS](https://docs.unity3d.com/Manual/upm-cache.html).
 
-When opening the Package Manager Window, you should see a few packages coming from NuGet (with the postfix text `‎ (NuGet)`)
+> [!WARNING]
+> You may also experience timeouts when installing UnityNuGet packages, with a message like:
+> > [Package Manager Window] Error adding package: org.nuget.microsoft.extensions.logging.abstractions@6.0.0.  
+> > connect ETIMEDOUT 143.244.220.150:443  
+> > UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+>
+> Verify that you are using the new OpenUPM-based URL and not the old Azure Websites URL.
+> You can also check [OpenUPM Status](https://openupm.github.io/upptime/history/other-unity-nu-get-registry) to see if OpenUPM itself is having an outage.
+
+When opening the Package Manager Window, you should see a few packages coming from NuGet with the postfix text `‎ (NuGet)`, like in this screenshot:
 
 ![UnityEditorWithNuGet](img/unity_editor_with_nuget.jpg)
 
@@ -84,7 +102,6 @@ You also need to **specify the lowest version of your package that has support f
 Beware that **all transitive dependencies of the package** must be **explicitly listed** in the registry as well.
 
 > [!NOTE]
->
 > - We reserve the right to decline a package to be available through this service.
 > - The server will be updated only when a new version tag is pushed on the main branch.
 
@@ -164,7 +181,7 @@ Having a `.NETStandard2.0` for NuGet packages for Unity can ensure that the expe
 
 As of Unity 2021.x it also supports `.NETStandard2.1` so packages providing this target will be compatible with this version of Unity or newer.
 
-> More information: <https://docs.unity3d.com/Manual/dotnet-profile-support.html>
+See Unity's documentation on [.NET profile support](https://docs.unity3d.com/Manual/dotnet-profile-support.html).
 
 ### **How this service is working?**
 
