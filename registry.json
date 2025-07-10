@@ -1258,12 +1258,12 @@
         "listed": true,
         "version": "4.0.0.207"
     },
+    "NETStandard.Library": {
+        "ignore": true
+    },
     "NetTopologySuite": {
         "listed": true,
         "version": "2.6.0"
-    },
-    "NETStandard.Library": {
-        "ignore": true
     },
     "Newtonsoft.Json": {
         "listed": true,
