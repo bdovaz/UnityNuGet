@@ -1258,6 +1258,10 @@
         "listed": true,
         "version": "4.0.0.207"
     },
+    "NetTopologySuite": {
+        "listed": true,
+        "version": "2.6.0"
+    },
     "NETStandard.Library": {
         "ignore": true
     },
@@ -1748,7 +1752,7 @@
     },
     "System.Memory": {
         "listed": true,
-        "version": "4.5.0"
+        "version": "4.6.0"
     },
     "System.Net.Http.WinHttpHandler": {
         "listed": true,
