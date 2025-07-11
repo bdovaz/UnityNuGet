@@ -29,6 +29,7 @@ namespace UnityNuGet.Npm
         [JsonPropertyName("_id")]
         public string? Id { get; set; }
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("_upm")]
         public UpmPackageInfo? Upm { get; set; }
 
