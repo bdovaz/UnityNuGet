@@ -1261,6 +1261,10 @@
     "NETStandard.Library": {
         "ignore": true
     },
+    "NetTopologySuite": {
+        "listed": true,
+        "version": "2.0.0"
+    },
     "Newtonsoft.Json": {
         "listed": true,
         "version": "11.0.1"
