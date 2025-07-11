@@ -636,6 +636,16 @@ namespace UnityNuGet
             // Update Repository metadata if necessary
             RepositoryMetadata repoMeta = packageReader.NuspecReader.GetRepositoryMetadata();
 
+            string releaseNotes = packageReader.NuspecReader.GetReleaseNotes();
+
+            if (!string.IsNullOrEmpty(releaseNotes))
+            {
+                npmPackageVersion.Upm = new NpmPackageVersion.UpmPackageInfo
+                {
+                    Changelog = releaseNotes,
+                };
+            }
+
             if (repoMeta != null && repoMeta.Url != null && repoMeta.Commit != null && repoMeta.Type != null)
             {
                 npmPackageVersion.Repository = new NpmSourceRepository()

@@ -8,6 +8,12 @@ namespace UnityNuGet.Npm
     /// </summary>
     public class NpmPackageVersion : NpmObject
     {
+        public class UpmPackageInfo
+        {
+            [JsonPropertyName("changelog")]
+            public string? Changelog { get; set; }
+        }
+
         [JsonPropertyName("name")]
         public string? Name { get; set; }
 
@@ -22,6 +28,9 @@ namespace UnityNuGet.Npm
 
         [JsonPropertyName("_id")]
         public string? Id { get; set; }
+
+        [JsonPropertyName("_upm")]
+        public UpmPackageInfo? Upm { get; set; }
 
         [JsonPropertyName("unity")]
         public string? Unity { get; set; }
