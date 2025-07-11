@@ -1263,7 +1263,7 @@
     },
     "NetTopologySuite": {
         "listed": true,
-        "version": "2.6.0"
+        "version": "2.0.0"
     },
     "Newtonsoft.Json": {
         "listed": true,
@@ -1752,7 +1752,7 @@
     },
     "System.Memory": {
         "listed": true,
-        "version": "4.6.0"
+        "version": "4.5.0"
     },
     "System.Net.Http.WinHttpHandler": {
         "listed": true,
