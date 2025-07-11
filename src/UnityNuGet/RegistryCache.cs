@@ -199,7 +199,7 @@ namespace UnityNuGet
         {
             foreach (SourceRepository source in _sourceRepositories)
             {
-                PackageMetadataResource packageMetadataResource = source.GetResource<PackageMetadataResource>();
+                PackageMetadataResource packageMetadataResource = await source.GetResourceAsync<PackageMetadataResource>(cancellationToken);
 
                 IEnumerable<IPackageSearchMetadata> result = await packageMetadataResource.GetMetadataAsync(
                     packageName,
@@ -491,11 +491,43 @@ namespace UnityNuGet
                     // If we don't have any dependencies error, generate the package
                     if (!hasDependencyErrors)
                     {
+                        using DownloadResourceResult downloadResult = await GetPackageDownloadResourceResult(packageIdentity, cancellationToken);
+
+                        using PackageReaderBase packageReader = downloadResult.PackageReader;
+
+                        string releaseNotes = packageReader.NuspecReader.GetReleaseNotes();
+
+                        if (!string.IsNullOrEmpty(releaseNotes))
+                        {
+                            npmVersion.Upm = new NpmPackageVersion.UpmPackageInfo
+                            {
+                                Changelog = releaseNotes,
+                            };
+                        }
+
+                        // Update Repository metadata if necessary
+                        RepositoryMetadata repoMeta = packageReader.NuspecReader.GetRepositoryMetadata();
+
+                        if (repoMeta != null && repoMeta.Url != null && repoMeta.Commit != null && repoMeta.Type != null)
+                        {
+                            npmVersion.Repository = new NpmSourceRepository()
+                            {
+                                Revision = repoMeta.Commit,
+                                Type = repoMeta.Type,
+                                Url = repoMeta.Url,
+                            };
+                        }
+                        else
+                        {
+                            npmVersion.Repository = null;
+                        }
+
                         bool packageConverted = await ConvertNuGetToUnityPackageIfDoesNotExist(
                             packageIdentity,
                             npmPackageInfo,
                             npmVersion,
                             packageMeta,
+                            packageReader,
                             forceUpdate,
                             packageEntry,
                             cancellationToken);
@@ -580,6 +612,7 @@ namespace UnityNuGet
             NpmPackageInfo npmPackageInfo,
             NpmPackageVersion npmPackageVersion,
             IPackageSearchMetadata packageMeta,
+            PackageReaderBase packageReader,
             bool forceUpdate,
             RegistryEntry packageEntry,
             CancellationToken cancellationToken = default)
@@ -597,6 +630,7 @@ namespace UnityNuGet
                     npmPackageInfo,
                     npmPackageVersion,
                     packageMeta,
+                    packageReader,
                     packageEntry,
                     cancellationToken);
 
@@ -621,6 +655,7 @@ namespace UnityNuGet
             NpmPackageInfo npmPackageInfo,
             NpmPackageVersion npmPackageVersion,
             IPackageSearchMetadata packageMeta,
+            PackageReaderBase packageReader,
             RegistryEntry packageEntry,
             CancellationToken cancellationToken = default)
         {
@@ -628,27 +663,6 @@ namespace UnityNuGet
             string unityPackageFilePath = Path.Combine(_rootPersistentFolder, unityPackageFileName);
 
             LogInformation($"Converting NuGet package {identity} to Unity `{unityPackageFileName}`");
-
-            using DownloadResourceResult downloadResult = await GetPackageDownloadResourceResult(identity, cancellationToken);
-
-            using PackageReaderBase packageReader = downloadResult.PackageReader;
-
-            // Update Repository metadata if necessary
-            RepositoryMetadata repoMeta = packageReader.NuspecReader.GetRepositoryMetadata();
-
-            if (repoMeta != null && repoMeta.Url != null && repoMeta.Commit != null && repoMeta.Type != null)
-            {
-                npmPackageVersion.Repository = new NpmSourceRepository()
-                {
-                    Revision = repoMeta.Commit,
-                    Type = repoMeta.Type,
-                    Url = repoMeta.Url,
-                };
-            }
-            else
-            {
-                npmPackageVersion.Repository = null;
-            }
 
             try
             {
