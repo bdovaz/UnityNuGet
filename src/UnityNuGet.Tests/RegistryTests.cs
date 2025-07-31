@@ -166,6 +166,11 @@ namespace UnityNuGet.Tests
                 @"Castle.Core",
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
                 @"CSharpFunctionalExtensions",
+                // Version < 1.0.26 depends on Microsoft.Windows.Compatibility, this one has tons of dependencies that don't target .netstandard2.0. And one of them is System.Speech that doesn't work in Unity.
+                @"Dapplo.Windows.Common",
+                @"Dapplo.Windows.Input",
+                @"Dapplo.Windows.Messages",
+                @"Dapplo.Windows.User32",
                 // Some versions between 5.6.4 and 6.3.0 doesn't ship .netstandard2.0.
                 @"Elasticsearch.Net",
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
@@ -184,17 +189,14 @@ namespace UnityNuGet.Tests
                 @"MumbleSharp",
                 // Versions < 3.2.1 depend on Nullable which doesn't ship .netstandard2.0.
                 @"Serilog.Expressions",
+                // < 3.0.0 versions target "Any" and not .netstandard2.0 / 2.1
+                @"SQLitePCLRaw.lib.e_sqlite3",
                 // Versions < 1.4.1 has dependencies on Microsoft.AspNetCore.*.
                 @"StrongInject.Extensions.DependencyInjection",
                 // Versions < 4.6.0 in theory supports .netstandard2.0 but it doesn't have a lib folder with assemblies and it makes it fail.
                 @"System.Private.ServiceModel",
                 // Versions < 0.8.6 depend on LiteGuard, a deprecated dependency.
                 @"Telnet",
-                // Version < 1.0.26 depends on Microsoft.Windows.Compatibility, this one has tons of dependencies that don't target .netstandard2.0. And one of them is System.Speech that doesn't work in Unity.
-                @"Dapplo.Windows.Common",
-                @"Dapplo.Windows.Input",
-                @"Dapplo.Windows.Messages",
-                @"Dapplo.Windows.User32",
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
                 @"UnitsNet.*",
                 // Most versions < 1.7.0 don't target .netstandard2.0
