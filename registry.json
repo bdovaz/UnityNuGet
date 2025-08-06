@@ -1602,6 +1602,10 @@
         "version": "8.30.0.37606",
         "analyzer": true
     },
+    "SourceGear.sqlite3": {
+        "listed": true,
+        "version": "3.50.3"
+    },
     "Sovran.NET": {
         "listed": true,
         "version": "1.0.0"
