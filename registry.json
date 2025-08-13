@@ -1024,6 +1024,13 @@
         "listed": true,
         "version": "9.8.0"
     },
+    "Microsoft.Extensions.Diagnostics.Testing": {
+        "listed": true,
+        "version": "9.8.0",
+        "defineConstraints": [
+            "UNITY_EDITOR"
+        ]
+    },
     "Microsoft.Extensions.Features": {
         "listed": true,
         "version": "6.0.0"
