@@ -1358,9 +1358,17 @@
         "listed": true,
         "version": "8.0.0"
     },
+    "Polly.Extensions": {
+        "listed": true,
+        "version": "8.0.0"
+    },
     "Polly.Extensions.Http": {
         "listed": true,
         "version": "2.0.1"
+    },
+    "Polly.RateLimiting": {
+        "listed": true,
+        "version": "8.0.0"
     },
     "Portable.BouncyCastle": {
         "listed": true,
