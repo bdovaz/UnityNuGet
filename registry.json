@@ -936,6 +936,10 @@
         "listed": true,
         "version": "[3.1.0,6.0.0)"
     },
+    "Microsoft.Extensions.AmbientMetadata.Application": {
+        "listed": true,
+        "version": "9.8.0"
+    },
     "Microsoft.Extensions.Caching.Abstractions": {
         "listed": true,
         "version": "2.0.0"
@@ -1000,6 +1004,10 @@
         "listed": true,
         "version": "2.0.0"
     },
+    "Microsoft.Extensions.DependencyInjection.AutoActivation": {
+        "listed": true,
+        "version": "9.8.0"
+    },
     "Microsoft.Extensions.DependencyModel": {
         "listed": true,
         "version": "3.0.0"
@@ -1011,6 +1019,10 @@
     "Microsoft.Extensions.Diagnostics.Abstractions": {
         "listed": true,
         "version": "8.0.0"
+    },
+    "Microsoft.Extensions.Diagnostics.ExceptionSummarization": {
+        "listed": true,
+        "version": "9.8.0"
     },
     "Microsoft.Extensions.Diagnostics.Testing": {
         "listed": true,
@@ -1051,9 +1063,17 @@
         "listed": true,
         "version": "2.1.0"
     },
+    "Microsoft.Extensions.Http.Diagnostics": {
+        "listed": true,
+        "version": "9.8.0"
+    },
     "Microsoft.Extensions.Http.Polly": {
         "listed": true,
         "version": "2.1.0"
+    },
+    "Microsoft.Extensions.Http.Resilience": {
+        "listed": true,
+        "version": "9.8.0"
     },
     "Microsoft.Extensions.Localization.Abstractions": {
         "listed": true,
@@ -1114,6 +1134,14 @@
     "Microsoft.Extensions.Primitives": {
         "listed": true,
         "version": "2.0.0"
+    },
+    "Microsoft.Extensions.Resilience": {
+        "listed": true,
+        "version": "9.8.0"
+    },
+    "Microsoft.Extensions.Telemetry": {
+        "listed": true,
+        "version": "9.8.0"
     },
     "Microsoft.Extensions.Telemetry.Abstractions": {
         "listed": true,
@@ -1337,9 +1365,17 @@
         "listed": true,
         "version": "8.0.0"
     },
+    "Polly.Extensions": {
+        "listed": true,
+        "version": "8.0.0"
+    },
     "Polly.Extensions.Http": {
         "listed": true,
         "version": "2.0.1"
+    },
+    "Polly.RateLimiting": {
+        "listed": true,
+        "version": "8.0.0"
     },
     "Portable.BouncyCastle": {
         "listed": true,
