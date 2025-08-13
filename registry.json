@@ -1012,6 +1012,13 @@
         "listed": true,
         "version": "8.0.0"
     },
+    "Microsoft.Extensions.Diagnostics.Testing": {
+        "listed": true,
+        "version": "9.8.0",
+        "defineConstraints": [
+            "UNITY_EDITOR"
+        ]
+    },
     "Microsoft.Extensions.Features": {
         "listed": true,
         "version": "6.0.0"
@@ -1107,6 +1114,10 @@
     "Microsoft.Extensions.Primitives": {
         "listed": true,
         "version": "2.0.0"
+    },
+    "Microsoft.Extensions.Telemetry.Abstractions": {
+        "listed": true,
+        "version": "9.8.0"
     },
     "Microsoft.Identity.Abstractions": {
         "listed": true,
