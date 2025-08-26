@@ -164,6 +164,8 @@ namespace UnityNuGet.Tests
                 @"AWSSDK.*",
                 // They have recently released a version with an old version numbering (0.0.1110)
                 @"Castle.Core",
+                // Versions < 0.105.0 depend on a package (RBush) that doesn't ship .netstandard2.0.
+                @"ClosedXML",
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
                 @"CSharpFunctionalExtensions",
                 // Version < 1.0.26 depends on Microsoft.Windows.Compatibility, this one has tons of dependencies that don't target .netstandard2.0. And one of them is System.Speech that doesn't work in Unity.

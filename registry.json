@@ -165,7 +165,7 @@
     },
     "ClosedXML": {
         "listed": true,
-        "version": "[0.92.1,0.102.3]"
+        "version": "0.104.2"
     },
     "ClosedXML.Parser": {
         "listed": true,
@@ -1432,6 +1432,14 @@
     "R3": {
         "listed": true,
         "version": "0.0.3"
+    },
+    "RBush": {
+        "listed": true,
+        "version": "4.0.0"
+    },
+    "RBush.Signed": {
+        "listed": true,
+        "version": "4.0.0"
     },
     "Reactive.Streams": {
         "listed": true,
