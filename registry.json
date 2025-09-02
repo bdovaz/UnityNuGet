@@ -755,6 +755,10 @@
         "listed": true,
         "version": "1.6.0"
     },
+    "MemoryPools": {
+        "listed": true,
+        "version": "1.1.0"
+    },
     "MessagePack": {
         "listed": true,
         "version": "1.7.0"
