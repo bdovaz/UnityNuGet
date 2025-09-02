@@ -1437,6 +1437,10 @@
         "listed": true,
         "version": "0.0.3"
     },
+    "Raffinert.FuzzySharp": {
+        "listed": true,
+        "version": "2.0.3"
+    },
     "RBush": {
         "listed": true,
         "version": "4.0.0"
