@@ -1032,6 +1032,14 @@
         "listed": true,
         "version": "9.8.0"
     },
+    "Microsoft.Extensions.Diagnostics.HealthChecks": {
+        "listed": true,
+        "version": "2.2.0"
+    },
+    "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions": {
+        "listed": true,
+        "version": "2.2.0"
+    },
     "Microsoft.Extensions.Diagnostics.Testing": {
         "listed": true,
         "version": "9.8.0",
@@ -1440,6 +1448,10 @@
     "R3": {
         "listed": true,
         "version": "0.0.3"
+    },
+    "Raffinert.FuzzySharp": {
+        "listed": true,
+        "version": "2.0.3"
     },
     "RBush": {
         "listed": true,
