@@ -1034,11 +1034,11 @@
     },
     "Microsoft.Extensions.Diagnostics.HealthChecks": {
         "listed": true,
-        "version": "8.0.0"
+        "version": "2.2.0"
     },
     "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions": {
         "listed": true,
-        "version": "8.0.0"
+        "version": "2.2.0"
     },
     "Microsoft.Extensions.Diagnostics.Testing": {
         "listed": true,
