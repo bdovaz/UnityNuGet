@@ -1028,6 +1028,14 @@
         "listed": true,
         "version": "8.0.0"
     },
+    "Microsoft.Extensions.Diagnostics.HealthChecks": {
+        "listed": false,
+        "version": "8.0.0"
+    },
+    "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions": {
+        "listed": true,
+        "version": "8.0.0"
+    },
     "Microsoft.Extensions.Diagnostics.ExceptionSummarization": {
         "listed": true,
         "version": "9.8.0"
