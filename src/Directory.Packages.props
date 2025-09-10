@@ -6,7 +6,7 @@
     <PackageVersion Include="ICSharpCode.Decompiler" Version="9.1.0.7988" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.8" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="9.8.0" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.8" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.9" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.7" />
     <PackageVersion Include="Microsoft.NET.ILLink.Tasks" Version="9.0.8" />
@@ -14,7 +14,7 @@
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="NuGet.PackageManagement" Version="6.14.0" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.8" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.9" />
     <PackageVersion Include="NUglify" Version="1.21.17" />
     <PackageVersion Include="nunit" Version="4.4.0" />
     <PackageVersion Include="NUnit.Analyzers" Version="4.10.0" />
