@@ -168,6 +168,8 @@ namespace UnityNuGet.Tests
                 @"ClosedXML",
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
                 @"CSharpFunctionalExtensions",
+                // It has too many versions, the minimum version is lifted so as not to process so many versions
+                @"CsvHelper",
                 // Version < 1.0.26 depends on Microsoft.Windows.Compatibility, this one has tons of dependencies that don't target .netstandard2.0. And one of them is System.Speech that doesn't work in Unity.
                 @"Dapplo.Windows.Common",
                 @"Dapplo.Windows.Input",
@@ -177,6 +179,8 @@ namespace UnityNuGet.Tests
                 @"Elasticsearch.Net",
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
                 @"Google.Apis.AndroidPublisher.v3",
+                // It has too many versions, the minimum version is lifted so as not to process so many versions
+                @"Google.Apis.Sheets.v4",
                 // Version 3.1.8 has dependency on `Panic.StringUtils` which doesn't support .netstandard2.0 or 2.1. Rest of versions are fine.
                 @"GraphQL.Client.Serializer.Newtonsoft",
                 // Version 3.1.8 has dependency on `Panic.StringUtils` which doesn't support .netstandard2.0 or 2.1. Rest of versions are fine.
@@ -195,6 +199,8 @@ namespace UnityNuGet.Tests
                 @"SQLitePCLRaw.lib.e_sqlite3",
                 // Versions < 1.4.1 has dependencies on Microsoft.AspNetCore.*.
                 @"StrongInject.Extensions.DependencyInjection",
+                // It has too many versions, the minimum version is lifted so as not to process so many versions
+                @"System.IO.Abstractions",
                 // Versions < 4.6.0 in theory supports .netstandard2.0 but it doesn't have a lib folder with assemblies and it makes it fail.
                 @"System.Private.ServiceModel",
                 // Versions < 0.8.6 depend on LiteGuard, a deprecated dependency.
