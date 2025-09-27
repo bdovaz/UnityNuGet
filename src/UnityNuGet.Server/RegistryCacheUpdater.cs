@@ -43,14 +43,14 @@ namespace UnityNuGet.Server
                     {
                         Filter = _registryOptions.Filter,
                         // Update progress
-                        OnProgress = (current, total) =>
+                        OnProgress = (_, e) =>
                         {
-                            _currentRegistryCache.ProgressTotalPackageCount = total;
-                            _currentRegistryCache.ProgressPackageIndex = current;
+                            _currentRegistryCache.ProgressTotalPackageCount = e.Total;
+                            _currentRegistryCache.ProgressPackageIndex = e.Current;
                         },
-                        OnInformation = _registryCacheReport.AddInformation,
-                        OnWarning = _registryCacheReport.AddWarning,
-                        OnError = _registryCacheReport.AddError
+                        OnInformation = (_, e) => _registryCacheReport.AddInformation(e.Message),
+                        OnWarning = (_, e) => _registryCacheReport.AddWarning(e.Message),
+                        OnError = (_, e) => _registryCacheReport.AddError(e.Message)
                     };
 
                     await newRegistryCache.Build(stoppingToken);

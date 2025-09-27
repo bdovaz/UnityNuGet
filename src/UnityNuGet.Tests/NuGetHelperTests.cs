@@ -23,7 +23,7 @@ namespace UnityNuGet.Tests
 
             IEnumerable<PackageDependencyGroup> compatibleDependencyGroups = NuGetHelper.GetCompatiblePackageDependencyGroups(packageDependencyGroups, targetFrameworks);
 
-            Assert.That(compatibleDependencyGroups, Is.EqualTo(new PackageDependencyGroup[] { packageDependencyGroups[2] }).AsCollection);
+            Assert.That(compatibleDependencyGroups, Is.EqualTo([packageDependencyGroups[2]]).AsCollection);
         }
 
         [Test]
@@ -41,7 +41,7 @@ namespace UnityNuGet.Tests
 
             IEnumerable<PackageDependencyGroup> compatibleDependencyGroups = NuGetHelper.GetCompatiblePackageDependencyGroups(packageDependencyGroups, targetFrameworks);
 
-            Assert.That(compatibleDependencyGroups, Is.EqualTo(new PackageDependencyGroup[] { packageDependencyGroups[2], packageDependencyGroups[3] }).AsCollection);
+            Assert.That(compatibleDependencyGroups, Is.EqualTo([packageDependencyGroups[2], packageDependencyGroups[3]]).AsCollection);
         }
 
         [Test]

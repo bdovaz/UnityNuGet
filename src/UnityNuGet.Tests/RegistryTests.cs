@@ -41,11 +41,11 @@ namespace UnityNuGet.Tests
 
             await registry.StartAsync(CancellationToken.None);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(registry.TryGetValue(packageName, out RegistryEntry? result), Is.True);
                 Assert.That(result, Is.Not.Null);
-            });
+            }
         }
 
         [Test]
