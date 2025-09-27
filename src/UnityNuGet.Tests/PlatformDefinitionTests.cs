@@ -21,16 +21,16 @@ namespace UnityNuGet.Tests
             // Look-up explicit configuration
             PlatformDefinition? win64 = platformDefs.Find(UnityOs.Windows, UnityCpu.X64);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(win64, Is.Not.Null);
                 Assert.That(win.Os, Is.EqualTo(win64!.Os));
-            });
-            Assert.Multiple(() =>
+            }
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(win64?.Cpu, Is.EqualTo(UnityCpu.X64));
                 Assert.That(win.Children, Does.Contain(win64));
-            });
+            }
 
             // Look-up invalid configuration
             PlatformDefinition? and = platformDefs.Find(UnityOs.Android, UnityCpu.None);
@@ -48,11 +48,11 @@ namespace UnityNuGet.Tests
             HashSet<PlatformDefinition> remaining = platformDefs.GetRemainingPlatforms(visited);
 
             Assert.That(remaining, Is.Not.Null);
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(remaining, Has.Count.EqualTo(1));
                 Assert.That(platformDefs, Is.EqualTo(remaining.First()));
-            });
+            }
         }
 
         [Test]
@@ -70,11 +70,11 @@ namespace UnityNuGet.Tests
 
                 foreach (PlatformDefinition r in remaining)
                 {
-                    Assert.Multiple(() =>
+                    using (Assert.EnterMultipleScope())
                     {
                         Assert.That(child, Is.Not.EqualTo(r));
                         Assert.That(platformDefs.Children, Does.Contain(r));
-                    });
+                    }
                 }
             }
         }

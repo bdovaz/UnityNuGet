@@ -19,8 +19,7 @@ on:
 
 jobs:
   build:
-    # In Ubuntu, there are problems with disk space and resources in general
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout

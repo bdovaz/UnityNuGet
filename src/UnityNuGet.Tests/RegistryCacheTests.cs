@@ -62,7 +62,7 @@ namespace UnityNuGet.Tests
                 ],
                 new NuGetConsoleTestLogger())
             {
-                OnError = message =>
+                OnError = (_, _) =>
                 {
                     errorsTriggered = true;
                 }

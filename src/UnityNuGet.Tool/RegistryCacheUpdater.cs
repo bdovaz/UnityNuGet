@@ -41,12 +41,12 @@ namespace UnityNuGet.Server
                     {
                         Filter = _registryOptions.Filter,
                         // Update progress
-                        OnProgress = (current, total) =>
+                        OnProgress = (_, e) =>
                         {
-                            _currentRegistryCache.ProgressTotalPackageCount = total;
-                            _currentRegistryCache.ProgressPackageIndex = current;
+                            _currentRegistryCache.ProgressTotalPackageCount = e.Total;
+                            _currentRegistryCache.ProgressPackageIndex = e.Current;
                         },
-                        OnError = message => errorCount++
+                        OnError = (_, _) => errorCount++
                     };
 
                     await newRegistryCache.Build(stoppingToken);

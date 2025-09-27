@@ -54,7 +54,7 @@ namespace UnityNuGet.Tests
                 new NuGetConsoleTestLogger())
             {
                 Filter = "rhino3dm",
-                OnError = message =>
+                OnError = (_, _) =>
                 {
                     errorsTriggered = true;
                 }

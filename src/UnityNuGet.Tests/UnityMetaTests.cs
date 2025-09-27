@@ -109,22 +109,22 @@ namespace UnityNuGet.Tests
             MatchCollection excludeMatches = excludeRegex.Matches(output);
             Assert.That(excludeMatches, Is.Not.Null);
             Assert.That(excludeMatches, Has.Count.EqualTo(1));
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(excludeMatches.Single().Groups, Has.Count.EqualTo(2));
                 Assert.That(osName, Is.EqualTo(excludeMatches.Single().Groups[1].Value));
-            });
+            }
 
             // There should be a single 'enabled: 1' match
             Regex enableRegex = new("enabled: 1");
             MatchCollection enableMatches = enableRegex.Matches(output);
             Assert.That(enableMatches, Is.Not.Null);
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(enableMatches, Has.Count.EqualTo(1));
 
                 Assert.That(output, Does.Contain($"- first:\n      {platformName}: {osName}\n    second:\n      enabled: 1\n"));
-            });
+            }
         }
 
         [TestCase(UnityOs.Windows, new[] { "Win", "Win64" })]
@@ -155,11 +155,11 @@ namespace UnityNuGet.Tests
             Regex enableRegex = new ("enabled: 1");
             MatchCollection enableMatches = enableRegex.Matches(output);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(enableMatches, Is.Not.Null);
                 Assert.That(excludeMatches, Has.Count.EqualTo(enableMatches.Count));
-            });
+            }
 
             foreach (string? osName in actualExcludes)
             {

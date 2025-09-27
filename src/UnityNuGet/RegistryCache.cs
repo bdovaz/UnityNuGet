@@ -30,7 +30,7 @@ namespace UnityNuGet
     /// </summary>
     public class RegistryCache
     {
-        public static readonly bool IsRunningOnAzure = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME"));
+        public static readonly bool IsRunningAsContinuousIntegration = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI"));
 
         // Change this version number if the content of the packages are changed by an update of this class
         private const string CurrentRegistryVersion = "1.9.0";
@@ -92,8 +92,8 @@ namespace UnityNuGet
                 Directory.CreateDirectory(_rootPersistentFolder);
             }
 
-            // Force NuGet packages to be in the same directory to avoid storage full on Azure.
-            if (IsRunningOnAzure)
+            // Force NuGet packages to be in the same directory to avoid storage full on CI.
+            if (IsRunningAsContinuousIntegration)
             {
                 string nugetFolder = Path.Combine(_rootPersistentFolder, ".nuget");
                 Environment.SetEnvironmentVariable("NUGET_PACKAGES", nugetFolder);
@@ -112,6 +112,10 @@ namespace UnityNuGet
 
             _sourceCacheContext = new SourceCacheContext();
             _npmPackageRegistry = new NpmPackageRegistry();
+
+            GlobalPackagesFolder = SettingsUtility.GetGlobalPackagesFolder(_settings);
+
+            LogInformation($"NuGet packages directory: {GlobalPackagesFolder}");
         }
 
         /// <summary>
@@ -122,25 +126,27 @@ namespace UnityNuGet
         /// </remarks>
         public string? Filter { get; set; }
 
+        public string GlobalPackagesFolder { get; }
+
         /// <summary>
         /// OnProgress event (number of packages initialized, total number of packages)
         /// </summary>
-        public Action<int, int>? OnProgress { get; set; }
+        public EventHandler<RegistryProgressEventArgs> OnProgress = (sender, e) => { };
 
         /// <summary>
         /// OnInformation event (information message)
         /// </summary>
-        public Action<string>? OnInformation { get; set; }
+        public EventHandler<RegistryLogEventArgs> OnInformation = (sender, e) => { };
 
         /// <summary>
         /// OnWarning event (warning message)
         /// </summary>
-        public Action<string>? OnWarning { get; set; }
+        public EventHandler<RegistryLogEventArgs> OnWarning = (sender, e) => { };
 
         /// <summary>
         /// OnError event (error message)
         /// </summary>
-        public Action<string>? OnError { get; set; }
+        public EventHandler<RegistryLogEventArgs> OnError = (sender, e) => { };
 
         /// <summary>
         /// Get all packages registered.
@@ -226,7 +232,7 @@ namespace UnityNuGet
                 _sourceRepositories,
                 packageIdentity,
                 new PackageDownloadContext(_sourceCacheContext),
-                SettingsUtility.GetGlobalPackagesFolder(_settings),
+                GlobalPackagesFolder,
                 _logger,
                 cancellationToken);
         }
@@ -254,10 +260,6 @@ namespace UnityNuGet
                 LogInformation($"Filtering with regex: {Filter}");
             }
 
-            Action<int, int>? onProgress = OnProgress;
-
-            string globalPackagesFolder = SettingsUtility.GetGlobalPackagesFolder(_settings);
-
             int progressCount = 0;
 
             foreach (KeyValuePair<string, RegistryEntry> packageDesc in _registry)
@@ -266,7 +268,7 @@ namespace UnityNuGet
                 RegistryEntry packageEntry = packageDesc.Value;
 
                 // Log progress count
-                onProgress?.Invoke(++progressCount, _registry.Count);
+                OnProgress(this, new RegistryProgressEventArgs(++progressCount, _registry.Count));
 
                 // A package entry is ignored but allowed in the registry (case of Microsoft.CSharp)
                 if (packageEntry.Ignored || (regexFilter != null && !regexFilter.IsMatch(packageName)))
@@ -543,13 +545,15 @@ namespace UnityNuGet
                         // Update the cache entry
                         await WritePackageCacheEntry(packageId, cacheEntry, cancellationToken);
 
-                        if (packageConverted && IsRunningOnAzure)
+                        if (packageConverted && IsRunningAsContinuousIntegration)
                         {
-                            string localPackagePath = Path.Combine(globalPackagesFolder, packageIdentity.Id.ToLowerInvariant(), packageIdentity.Version.ToString());
+                            string localPackagePath = Path.Combine(GlobalPackagesFolder, packageIdentity.Id.ToLowerInvariant(), packageIdentity.Version.ToString());
 
                             if (Directory.Exists(localPackagePath))
                             {
                                 Directory.Delete(localPackagePath, true);
+
+                                LogInformation($"The NuGet package cache folder has been deleted: {localPackagePath}");
                             }
                             else
                             {
@@ -1397,19 +1401,19 @@ namespace UnityNuGet
         private void LogInformation(string message)
         {
             _logger.LogInformation(message);
-            OnInformation?.Invoke(message);
+            OnInformation(this, new RegistryLogEventArgs(message));
         }
 
         private void LogWarning(string message)
         {
             _logger.LogWarning(message);
-            OnWarning?.Invoke(message);
+            OnWarning(this, new RegistryLogEventArgs(message));
         }
 
         private void LogError(string message)
         {
             _logger.LogError(message);
-            OnError?.Invoke(message);
+            OnError(this, new RegistryLogEventArgs(message));
         }
 
         private static List<string> SplitCommaSeparatedString(string input)
