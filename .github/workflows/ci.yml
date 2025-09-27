@@ -22,20 +22,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Disk space (before)
-        shell: bash
-        run: df -H
-
-      - name: Free Disk space
-        shell: bash
-        run: |
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/share/dotnet
-
-      - name: Disk space (after)
-        shell: bash
-        run: df -H
-
       - name: Checkout
         uses: actions/checkout@v5
 
