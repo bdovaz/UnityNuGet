@@ -1781,6 +1781,10 @@
         "listed": true,
         "version": "1.4.0"
     },
+    "System.CommandLine": {
+        "listed": true,
+        "version": "2.0.0"
+    },
     "System.ComponentModel.Annotations": {
         "listed": true,
         "version": "4.4.0"
