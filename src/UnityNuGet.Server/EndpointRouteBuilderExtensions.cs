@@ -40,6 +40,7 @@ namespace Microsoft.AspNetCore.Builder
                 }
 
                 NpmPackageListAllResponse? result = instance?.All();
+
                 return Results.Json(result, UnityNuGetJsonSerializerContext.Default);
             });
         }
@@ -54,6 +55,7 @@ namespace Microsoft.AspNetCore.Builder
                 }
 
                 NpmPackage? package = instance?.GetPackage(id);
+
                 if (package == null)
                 {
                     return Results.Json(NpmError.NotFound, UnityNuGetJsonSerializerContext.Default);
@@ -73,6 +75,7 @@ namespace Microsoft.AspNetCore.Builder
                 }
 
                 NpmPackage? package = instance?.GetPackage(id);
+
                 if (package == null)
                 {
                     return Results.Json(NpmError.NotFound, UnityNuGetJsonSerializerContext.Default);
@@ -84,6 +87,7 @@ namespace Microsoft.AspNetCore.Builder
                 }
 
                 string? filePath = instance?.GetPackageFilePath(file);
+
                 if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
                 {
                     return Results.Json(NpmError.NotFound, UnityNuGetJsonSerializerContext.Default);
@@ -94,6 +98,7 @@ namespace Microsoft.AspNetCore.Builder
                 {
                     httpContext.Response.ContentType = "application/octet-stream";
                     httpContext.Response.ContentLength = new FileInfo(filePath).Length;
+
                     return Results.Ok();
                 }
                 else
@@ -174,6 +179,7 @@ namespace Microsoft.AspNetCore.Builder
                 string output = Template
                     .Parse(text)
                     .Render(templateContext);
+
                 await context.Response.WriteAsync(output);
             });
         }

@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Version>0.14.0</Version>
+    <TargetFramework>net10.0</TargetFramework>
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
@@ -22,15 +21,12 @@
 
   <ItemGroup>
     <PackageReference Include="ICSharpCode.Decompiler" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
-    <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
     <PackageReference Include="NuGet.PackageManagement" />
     <PackageReference Include="NUglify" />
     <PackageReference Include="Scriban" />
     <PackageReference Include="SharpZipLib" />
     <PackageReference Include="System.ComponentModel.Annotations" />
-    <PackageReference Include="System.Linq.Async" />
   </ItemGroup>
 
 </Project>
