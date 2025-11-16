@@ -52,9 +52,16 @@ jobs:
         if: ${{ success() && env.UNITYNUGET_DEPLOY == 1 }}
         run: dotnet pack src/UnityNuGet.Tool/UnityNuGet.Tool.csproj -c Release -p:PackageVersion=$UNITYNUGET_VERSION -o ${{ runner.temp }}
 
+      - name: NuGet login
+        if: ${{ success() && env.UNITYNUGET_DEPLOY == 1 }}
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Publish (Release)
         if: ${{ success() && env.UNITYNUGET_DEPLOY == 1 }}
         run: |
           dotnet nuget push ${{ runner.temp }}/UnityNuGet.Tool.${{ env.UNITYNUGET_VERSION }}.nupkg \
             --source https://api.nuget.org/v3/index.json \
-            --api-key ${{ secrets.NUGET_API_KEY }}
+            --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
