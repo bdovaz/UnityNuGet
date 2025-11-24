@@ -1845,6 +1845,10 @@
         "listed": true,
         "version": "4.0.0"
     },
+    "System.Linq.AsyncEnumerable": {
+        "listed": true,
+        "version": "10.0.0"
+    },
     "System.Management": {
         "listed": true,
         "version": "4.5.0"
