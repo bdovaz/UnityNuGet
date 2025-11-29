@@ -136,6 +136,10 @@
         "listed": true,
         "version": "0.0.43"
     },
+    "BinaryEx": {
+        "listed": true,
+        "version": "0.3.0"
+    },
     "BouncyCastle.Cryptography": {
         "listed": true,
         "version": "2.0.0"
