@@ -19,7 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\..\registry.json" />
+    <EmbeddedResource Include="..\..\registry.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
     <ProjectReference Include="..\UnityNuGet\UnityNuGet.csproj" />
   </ItemGroup>
 
