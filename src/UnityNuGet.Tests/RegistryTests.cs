@@ -1,15 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
-using Moq;
 using NuGet.Configuration;
 using NuGet.PackageManagement;
 using NuGet.Packaging;
@@ -31,13 +28,10 @@ namespace UnityNuGet.Tests
         [TestCase("Scriban")]
         public async Task Make_Sure_That_The_Registry_Is_Case_Insensitive(string packageName)
         {
-            Mock<IHostEnvironment> hostEnvironmentMock = new();
-            hostEnvironmentMock.Setup(h => h.EnvironmentName).Returns(Environments.Development);
-
             LoggerFactory loggerFactory = new();
             loggerFactory.AddProvider(new FakeLoggerProvider());
 
-            Registry registry = new(hostEnvironmentMock.Object, loggerFactory, Options.Create(s_registryOptions));
+            Registry registry = new(loggerFactory, Options.Create(s_registryOptions));
 
             await registry.StartAsync(CancellationToken.None);
 
@@ -51,13 +45,10 @@ namespace UnityNuGet.Tests
         [Test]
         public async Task Make_Sure_That_The_Order_In_The_Registry_Is_Respected()
         {
-            Mock<IHostEnvironment> hostEnvironmentMock = new();
-            hostEnvironmentMock.Setup(h => h.EnvironmentName).Returns(Environments.Development);
-
             LoggerFactory loggerFactory = new();
             loggerFactory.AddProvider(new FakeLoggerProvider());
 
-            Registry registry = new(hostEnvironmentMock.Object, loggerFactory, Options.Create(s_registryOptions));
+            Registry registry = new(loggerFactory, Options.Create(s_registryOptions));
 
             await registry.StartAsync(CancellationToken.None);
 
@@ -70,13 +61,10 @@ namespace UnityNuGet.Tests
         [Test]
         public async Task Ensure_That_Packages_Already_Included_In_Net_Standard_Are_not_Included_In_The_Registry()
         {
-            Mock<IHostEnvironment> hostEnvironmentMock = new();
-            hostEnvironmentMock.Setup(h => h.EnvironmentName).Returns(Environments.Development);
-
             LoggerFactory loggerFactory = new();
             loggerFactory.AddProvider(new FakeLoggerProvider());
 
-            Registry registry = new(hostEnvironmentMock.Object, loggerFactory, Options.Create(s_registryOptions));
+            Registry registry = new(loggerFactory, Options.Create(s_registryOptions));
 
             await registry.StartAsync(CancellationToken.None);
 
@@ -138,19 +126,16 @@ namespace UnityNuGet.Tests
 
         static async Task<TestCaseData[]> AllRegistries()
         {
-            Mock<IHostEnvironment> hostEnvironmentMock = new ();
-            hostEnvironmentMock.Setup(h => h.EnvironmentName).Returns(Environments.Development);
-
-            LoggerFactory loggerFactory = new ();
+            LoggerFactory loggerFactory = new();
             loggerFactory.AddProvider(new FakeLoggerProvider());
 
-            Registry registry = new (hostEnvironmentMock.Object, loggerFactory, Options.Create(s_registryOptions));
+            Registry registry = new(loggerFactory, Options.Create(s_registryOptions));
 
-            NuGetConsoleTestLogger logger = new ();
+            NuGetConsoleTestLogger logger = new();
 
             await registry.StartAsync(CancellationToken.None);
 
-            SourceCacheContext cache = new ();
+            SourceCacheContext cache = new();
             SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
             PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>();
 

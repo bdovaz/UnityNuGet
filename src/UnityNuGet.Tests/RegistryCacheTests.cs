@@ -2,11 +2,9 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
-using Moq;
 using NuGet.Versioning;
 using NUnit.Framework;
 using UnityNuGet.Npm;
@@ -31,14 +29,11 @@ namespace UnityNuGet.Tests
         {
             bool errorsTriggered = false;
 
-            Mock<IHostEnvironment> hostEnvironmentMock = new();
-            hostEnvironmentMock.Setup(h => h.EnvironmentName).Returns(Environments.Development);
-
             LoggerFactory loggerFactory = new();
             loggerFactory.AddProvider(new FakeLoggerProvider());
 
             string unityPackages = Path.Combine(Path.GetDirectoryName(typeof(RegistryCacheTests).Assembly.Location)!, "unity_packages");
-            Registry registry = new(hostEnvironmentMock.Object, loggerFactory, Options.Create(new RegistryOptions { RegistryFilePath = "registry.json" }));
+            Registry registry = new(loggerFactory, Options.Create(new RegistryOptions { RegistryFilePath = "registry.json" }));
 
             await registry.StartAsync(CancellationToken.None);
 

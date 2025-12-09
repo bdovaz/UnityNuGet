@@ -15,13 +15,11 @@ namespace UnityNuGet
     /// Loads the `registry.json` file at startup
     /// </summary>
     public sealed class Registry(
-        IHostEnvironment hostEnvironment,
         ILoggerFactory loggerFactory,
         IOptions<RegistryOptions> registryOptionsAccessor) : IHostedService, IReadOnlyCollection<KeyValuePair<string, RegistryEntry>>, IEnumerable<KeyValuePair<string, RegistryEntry>>
     {
         private IDictionary<string, RegistryEntry>? _data;
 
-        private readonly IHostEnvironment _hostEnvironment = hostEnvironment;
         private readonly ILoggerFactory _loggerFactory = loggerFactory;
         private readonly RegistryOptions _registryOptions = registryOptionsAccessor.Value;
 
@@ -43,20 +41,7 @@ namespace UnityNuGet
             }
             else
             {
-                bool isDevelopment = _hostEnvironment.IsDevelopment();
-
-                string currentDirectory;
-
-                if (isDevelopment)
-                {
-                    currentDirectory = Path.GetDirectoryName(AppContext.BaseDirectory)!;
-                }
-                else
-                {
-                    currentDirectory = Directory.GetCurrentDirectory();
-                }
-
-                registryFilePath = Path.Combine(currentDirectory, _registryOptions.RegistryFilePath!);
+                registryFilePath = Path.Combine(Directory.GetCurrentDirectory(), _registryOptions.RegistryFilePath!);
             }
 
             ILogger logger = _loggerFactory.CreateLogger("NuGet");
