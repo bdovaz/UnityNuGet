@@ -398,7 +398,7 @@
     },
     "DocumentFormat.OpenXml.Framework": {
         "listed": true,
-        "version": "3.0.0"
+        "version": "1.0.0"
     },
     "DotNetty.Buffers": {
         "listed": true,
