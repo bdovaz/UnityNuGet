@@ -75,8 +75,8 @@ For earlier Unity versions, uncheck `Project Settings > Player > Other Settings 
 
 > [!WARNING]
 > You may also experience timeouts when installing UnityNuGet packages, with a message like:
-> > [Package Manager Window] Error adding package: org.nuget.microsoft.extensions.logging.abstractions@6.0.0.  
-> > connect ETIMEDOUT 143.244.220.150:443  
+> > [Package Manager Window] Error adding package: org.nuget.microsoft.extensions.logging.abstractions@6.0.0.
+> > connect ETIMEDOUT 143.244.220.150:443
 > > UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
 >
 > Verify that you are using the new OpenUPM-based URL and not the old Azure Websites URL.
@@ -190,6 +190,12 @@ This project implements a simplified compatible NPM server in C# using ASP.NET C
 At a threshold defined by `UpdateInterval` (10 minutes by default), packages are updated from NuGet so that if a new version is published, from the curated list of NuGet packages, it will be available through this service.
 
 Once converted, these packages are cached on the disk on the server.
+
+### **Which version of Roslyn analyzers should I use?**
+
+See the analyzer-specific page in the repository below:
+
+- [Which version of Roslyn analyzers should I use with Unity?](https://github.com/nowsprinting/which-version-of-roslyn-analyzers-should-i-use-with-unity)
 
 ## License
 
