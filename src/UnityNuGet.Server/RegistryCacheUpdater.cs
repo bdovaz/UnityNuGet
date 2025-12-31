@@ -18,6 +18,7 @@ namespace UnityNuGet.Server
         private readonly RegistryCacheSingleton _currentRegistryCache = currentRegistryCache;
         private readonly ILogger _logger = logger;
         private readonly RegistryOptions _registryOptions = registryOptionsAccessor.Value;
+        private readonly bool _allowServingWithMissingDependencies = registryOptionsAccessor.Value.AllowServingWithMissingDependencies;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -57,7 +58,16 @@ namespace UnityNuGet.Server
 
                     if (_registryCacheReport.ErrorMessages.Any())
                     {
-                        _logger.LogInformation("RegistryCache not updated due to errors. See previous logs");
+                        bool onlyMissingDependencyErrors = _registryCacheReport.ErrorMessages.All(IsMissingDependencyError);
+                        if (_allowServingWithMissingDependencies && onlyMissingDependencyErrors)
+                        {
+                            _currentRegistryCache.Instance = newRegistryCache;
+                            _logger.LogWarning("RegistryCache updated with errors. Serving partial results; see previous logs.");
+                        }
+                        else
+                        {
+                            _logger.LogInformation("RegistryCache not updated due to errors. See previous logs");
+                        }
                     }
                     else
                     {
@@ -90,6 +100,12 @@ namespace UnityNuGet.Server
                 _registryCacheReport.AddError($"{message}. Reason: {ex}");
                 _registryCacheReport.Complete();
             }
+        }
+
+        private static bool IsMissingDependencyError(string message)
+        {
+            return message.Contains("has a dependency on", StringComparison.Ordinal)
+                && message.Contains("which is not in the registry", StringComparison.Ordinal);
         }
     }
 }

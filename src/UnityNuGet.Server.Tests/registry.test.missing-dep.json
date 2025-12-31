@@ -1,0 +1,6 @@
+{
+    "Serilog.Sinks.File": {
+        "listed": true,
+        "version": "5.0.0"
+    }
+}

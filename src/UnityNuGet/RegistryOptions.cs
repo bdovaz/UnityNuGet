@@ -35,6 +35,8 @@ namespace UnityNuGet
         [Required]
         public TimeSpan UpdateInterval { get; set; }
 
+        public bool AllowServingWithMissingDependencies { get; set; }
+
         [Required]
         [ValidateEnumeratedItems]
         public RegistryTargetFramework[]? TargetFrameworks { get; set; }

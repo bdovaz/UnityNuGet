@@ -21,4 +21,10 @@
     <ProjectReference Include="..\UnityNuGet.Server\UnityNuGet.Server.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="registry.test.missing-dep.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
