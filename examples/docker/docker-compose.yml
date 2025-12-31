@@ -12,6 +12,7 @@ services:
         - Registry:RegistryFilePath=/data/registry.json # Path to the file (relative or absolute) where the packages registry file will be stored, default is "registry.json".
         - Registry:RootPersistentFolder=/data/unity_packages # Path to the folder (relative or absolute) where the packages cache will be stored, default is "unity_packages".
         - Registry:UpdateInterval=00:01:00 # Packages update interval, default is "00:10:00" (10 minutes).
+        - Registry:AllowServingWithMissingDependencies=false # Set to true to ignore missing dependency errors and keep serving (friendlier for production).
         - Logging:LogLevel:Default=Information
       ports:
         - 5000:8080
