@@ -956,6 +956,10 @@
         "listed": true,
         "version": "[3.1.0,6.0.0)"
     },
+    "Microsoft.Extensions.AI.Abstractions": {
+        "listed": true,
+        "version": "9.5.0"
+    },
     "Microsoft.Extensions.AmbientMetadata.Application": {
         "listed": true,
         "version": "9.8.0"
