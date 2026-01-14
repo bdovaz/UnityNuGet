@@ -491,6 +491,10 @@
         "listed": true,
         "version": "1.7.0"
     },
+    "FlipBinding.CSharp": {
+        "listed": true,
+        "version": "1.0.0"
+    },
     "FluentAssertions": {
         "listed": true,
         "version": "5.0.0",
