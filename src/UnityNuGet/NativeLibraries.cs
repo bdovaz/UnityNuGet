@@ -30,9 +30,9 @@ namespace UnityNuGet
 
                 string[] system = folders[1].Split('-');
 
-                if (system.Length != 2)
+                if (system.Length < 1)
                 {
-                    logger.LogInformation($"Skipping file located in the runtime folder that does not specify platform and architecture: {file} ...");
+                    logger.LogInformation($"Skipping file located in the runtime folder that does not specify platform: {file} ...");
                     continue;
                 }
 
@@ -51,13 +51,21 @@ namespace UnityNuGet
                     continue;
                 }
 
-                UnityCpu? cpu = system[1] switch
+                UnityCpu? cpu = null;
+                if (system.Length > 1)
                 {
-                    "x86" => UnityCpu.X86,
-                    "x64" => UnityCpu.X64,
-                    "arm64" => UnityCpu.ARM64,
-                    _ => null
-                };
+                    cpu = system[1] switch
+                    {
+                        "x86" => UnityCpu.X86,
+                        "x64" => UnityCpu.X64,
+                        "arm64" => UnityCpu.ARM64,
+                        _ => null
+                    };
+                }
+                else if (os == UnityOs.OSX)
+                {
+                    cpu = UnityCpu.AnyCpu;
+                }
 
                 if (cpu is null)
                 {
