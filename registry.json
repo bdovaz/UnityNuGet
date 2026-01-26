@@ -336,6 +336,10 @@
         "listed": true,
         "version": "2.4.0"
     },
+	"CommunityToolkit.HighPerformance": {
+		"listed": true,
+        "version": "7.0.1"
+	},
     "CommunityToolkit.Mvvm": {
         "listed": true,
         "version": "7.0.1"
