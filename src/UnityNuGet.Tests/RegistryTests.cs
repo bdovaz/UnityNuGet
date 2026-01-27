@@ -124,6 +124,40 @@ namespace UnityNuGet.Tests
             Assert.That(libFiles.SetEquals(runtimeFiles), Is.True);
         }
 
+        [Test]
+        public async Task CanParse_PackageWithOsxUniversalNative()
+        {
+            NuGetConsoleTestLogger logger = new();
+            SourceCacheContext cache = new();
+            ISettings settings = Settings.LoadDefaultSettings(root: null);
+            SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
+
+            // Fetch a package that has osx (Universal Binary) native libraries
+            // Example: MongoDB.Libmongocrypt or similar packages with runtimes/osx/native/*.dylib
+            DownloadResourceResult downloadResult = await PackageDownloader.GetDownloadResourceResultAsync(
+                    [repository],
+                    new PackageIdentity("MongoDB.Libmongocrypt", new NuGetVersion(1, 11, 0)),
+                    new PackageDownloadContext(cache),
+                    SettingsUtility.GetGlobalPackagesFolder(settings),
+                    logger, CancellationToken.None);
+
+            // Make sure we have native libraries for osx (Universal Binary)
+            List<(string file, string[] folders, UnityOs os, UnityCpu cpu)> nativeLibs = await NativeLibraries
+                .GetSupportedNativeLibsAsync(downloadResult.PackageReader, logger)
+                .ToListAsync();
+
+            // Should have at least one osx native library
+            Assert.That(nativeLibs, Is.Not.Empty);
+
+            // Make sure we have osx native libraries with AnyCpu (Universal Binary)
+            PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
+            PlatformDefinition? osxUniversal = platformDefs.Find(UnityOs.OSX, UnityCpu.AnyCpu);
+            Assert.That(osxUniversal, Is.Not.Null, "OSX Universal Binary platform definition should exist");
+
+            bool hasOsxUniversal = nativeLibs.Any(lib => lib.os == UnityOs.OSX && lib.cpu == UnityCpu.AnyCpu);
+            Assert.That(hasOsxUniversal, Is.True, "Should have at least one osx Universal Binary native library");
+        }
+
         static async Task<TestCaseData[]> AllRegistries()
         {
             LoggerFactory loggerFactory = new();
