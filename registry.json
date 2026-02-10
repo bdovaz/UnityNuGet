@@ -672,6 +672,10 @@
         "listed": true,
         "version": "0.9.9"
     },
+    "ICSharpCode.Decompiler": {
+        "listed": true,
+        "version": "7.0.0"
+    },
     "IdentityModel": {
         "listed": true,
         "version": "2.13.0",
