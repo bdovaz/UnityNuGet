@@ -674,7 +674,10 @@
     },
     "ICSharpCode.Decompiler": {
         "listed": true,
-        "version": "7.0.0"
+        "version": "7.0.0",
+        "defineConstraints": [
+            "UNITY_EDITOR"
+        ]
     },
     "IdentityModel": {
         "listed": true,
