@@ -668,9 +668,20 @@
         "listed": true,
         "version": "1.5.3"
     },
+    "Humanizer.Core": {
+        "listed": true,
+        "version": "2.3.2"
+    },
     "Hyperion": {
         "listed": true,
         "version": "0.9.9"
+    },
+    "ICSharpCode.Decompiler": {
+        "listed": true,
+        "version": "6.0.0.5836",
+        "defineConstraints": [
+            "UNITY_EDITOR"
+        ]
     },
     "IdentityModel": {
         "listed": true,
