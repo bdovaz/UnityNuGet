@@ -1400,6 +1400,26 @@
         "listed": true,
         "version": "1.0.0"
     },
+    "OpenTelemetry": {
+        "listed": true,
+        "version": "1.0.1"
+    },
+    "OpenTelemetry.Api": {
+        "listed": true,
+        "version": "1.0.1"
+    },
+    "OpenTelemetry.Api.ProviderBuilderExtensions": {
+        "listed": true,
+        "version": "1.4.0"
+    },
+    "OpenTelemetry.Extensions.Hosting": {
+        "listed": true,
+        "version": "1.4.0"
+    },
+    "OpenTelemetry.Instrumentation.Http": {
+        "listed": true,
+        "version": "1.6.0"
+    },
     "Parse": {
         "listed": true,
         "version": "3.0.0"
