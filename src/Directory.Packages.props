@@ -16,7 +16,7 @@
     <PackageVersion Include="NuGet.PackageManagement" Version="7.3.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0" />
     <PackageVersion Include="NUglify" Version="1.21.17" />
-    <PackageVersion Include="nunit" Version="4.4.0" />
+    <PackageVersion Include="nunit" Version="4.5.0" />
     <PackageVersion Include="NUnit.Analyzers" Version="4.11.2" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.1.0" />
     <PackageVersion Include="Scriban" Version="6.5.2" />
