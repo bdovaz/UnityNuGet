@@ -19,7 +19,7 @@
     <PackageVersion Include="nunit" Version="4.4.0" />
     <PackageVersion Include="NUnit.Analyzers" Version="4.11.2" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.1.0" />
-    <PackageVersion Include="Scriban" Version="6.5.2" />
+    <PackageVersion Include="Scriban" Version="6.5.3" />
     <PackageVersion Include="SharpZipLib" Version="1.4.2" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
   </ItemGroup>
