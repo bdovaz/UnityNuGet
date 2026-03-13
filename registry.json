@@ -1760,6 +1760,10 @@
         "version": "8.30.0.37606",
         "analyzer": true
     },
+    "SourceCraftCommunity.SimplifiedCSharp": {
+        "listed": true,
+        "version": "1.0.1"
+    },
     "SourceGear.sqlite3": {
         "listed": true,
         "version": "3.50.3"
