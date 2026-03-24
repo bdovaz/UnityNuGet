@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Formats.Tar;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -10,8 +12,6 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using ICSharpCode.SharpZipLib.GZip;
-using ICSharpCode.SharpZipLib.Tar;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Frameworks;
@@ -670,14 +670,11 @@ namespace UnityNuGet
 
             try
             {
-                using var memStream = new MemoryStream();
+                await using var memStream = new MemoryStream();
 
-                using (FileStream outStream = File.Create(unityPackageFilePath))
-                using (GZipOutputStream gzoStream = new(outStream)
-                {
-                    ModifiedTime = packageMeta.Published?.UtcDateTime
-                })
-                using (TarOutputStream tarArchive = new(gzoStream, Encoding.UTF8))
+                await using (FileStream outStream = File.Create(unityPackageFilePath))
+                await using (GZipStream gzipStream = new(outStream, CompressionLevel.Optimal))
+                await using (TarWriter tarWriter = new(gzipStream))
                 {
                     // Select the framework version that is the closest or equal to the latest configured framework version
                     IEnumerable<FrameworkSpecificGroup> versions = await packageReader.GetLibItemsAsync(cancellationToken);
@@ -718,7 +715,7 @@ namespace UnityNuGet
                     await TryToWriteAnalyzerFiles(
                         packageReader,
                         identity,
-                        tarArchive,
+                        tarWriter,
                         memStream,
                         modTime,
                         cancellationToken);
@@ -734,13 +731,13 @@ namespace UnityNuGet
                         string analyzerAsmdefFileName = $"{identity.Id}.asmdef";
 
                         await WriteTextFileToTar(
-                            tarArchive,
+                            tarWriter,
                             analyzerAsmdefFileName,
                             analyzerAsmdefAsJson,
                             modTime,
                             cancellationToken);
                         await WriteTextFileToTar(
-                            tarArchive,
+                            tarWriter,
                             $"{analyzerAsmdefFileName}.meta",
                             UnityMeta.GetMetaForExtension(GetStableGuid(identity, analyzerAsmdefFileName), ".asmdef")!,
                             modTime,
@@ -751,13 +748,13 @@ namespace UnityNuGet
                         const string emptyScriptFileName = "EmptyScript.cs";
 
                         await WriteTextFileToTar(
-                            tarArchive,
+                            tarWriter,
                             emptyScriptFileName,
                             emptyScriptContent,
                             modTime,
                             cancellationToken);
                         await WriteTextFileToTar(
-                            tarArchive,
+                            tarWriter,
                             $"{emptyScriptFileName}.meta",
                             UnityMeta.GetMetaForExtension(GetStableGuid(identity, emptyScriptFileName), ".cs")!,
                             modTime,
@@ -880,23 +877,21 @@ namespace UnityNuGet
                             memStream.Position = 0;
                             memStream.SetLength(0);
 
-                            using Stream stream = await packageReader.GetStreamAsync(file.SourcePath, cancellationToken);
+                            await using Stream stream = await packageReader.GetStreamAsync(file.SourcePath, cancellationToken);
 
                             await stream.CopyToAsync(memStream, cancellationToken);
 
-                            byte[] buffer = memStream.ToArray();
-
                             // write content
                             await WriteBufferToTar(
-                                tarArchive,
+                                tarWriter,
                                 fileInUnityPackage,
-                                buffer,
+                                memStream,
                                 modTime,
                                 cancellationToken);
 
                             // write meta file
                             await WriteTextFileToTar(
-                                tarArchive,
+                                tarWriter,
                                 $"{fileInUnityPackage}.meta",
                                 meta,
                                 modTime,
@@ -937,21 +932,19 @@ namespace UnityNuGet
 
                         memStream.SetLength(0);
 
-                        using Stream stream = await packageReader.GetStreamAsync(file, cancellationToken);
+                        await using Stream stream = await packageReader.GetStreamAsync(file, cancellationToken);
 
                         await stream.CopyToAsync(memStream, cancellationToken);
 
-                        byte[] buffer = memStream.ToArray();
-
                         await WriteBufferToTar(
-                            tarArchive,
+                            tarWriter,
                             file,
-                            buffer,
+                            memStream,
                             modTime,
                             cancellationToken);
 
                         await WriteTextFileToTar(
-                            tarArchive,
+                            tarWriter,
                             $"{file}.meta",
                             meta,
                             modTime,
@@ -970,7 +963,7 @@ namespace UnityNuGet
                     foreach (string folder in packageFolders)
                     {
                         await WriteTextFileToTar(
-                            tarArchive,
+                            tarWriter,
                             $"{folder}.meta",
                             UnityMeta.GetMetaForFolder(GetStableGuid(identity, folder)),
                             modTime,
@@ -985,13 +978,13 @@ namespace UnityNuGet
                     const string packageJsonFileName = "package.json";
 
                     await WriteTextFileToTar(
-                        tarArchive,
+                        tarWriter,
                         packageJsonFileName,
                         unityPackageAsJson,
                         modTime,
                         cancellationToken);
                     await WriteTextFileToTar(
-                        tarArchive,
+                        tarWriter,
                         $"{packageJsonFileName}.meta",
                         UnityMeta.GetMetaForExtension(GetStableGuid(identity, packageJsonFileName), ".json")!,
                         modTime,
@@ -1001,12 +994,12 @@ namespace UnityNuGet
                     await TryToWriteLicenseFiles(
                         packageMeta,
                         identity,
-                        tarArchive,
+                        tarWriter,
                         modTime,
                         cancellationToken);
                 }
 
-                using (FileStream stream = File.OpenRead(unityPackageFilePath))
+                await using (FileStream stream = File.OpenRead(unityPackageFilePath))
                 {
                     string sha1 = Sha1sum(stream);
 
@@ -1037,9 +1030,9 @@ namespace UnityNuGet
         private async Task TryToWriteAnalyzerFiles(
             PackageReaderBase packageReader,
             PackageIdentity identity,
-            TarOutputStream tarArchive,
+            TarWriter tarWriter,
             MemoryStream memStream,
-            DateTime modTime,
+            DateTimeOffset modTime,
             CancellationToken cancellationToken = default)
         {
             IDictionary<string, string> supportedFiles = await RoslynAnalyzersHelper.GetUnitySupportedFiles(
@@ -1077,7 +1070,7 @@ namespace UnityNuGet
 
                         // write meta file for the folder
                         await WriteTextFileToTar(
-                            tarArchive,
+                            tarWriter,
                             $"{processedDirectoryName}.meta",
                             UnityMeta.GetMetaForFolder(GetStableGuid(identity, processedDirectoryName)),
                             modTime,
@@ -1090,23 +1083,21 @@ namespace UnityNuGet
                 memStream.Position = 0;
                 memStream.SetLength(0);
 
-                using Stream stream = await packageReader.GetStreamAsync(filePath, cancellationToken);
+                await using Stream stream = await packageReader.GetStreamAsync(filePath, cancellationToken);
 
                 await stream.CopyToAsync(memStream, cancellationToken);
 
-                byte[] buffer = memStream.ToArray();
-
                 // write content
                 await WriteBufferToTar(
-                    tarArchive,
+                    tarWriter,
                     fileInUnityPackage,
-                    buffer,
+                    memStream,
                     modTime,
                     cancellationToken);
 
                 // write meta file
                 await WriteTextFileToTar(
-                    tarArchive,
+                    tarWriter,
                     $"{fileInUnityPackage}.meta",
                     meta,
                     modTime,
@@ -1117,7 +1108,7 @@ namespace UnityNuGet
         private static async Task TryToWriteLicenseFiles(
             IPackageSearchMetadata packageMeta,
             PackageIdentity identity,
-            TarOutputStream tarArchive,
+            TarWriter tarWriter,
             DateTime modTime,
             CancellationToken cancellationToken = default)
         {
@@ -1176,14 +1167,14 @@ namespace UnityNuGet
                 const string licenseMdFile = "License.md";
 
                 await WriteTextFileToTar(
-                    tarArchive,
+                    tarWriter,
                     licenseMdFile,
                     license,
                     modTime,
                     cancellationToken);
 
                 await WriteTextFileToTar(
-                    tarArchive,
+                    tarWriter,
                     $"{licenseMdFile}.meta",
                     UnityMeta.GetMetaForExtension(GetStableGuid(identity, licenseMdFile), ".md")!,
                     modTime,
@@ -1282,10 +1273,7 @@ namespace UnityNuGet
                 string cacheEntryAsJson = File.ReadAllText(path);
                 cacheEntry = JsonSerializer.Deserialize(cacheEntryAsJson, UnityNuGetJsonSerializerContext.Default.NpmPackageCacheEntry);
 
-                if (cacheEntry != null)
-                {
-                    cacheEntry.Json = cacheEntryAsJson;
-                }
+                cacheEntry?.Json = cacheEntryAsJson;
 
                 return cacheEntry != null;
             }
@@ -1315,33 +1303,33 @@ namespace UnityNuGet
             }
         }
 
-        private static async Task WriteTextFileToTar(TarOutputStream tarOut, string filePath, string content, DateTime modTime, CancellationToken cancellationToken = default)
+        private static async Task WriteTextFileToTar(TarWriter tarWriter, string filePath, string content, DateTimeOffset modTime, CancellationToken cancellationToken = default)
         {
-            ArgumentNullException.ThrowIfNull(tarOut);
+            ArgumentNullException.ThrowIfNull(tarWriter);
             ArgumentNullException.ThrowIfNull(filePath);
             ArgumentNullException.ThrowIfNull(content);
 
-            byte[] buffer = s_utf8EncodingNoBom.GetBytes(content);
+            await using MemoryStream memoryStream = new(s_utf8EncodingNoBom.GetBytes(content));
 
-            await WriteBufferToTar(tarOut, filePath, buffer, modTime, cancellationToken);
+            await WriteBufferToTar(tarWriter, filePath, memoryStream, modTime, cancellationToken);
         }
 
-        private static async Task WriteBufferToTar(TarOutputStream tarOut, string filePath, byte[] buffer, DateTime modTime, CancellationToken cancellationToken = default)
+        private static async Task WriteBufferToTar(TarWriter tarWriter, string filePath, Stream stream, DateTimeOffset modTime, CancellationToken cancellationToken = default)
         {
-            ArgumentNullException.ThrowIfNull(tarOut);
+            ArgumentNullException.ThrowIfNull(tarWriter);
             ArgumentNullException.ThrowIfNull(filePath);
-            ArgumentNullException.ThrowIfNull(buffer);
+            ArgumentNullException.ThrowIfNull(stream);
 
             filePath = filePath.Replace(@"\", "/");
             filePath = filePath.TrimStart('/');
 
-            var tarEntry = TarEntry.CreateTarEntry($"package/{filePath}");
-            tarEntry.ModTime = modTime;
-            tarEntry.Size = buffer.Length;
+            var tarEntry = new PaxTarEntry(TarEntryType.RegularFile, $"package/{filePath}")
+            {
+                ModificationTime = modTime,
+                DataStream = stream
+            };
 
-            await tarOut.PutNextEntryAsync(tarEntry, cancellationToken);
-            await tarOut.WriteAsync(buffer, cancellationToken);
-            await tarOut.CloseEntryAsync(cancellationToken);
+            await tarWriter.WriteEntryAsync(tarEntry, cancellationToken);
         }
 
         private static UnityPackage CreateUnityPackage(NpmPackageInfo npmPackageInfo, NpmPackageVersion npmPackageVersion)
