@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Formats.Tar;
 using System.IO;
+using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -7,6 +10,7 @@ using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 using NuGet.Versioning;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using UnityNuGet.Npm;
 
 namespace UnityNuGet.Tests
@@ -81,7 +85,33 @@ namespace UnityNuGet.Tests
             Assert.That(scribanPackage, Is.Not.Null);
             string scribanPackageJson = await scribanPackage!.ToJson(UnityNuGetJsonSerializerContext.Default.NpmPackage);
             Assert.That(scribanPackageJson, Does.Contain("org.nuget.scriban"));
-            Assert.That(scribanPackageJson, Does.Contain("2.1.0"));
+            Assert.That(scribanPackageJson, Does.Contain("7.0.0"));
+
+            List<string> entries = [];
+
+            await using (FileStream fileStream = File.OpenRead(Path.Combine("unity_packages", "org.nuget.scriban-7.0.0.tgz")))
+            await using (GZipStream gzipStream = new(fileStream, CompressionMode.Decompress, leaveOpen: false))
+            await using (TarReader tarReader = new(gzipStream))
+            {
+                while (tarReader.GetNextEntry() is TarEntry entry)
+                {
+                    entries.Add(entry.Name);
+                }
+            }
+
+            Assert.That(entries, Is.EqualTo(new List<string>
+            {
+                "package/lib/netstandard2.0/Scriban.dll",
+                "package/lib/netstandard2.0/Scriban.dll.meta",
+                "package/lib/netstandard2.0/Scriban.xml",
+                "package/lib/netstandard2.0/Scriban.xml.meta",
+                "package/lib.meta",
+                "package/lib/netstandard2.0.meta",
+                "package/package.json",
+                "package/package.json.meta",
+                "package/License.md" ,
+                "package/License.md.meta",
+            }).AsCollection);
         }
     }
 }
