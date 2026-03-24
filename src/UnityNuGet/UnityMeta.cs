@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Scriban;
+using Scriban.Runtime;
 
 namespace UnityNuGet
 {
@@ -45,12 +46,12 @@ guid: {{ guid }}
   isOverridable: 0
   isExplicitlyReferenced: 0
   validateReferences: 1
-  platformData:{{exclude_platforms}}
+  platformData:{{ excludePlatforms }}
   - first:
       Any:
     second:
-      enabled: {{ all_enabled }}
-      settings: {}{{ per_platform_settings }}
+      enabled: {{ allEnabled }}
+      settings: {}{{ perPlatformSettings }}
   - first:
       Windows Store Apps: WindowsStoreApps
     second:
@@ -91,26 +92,26 @@ guid: {{ guid }}
                 PlatformDefinition? platIos = platformDef.Find(UnityOs.iOS);
                 PlatformDefinition? platEditor = platformDef.FindEditor();
 
-                var dict = new
+                ScriptObject platformScriptObject = new()
                 {
-                    enablesWin = (platWin != null) ? 1 : 0,
-                    enablesWin64 = (platWin64 != null) ? 1 : 0,
-                    enablesLinux64 = (platLinux64 != null) ? 1 : 0,
-                    enablesOsx = (platOsx != null) ? 1 : 0,
-                    enablesAndroid = (platAndroid != null) ? 1 : 0,
-                    enablesWasm = (platWasm != null) ? 1 : 0,
-                    enablesIos = (platIos != null) ? 1 : 0,
-                    enablesEditor = (platEditor != null) ? 1 : 0,
+                    ["enablesWin"] = (platWin != null) ? 1 : 0,
+                    ["enablesWin64"] = (platWin64 != null) ? 1 : 0,
+                    ["enablesLinux64"] = (platLinux64 != null) ? 1 : 0,
+                    ["enablesOsx"] = (platOsx != null) ? 1 : 0,
+                    ["enablesAndroid"] = (platAndroid != null) ? 1 : 0,
+                    ["enablesWasm"] = (platWasm != null) ? 1 : 0,
+                    ["enablesIos"] = (platIos != null) ? 1 : 0,
+                    ["enablesEditor"] = (platEditor != null) ? 1 : 0,
 
-                    cpuWin = (platWin?.Cpu ?? UnityCpu.None).GetName(),
-                    cpuWin64 = (platWin64?.Cpu ?? UnityCpu.None).GetName(),
-                    cpuLinux64 = (platLinux64?.Cpu ?? UnityCpu.None).GetName(),
-                    cpuOsx = (platOsx?.Cpu ?? UnityCpu.None).GetName(),
-                    cpuAndroid = (platAndroid?.Cpu ?? UnityCpu.None).GetName(),
-                    cpuIos = (platIos?.Cpu ?? UnityCpu.None).GetName(),
-                    cpuEditor = (platEditor?.Cpu ?? UnityCpu.None).GetName(),
+                    ["cpuWin"] = (platWin?.Cpu ?? UnityCpu.None).GetName(),
+                    ["cpuWin64"] = (platWin64?.Cpu ?? UnityCpu.None).GetName(),
+                    ["cpuLinux64"] = (platLinux64?.Cpu ?? UnityCpu.None).GetName(),
+                    ["cpuOsx"] = (platOsx?.Cpu ?? UnityCpu.None).GetName(),
+                    ["cpuAndroid"] = (platAndroid?.Cpu ?? UnityCpu.None).GetName(),
+                    ["cpuIos"] = (platIos?.Cpu ?? UnityCpu.None).GetName(),
+                    ["cpuEditor"] = (platEditor?.Cpu ?? UnityCpu.None).GetName(),
 
-                    osEditor = (platEditor?.Os ?? UnityOs.AnyOs).GetName(),
+                    ["osEditor"] = (platEditor?.Os ?? UnityOs.AnyOs).GetName(),
                 };
 
                 const string excludePlatformsText = @"
@@ -119,95 +120,103 @@ guid: {{ guid }}
     second:
       enabled: 0
       settings:
-        Exclude Android: {{ 1 - enables_android }}
-        Exclude Editor: {{ 1 - enables_editor }}
-        Exclude Linux64: {{ 1 - enables_linux64 }}
-        Exclude OSXUniversal: {{ 1 - enables_osx }}
-        Exclude WebGL: {{ 1 - enables_wasm }}
-        Exclude Win: {{ 1 - enables_win }}
-        Exclude Win64: {{ 1 - enables_win64 }}
-        Exclude iOS: {{ 1 - enables_ios }}";
+        Exclude Android: {{ 1 - enablesAndroid }}
+        Exclude Editor: {{ 1 - enablesEditor }}
+        Exclude Linux64: {{ 1 - enablesLinux64 }}
+        Exclude OSXUniversal: {{ 1 - enablesOsx }}
+        Exclude WebGL: {{ 1 - enablesWasm }}
+        Exclude Win: {{ 1 - enablesWin }}
+        Exclude Win64: {{ 1 - enablesWin64 }}
+        Exclude iOS: {{ 1 - enablesIos }}";
 
                 const string perPlatformSettingsText = @"
   - first:
       Android: Android
     second:
-      enabled: {{ enables_android }}
+      enabled: {{ enablesAndroid }}
       settings:
-        CPU: {{ cpu_android }}
+        CPU: {{ cpuAndroid }}
   - first:
       Editor: Editor
     second:
-      enabled: {{ enables_editor }}
+      enabled: {{ enablesEditor }}
       settings:
-        CPU: {{ cpu_editor }}
+        CPU: {{ cpuEditor }}
         DefaultValueInitialized: true
-        OS: {{ os_editor }}
+        OS: {{ osEditor }}
   - first:
       Standalone: Linux64
     second:
-      enabled: {{ enables_linux64 }}
+      enabled: {{ enablesLinux64 }}
       settings:
-        CPU: {{ cpu_linux64 }}
+        CPU: {{ cpuLinux64 }}
   - first:
       Standalone: OSXUniversal
     second:
-      enabled: {{ enables_osx }}
+      enabled: {{ enablesOsx }}
       settings:
-        CPU: {{ cpu_osx }}
+        CPU: {{ cpuOsx }}
   - first:
       Standalone: Win
     second:
-      enabled: {{ enables_win }}
+      enabled: {{ enablesWin }}
       settings:
-        CPU: {{ cpu_win }}
+        CPU: {{ cpuWin }}
   - first:
       Standalone: Win64
     second:
-      enabled: {{ enables_win64 }}
+      enabled: {{ enablesWin64 }}
       settings:
-        CPU: {{ cpu_win64 }}
+        CPU: {{ cpuWin64 }}
   - first:
       WebGL: WebGL
     second:
-      enabled: {{ enables_wasm }}
+      enabled: {{ enablesWasm }}
       settings: {}
   - first:
       iPhone: iOS
     second:
-      enabled: {{ enables_ios }}
+      enabled: {{ enablesIos }}
       settings:
         AddToEmbeddedBinaries: false
-        CPU: {{ cpu_ios }}
+        CPU: {{ cpuIos }}
         CompileFlags:
         FrameworkDependencies: ";
 
+                TemplateContext platformTemplateContext = new();
+                platformTemplateContext.PushGlobal(platformScriptObject);
+
                 excludePlatforms = Template
                     .Parse(excludePlatformsText)
-                    .Render(dict);
+                    .Render(platformTemplateContext);
 
                 perPlatformSettings = Template
                     .Parse(perPlatformSettingsText)
-                    .Render(dict);
+                    .Render(platformTemplateContext);
             }
 
             bool allPlatformsEnabled = (platformDef.Os == UnityOs.AnyOs) && (platformDef.Cpu == UnityCpu.AnyCpu);
 
+            ScriptObject dllMetaScriptObject = new()
+            {
+                ["excludePlatforms"] = excludePlatforms,
+                ["perPlatformSettings"] = perPlatformSettings,
+                ["guid"] = guid.ToString("N"),
+                ["allEnabled"] = allPlatformsEnabled ? "1" : "0",
+                ["labels"] = allLabels.Count == 0
+                    ? string.Empty
+                    : $"labels:\n{FormatList(allLabels)}",
+                ["constraints"] = allConstraints.Count == 0
+                    ? string.Empty
+                    : $"  defineConstraints:\n{FormatList(allConstraints)}"
+            };
+
+            TemplateContext dllMetaTemplateContext = new();
+            dllMetaTemplateContext.PushGlobal(dllMetaScriptObject);
+
             return Template
                 .Parse(text)
-                .Render(new
-                {
-                    excludePlatforms,
-                    perPlatformSettings,
-                    guid = guid.ToString("N"),
-                    allEnabled = allPlatformsEnabled ? "1" : "0",
-                    labels = allLabels.Count == 0
-                        ? string.Empty
-                        : $"labels:\n{FormatList(allLabels)}",
-                    constraints = allConstraints.Count == 0
-                        ? string.Empty
-                        : $"  defineConstraints:\n{FormatList(allConstraints)}"
-                })
+                .Render(dllMetaTemplateContext)
                 .StripWindowsNewlines();
         }
 
