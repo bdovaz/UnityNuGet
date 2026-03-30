@@ -2161,6 +2161,10 @@
         "listed": true,
         "version": "12.0.0"
     },
+    "Zirou.Tomlyn.Extensions.Configuration": {
+        "listed": true,
+        "version": "2.0.0"
+    },
     "ZLinq": {
         "listed": true,
         "version": "0.5.0"
