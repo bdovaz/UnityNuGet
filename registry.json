@@ -794,6 +794,10 @@
         "listed": true,
         "version": "1.0.0.1"
     },
+    "MersenneTwister": {
+        "listed": true,
+        "version": "1.0.5"
+    },
     "MessagePack": {
         "listed": true,
         "version": "1.7.0"
