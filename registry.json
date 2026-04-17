@@ -1627,6 +1627,10 @@
         "listed": true,
         "version": "1.0.0"
     },
+    "Serialize.Linq": {
+        "listed": true,
+        "version": "1.7.0"
+    },
     "Serilog": {
         "listed": true,
         "version": "2.8.0"
