@@ -562,6 +562,14 @@
         "listed": true,
         "version": "1.35.0"
     },
+    "Google.Apis.Drive.v3": {
+        "listed": true,
+        "version": "1.35.1.1312"
+    },
+    "Google.Apis.Script.v1": {
+        "listed": true,
+        "version": "1.35.1.1314"
+    },
     "Google.Apis.Sheets.v4": {
         "listed": true,
         "version": "1.70.0.3819"
