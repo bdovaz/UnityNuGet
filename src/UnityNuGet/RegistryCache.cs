@@ -1323,6 +1323,11 @@ namespace UnityNuGet
             filePath = filePath.Replace(@"\", "/");
             filePath = filePath.TrimStart('/');
 
+            if (stream.CanSeek)
+            {
+                stream.Position = 0;
+            }
+
             var tarEntry = new PaxTarEntry(TarEntryType.RegularFile, $"package/{filePath}")
             {
                 ModificationTime = modTime,

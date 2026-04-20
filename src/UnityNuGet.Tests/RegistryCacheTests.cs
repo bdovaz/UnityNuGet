@@ -95,6 +95,7 @@ namespace UnityNuGet.Tests
             {
                 while (tarReader.GetNextEntry() is TarEntry entry)
                 {
+                    Assert.That(entry.Length, Is.GreaterThan(0), $"Entry '{entry.Name}' has zero bytes");
                     entries.Add(entry.Name);
                 }
             }
