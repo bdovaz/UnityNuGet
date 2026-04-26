@@ -33,7 +33,7 @@ namespace UnityNuGet
         public static readonly bool IsRunningAsContinuousIntegration = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI"));
 
         // Change this version number if the content of the packages are changed by an update of this class
-        private const string CurrentRegistryVersion = "1.9.0";
+        private const string CurrentRegistryVersion = "1.9.1";
 
         private static readonly Encoding s_utf8EncodingNoBom = new UTF8Encoding(false, false);
         private readonly Registry _registry;
