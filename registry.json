@@ -1340,6 +1340,14 @@
         "listed": true,
         "version": "2.7.0"
     },
+    "MQTTnet": {
+        "listed": true,
+        "version": "2.5.1"
+    },
+    "MQTTnet.Extensions.ManagedClient": {
+        "listed": true,
+        "version": "4.0.0.167"
+    },
     "MumbleSharp": {
         "listed": true,
         "version": "2.0.0"
