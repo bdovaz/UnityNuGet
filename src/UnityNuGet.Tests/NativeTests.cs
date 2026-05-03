@@ -46,7 +46,8 @@ namespace UnityNuGet.Tests
                     new() { Version = new Version(3, 8, 0, 0), DefineConstraints = ["!UNITY_6000_0_OR_NEWER"] },
                     new() { Version = new Version(4, 3, 0, 0), DefineConstraints = ["UNITY_6000_0_OR_NEWER"] },
                 ],
-                new NuGetConsoleTestLogger())
+                new NuGetConsoleTestLogger(),
+                new UnityPackageSigner(loggerFactory.CreateLogger<UnityPackageSigner>(), Options.Create(new SigningOptions())))
             {
                 Filter = "rhino3dm",
                 OnError = (_, _) =>

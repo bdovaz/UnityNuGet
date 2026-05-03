@@ -50,8 +50,10 @@ namespace UnityNuGet
         private readonly IEnumerable<SourceRepository> _sourceRepositories;
         private readonly SourceCacheContext _sourceCacheContext;
         private readonly NpmPackageRegistry _npmPackageRegistry;
+        private readonly UnityPackageSigner _unityPackageSigner;
+        private readonly bool _canSignPackages;
 
-        public RegistryCache(Registry registry, RegistryCache registryCache) : this(
+        public RegistryCache(Registry registry, RegistryCache registryCache, UnityPackageSigner unityPackageSigner) : this(
             registry,
             registryCache._rootPersistentFolder,
             registryCache._rootHttpUri,
@@ -61,7 +63,8 @@ namespace UnityNuGet
             registryCache._packageKeywords,
             registryCache._targetFrameworks,
             registryCache._roslynAnalyzerVersions,
-            registryCache._logger)
+            registryCache._logger,
+            unityPackageSigner)
         {
         }
 
@@ -75,7 +78,8 @@ namespace UnityNuGet
             string[] packageKeywords,
             RegistryTargetFramework[] targetFrameworks,
             RoslynAnalyzerVersion[] roslynAnalyzerVersions,
-            ILogger logger)
+            ILogger logger,
+            UnityPackageSigner unityPackageSigner)
         {
             _registry = registry;
             _rootPersistentFolder = rootPersistentFolder ?? throw new ArgumentNullException(nameof(rootPersistentFolder));
@@ -103,6 +107,7 @@ namespace UnityNuGet
             var sourceRepositoryProvider = new SourceRepositoryProvider(new PackageSourceProvider(_settings), Repository.Provider.GetCoreV3());
             _sourceRepositories = sourceRepositoryProvider.GetRepositories();
             _logger = logger;
+            _unityPackageSigner = unityPackageSigner;
 
             // Initialize target framework
             foreach (RegistryTargetFramework registryTargetFramework in _targetFrameworks)
@@ -114,6 +119,8 @@ namespace UnityNuGet
             _npmPackageRegistry = new NpmPackageRegistry();
 
             GlobalPackagesFolder = SettingsUtility.GetGlobalPackagesFolder(_settings);
+
+            _canSignPackages = _unityPackageSigner.CanSign();
 
             LogInformation($"NuGet packages directory: {GlobalPackagesFolder}");
         }
@@ -997,6 +1004,25 @@ namespace UnityNuGet
                         tarWriter,
                         modTime,
                         cancellationToken);
+                }
+
+                if (_canSignPackages)
+                {
+                    string tempPackageDirectoryPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+
+                    Directory.CreateDirectory(tempPackageDirectoryPath);
+
+                    using (FileStream fileStream = File.OpenRead(unityPackageFilePath))
+                    {
+                        using (GZipStream gzipStream = new(fileStream, CompressionMode.Decompress))
+                        {
+                            TarFile.ExtractToDirectory(gzipStream, tempPackageDirectoryPath, overwriteFiles: true);
+                        }
+                    }
+
+                    await _unityPackageSigner.Sign(Path.Combine(tempPackageDirectoryPath, "package"), _rootPersistentFolder, cancellationToken);
+
+                    Directory.Delete(tempPackageDirectoryPath, recursive: true);
                 }
 
                 await using (FileStream stream = File.OpenRead(unityPackageFilePath))

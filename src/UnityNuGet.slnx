@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/build/">
+    <File Path="../.github/workflows/ci.yml" />
+    <File Path="../changelog.md" />
+    <File Path="../license.txt" />
+    <File Path="../readme.md" />
+    <File Path="../registry.json" />
+    <File Path="global.json" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="UnityNuGet.Server.Tests/UnityNuGet.Server.Tests.csproj" />
+  <Project Path="UnityNuGet.Server/UnityNuGet.Server.csproj" />
+  <Project Path="UnityNuGet.Tests/UnityNuGet.Tests.csproj" />
+  <Project Path="UnityNuGet.Tool/UnityNuGet.Tool.csproj" />
+  <Project Path="UnityNuGet/UnityNuGet.csproj" />
+</Solution>

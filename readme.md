@@ -127,6 +127,20 @@ This project publishes a [Docker image in ghcr.io](https://github.com/bdovaz/Uni
 
 There is a complete example with all available options in [examples/docker](examples/docker).
 
+### Sign packages (Optional)
+
+Packages are signed using the [upm pack](https://docs.unity3d.com/6000.6/Documentation/Manual/upm-cli-pack.html) command.
+
+To do this, you need to set the following environment variables. They are defined in the `Prerequisites` section of [this page](https://docs.unity3d.com/6000.6/Documentation/Manual/upm-cli-install.html):
+
+```text
+Signing:UpmServiceAccountKeyId
+Signing:UpmServiceAccountKeySecret
+Signing:UnityOrganizationId
+```
+
+If these variables are set, the packages will be signed automatically.
+
 ### Accessing a private NuGet feed from Azure DevOps
 
 > [!NOTE]

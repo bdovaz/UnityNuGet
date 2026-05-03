@@ -19,6 +19,9 @@ builder.Services.Configure<RegistryOptions>(builder.Configuration.GetSection("Re
 builder.Services.AddSingleton<IValidateOptions<RegistryOptions>, ValidateRegistryOptions>();
 builder.Services.AddOptionsWithValidateOnStart<RegistryOptions, ValidateRegistryOptions>();
 
+builder.Services.Configure<SigningOptions>(builder.Configuration.GetSection("Signing"));
+builder.Services.AddSingleton<UnityPackageSigner>();
+
 IHost host = builder.Build();
 
 await host.RunAsync();

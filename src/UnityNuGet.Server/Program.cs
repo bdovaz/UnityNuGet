@@ -33,6 +33,9 @@ builder.Services.Configure<JsonOptions>(options =>
     }
 });
 
+builder.Services.Configure<SigningOptions>(builder.Configuration.GetSection("Signing"));
+builder.Services.AddSingleton<UnityPackageSigner>();
+
 builder.Services.AddHealthChecks();
 
 WebApplication app = builder.Build();
