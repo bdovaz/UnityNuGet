@@ -14,6 +14,9 @@ services:
         - Registry:UpdateInterval=00:01:00 # Packages update interval, default is "00:10:00" (10 minutes).
         - Registry:AllowServingWithMissingDependencies=false # Set to true to ignore missing dependency errors and keep serving (friendlier for production).
         - Logging:LogLevel:Default=Information
+        - Signing:UpmServiceAccountKeyId= # Key ID of the service account created in the Unity dashboard, required for package signing. It can be left empty if the packages signing is not required.
+        - Signing:UpmServiceAccountKeySecret= # Key secret of the service account created in the Unity dashboard, required for package signing. It can be left empty if the packages signing is not required.
+        - Signing:UnityOrganizationId= # Unity organization ID, required for package signing. It can be left empty if the packages signing is not required."
       ports:
         - 5000:8080
       volumes:

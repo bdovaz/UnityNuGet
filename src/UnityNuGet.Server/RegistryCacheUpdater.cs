@@ -11,12 +11,13 @@ namespace UnityNuGet.Server
     /// <summary>
     /// Update the RegistryCache at a regular interval
     /// </summary>
-    internal sealed class RegistryCacheUpdater(Registry registry, RegistryCacheReport registryCacheReport, RegistryCacheSingleton currentRegistryCache, ILogger<RegistryCacheUpdater> logger, IOptions<RegistryOptions> registryOptionsAccessor) : BackgroundService
+    internal sealed class RegistryCacheUpdater(Registry registry, RegistryCacheReport registryCacheReport, RegistryCacheSingleton currentRegistryCache, ILogger<RegistryCacheUpdater> logger, IOptions<RegistryOptions> registryOptionsAccessor, UnityPackageSigner unityPackageSigner) : BackgroundService
     {
         private readonly Registry _registry = registry;
         private readonly RegistryCacheReport _registryCacheReport = registryCacheReport;
         private readonly RegistryCacheSingleton _currentRegistryCache = currentRegistryCache;
         private readonly ILogger _logger = logger;
+        private readonly UnityPackageSigner _unityPackageSigner = unityPackageSigner;
         private readonly RegistryOptions _registryOptions = registryOptionsAccessor.Value;
         private readonly bool _allowServingWithMissingDependencies = registryOptionsAccessor.Value.AllowServingWithMissingDependencies;
 
@@ -40,7 +41,8 @@ namespace UnityNuGet.Server
                         _registryOptions.PackageKeywords!,
                         _registryOptions.TargetFrameworks!,
                         _registryOptions.RoslynAnalyzerVersions!,
-                        _currentRegistryCache.NuGetRedirectLogger!)
+                        _currentRegistryCache.NuGetRedirectLogger!,
+                        _unityPackageSigner)
                     {
                         Filter = _registryOptions.Filter,
                         // Update progress

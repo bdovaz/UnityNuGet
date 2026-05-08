@@ -7,12 +7,13 @@ using Microsoft.Extensions.Options;
 
 namespace UnityNuGet.Server
 {
-    internal sealed class RegistryCacheUpdater(Registry registry, RegistryCacheSingleton currentRegistryCache, IHostApplicationLifetime hostApplicationLifetime, ILogger<RegistryCacheUpdater> logger, IOptions<RegistryOptions> registryOptionsAccessor) : BackgroundService
+    internal sealed class RegistryCacheUpdater(Registry registry, RegistryCacheSingleton currentRegistryCache, IHostApplicationLifetime hostApplicationLifetime, ILogger<RegistryCacheUpdater> logger, IOptions<RegistryOptions> registryOptionsAccessor, UnityPackageSigner unityPackageSigner) : BackgroundService
     {
         private readonly Registry _registry = registry;
         private readonly RegistryCacheSingleton _currentRegistryCache = currentRegistryCache;
         private readonly IHostApplicationLifetime _hostApplicationLifetime = hostApplicationLifetime;
         private readonly ILogger _logger = logger;
+        private readonly UnityPackageSigner _unityPackageSigner = unityPackageSigner;
         private readonly RegistryOptions _registryOptions = registryOptionsAccessor.Value;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -37,7 +38,8 @@ namespace UnityNuGet.Server
                         _registryOptions.PackageKeywords!,
                         _registryOptions.TargetFrameworks!,
                         _registryOptions.RoslynAnalyzerVersions!,
-                        _currentRegistryCache.NuGetRedirectLogger!)
+                        _currentRegistryCache.NuGetRedirectLogger!,
+                        _unityPackageSigner)
                     {
                         Filter = _registryOptions.Filter,
                         // Update progress
