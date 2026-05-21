@@ -2121,6 +2121,10 @@
         "version": "1.0.4.1",
         "analyzer": true
     },
+    "UniTask": {
+        "listed": true,
+        "version": "2.0.14"
+    },
     "UnitsNet": {
         "listed": true,
         "version": "5.28.0"
