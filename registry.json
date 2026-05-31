@@ -764,7 +764,7 @@
     },
     "linq2db": {
         "listed": true,
-        "version": "6.3.0"
+        "version": "2.0.0"
     },
     "LiteDB": {
         "listed": true,
