@@ -762,6 +762,10 @@
         "listed": true,
         "version": "0.11.0"
     },
+    "linq2db": {
+        "listed": true,
+        "version": "2.0.0"
+    },
     "LiteDB": {
         "listed": true,
         "version": "4.0.0"
@@ -1895,6 +1899,10 @@
     "System.Configuration.ConfigurationManager": {
         "listed": true,
         "version": "4.4.0"
+    },
+    "System.Data.DataSetExtensions": {
+        "listed": true,
+        "version": "4.5.0"
     },
     "System.Data.SqlClient": {
         "listed": true,
