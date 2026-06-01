@@ -428,6 +428,10 @@
         "listed": true,
         "version": "0.7.0"
     },
+    "DryDB": {
+        "listed": true,
+        "version": "1.0.3"
+    },
     "Duende.IdentityModel": {
         "listed": true,
         "version": "7.0.0"
