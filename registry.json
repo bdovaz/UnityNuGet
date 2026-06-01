@@ -1352,6 +1352,10 @@
         "listed": true,
         "version": "4.0.0.167"
     },
+    "MySqlConnector": {
+        "listed": true,
+        "version": "1.0.0"
+    },
     "MumbleSharp": {
         "listed": true,
         "version": "2.0.0"
