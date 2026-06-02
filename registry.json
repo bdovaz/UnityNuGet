@@ -1360,6 +1360,10 @@
         "listed": true,
         "version": "2.0.0"
     },
+    "MySqlConnector": {
+        "listed": true,
+        "version": "0.25.0"
+    },
     "NaCl.Net": {
         "listed": true,
         "version": "0.1.12"
