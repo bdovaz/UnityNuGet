@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0@sha256:c0790639332692a0d56cdd81ed581cfd24d040d9839764c138994866df89a3b6 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0@sha256:7a8377404285d7bdc853dd99da9b42915c99a8519bd89fb2dd90811162cc1138 AS build
 
 ARG TARGETARCH
 
@@ -26,7 +26,7 @@ COPY . ./
 RUN dotnet publish src/UnityNuGet.Server -a "$TARGETARCH" -c Release -o /app/src/out
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:8c0b6857eab7b2aa57884c839bf4678414606bd7d17370f18a842ac5cf414711
+FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:0d82223adf5108126cdd819bb373a92116068a5bfb851b0d552e2260f965440c
 
 ARG TARGETPLATFORM
 
