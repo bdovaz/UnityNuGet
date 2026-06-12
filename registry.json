@@ -140,6 +140,11 @@
         "listed": true,
         "version": "4.0.0"
     },
+    "BannedApiAnalyzers.Unity": {
+        "listed": true,
+        "version": "1.0.0",
+        "analyzer": true
+    },
     "Ben.Demystifier": {
         "listed": true,
         "version": "0.0.43"
