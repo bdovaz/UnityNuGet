@@ -1412,6 +1412,10 @@
         "listed": true,
         "version": "4.5.0"
     },
+    "NReco.Csv": {
+        "listed": true,
+        "version": "1.0.0"
+    },
     "NSubstitute": {
         "listed": true,
         "version": "4.0.0",
