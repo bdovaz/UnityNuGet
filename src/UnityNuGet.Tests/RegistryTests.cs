@@ -173,7 +173,7 @@ namespace UnityNuGet.Tests
             SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
             PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>();
 
-            RegistryTargetFramework[] nuGetFrameworks = [new() { Framework = CommonFrameworks.NetStandard20 }];
+            RegistryTargetFramework[] nuGetFrameworks = [new() { Framework = CommonFrameworks.NetStandard20 }, new() { Framework = CommonFrameworks.NetStandard21 }];
 
             string[] excludedPackages = [
                 // Versions 1.4.23 - 1.4.25 depend on a package that no longer exists: LightningDB.Vendored.Akka
