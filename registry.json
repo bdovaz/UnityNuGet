@@ -1,4 +1,8 @@
 {
+    "AdvancedStringBuilder": {
+        "listed": true,
+        "version": "0.1.0"
+    },
     "AdysTech.CredentialManager": {
         "listed": true,
         "version": "2.3.0"
@@ -731,6 +735,14 @@
         "listed": true,
         "version": "1.5.0"
     },
+    "JavaScriptEngineSwitcher.Core": {
+        "listed": true,
+        "version": "3.0.0"
+    },
+    "JavaScriptEngineSwitcher.Jurassic": {
+        "listed": true,
+        "version": "3.0.0"
+    },
     "Jdenticon-net": {
         "listed": true,
         "version": "2.2.0"
@@ -742,6 +754,10 @@
     "Jurassic": {
         "listed": true,
         "version": "3.0.0"
+    },
+    "Jurassic.Unofficial": {
+        "listed": true,
+        "version": "2017.9.1"
     },
     "JWT": {
         "listed": true,
