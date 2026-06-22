@@ -234,6 +234,10 @@ namespace UnityNuGet.Tests
                 @"XLParser",
                 // Versions < 1.3.1 has dependencies on PolySharp
                 @"Utf8StringInterpolation",
+                // VYaml.Core is deprecated and no longer available on NuGet.org.
+                @"VYaml.Core",
+                // VYaml.SourceGenerator.Roslyn is deprecated and no longer available on NuGet.org.
+                @"VYaml.SourceGenerator.Roslyn3",
                 // Versions 2.0.0 has dependencies on Utf8StringInterpolation 1.3.0
                 @"ZLogger"
             ];
