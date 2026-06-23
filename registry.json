@@ -2213,6 +2213,9 @@
     "VYaml.Core": {
         "ignore": true
     },
+    "VYaml.SourceGenerator": {
+        "ignore": true
+    },
     "VYaml.SourceGenerator.Roslyn3": {
         "ignore": true
     },
