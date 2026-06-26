@@ -173,7 +173,7 @@ namespace UnityNuGet.Tests
             SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
             PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>();
 
-            RegistryTargetFramework[] nuGetFrameworks = [new() { Framework = CommonFrameworks.NetStandard20 }];
+            RegistryTargetFramework[] nuGetFrameworks = [new() { Framework = CommonFrameworks.NetStandard20 }, new() { Framework = CommonFrameworks.NetStandard21 }];
 
             string[] excludedPackages = [
                 // Versions 1.4.23 - 1.4.25 depend on a package that no longer exists: LightningDB.Vendored.Akka
@@ -234,6 +234,8 @@ namespace UnityNuGet.Tests
                 @"XLParser",
                 // Versions < 1.3.1 has dependencies on PolySharp
                 @"Utf8StringInterpolation",
+                // VYaml from 0.1.0 to 0.21.0 depends on VYaml.Core and VYaml.SourceGenerator.Roslyn which are no longer available on NuGet.org.
+                @"VYaml",
                 // Versions 2.0.0 has dependencies on Utf8StringInterpolation 1.3.0
                 @"ZLogger"
             ];
