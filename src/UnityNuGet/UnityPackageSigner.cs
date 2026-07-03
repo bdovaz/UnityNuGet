@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -23,6 +24,8 @@ namespace UnityNuGet
                 && _signingOptions.UnityOrganizationId.HasValue
                 && File.Exists(_signingOptions.UpmExecutableFilePath);
         }
+
+        public bool CanSign(string packageId) => string.IsNullOrEmpty(_signingOptions.PackageIdRegexPattern) || Regex.IsMatch(packageId, _signingOptions.PackageIdRegexPattern);
 
         public async Task Sign(string packageDirectoryPath, string destinationDirectoryPath, CancellationToken cancellationToken = default)
         {

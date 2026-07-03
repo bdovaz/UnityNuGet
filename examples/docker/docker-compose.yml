@@ -16,7 +16,8 @@ services:
         - Logging:LogLevel:Default=Information
         - Signing:UpmServiceAccountKeyId= # Key ID of the service account created in the Unity dashboard, required for package signing. It can be left empty if the packages signing is not required.
         - Signing:UpmServiceAccountKeySecret= # Key secret of the service account created in the Unity dashboard, required for package signing. It can be left empty if the packages signing is not required.
-        - Signing:UnityOrganizationId= # Unity organization ID, required for package signing. It can be left empty if the packages signing is not required."
+        - Signing:UnityOrganizationId= # Unity organization ID, required for package signing. It can be left empty if the packages signing is not required.
+        - Signing:PackageIdRegexPattern= # Regex pattern to match the package IDs that should be signed. This can be left empty if all packages are to be signed or if signing them is not necessary.
       ports:
         - 5000:8080
       volumes:

@@ -1006,7 +1006,7 @@ namespace UnityNuGet
                         cancellationToken);
                 }
 
-                if (_canSignPackages)
+                if (_canSignPackages && _unityPackageSigner.CanSign(identity.Id))
                 {
                     string tempPackageDirectoryPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
 
