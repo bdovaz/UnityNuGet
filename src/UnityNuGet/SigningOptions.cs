@@ -9,5 +9,7 @@
         public int? UnityOrganizationId { get; set; }
 
         public string? UpmExecutableFilePath { get; set; }
+
+        public string? PackageIdRegexPattern { get; set; }
     }
 }
