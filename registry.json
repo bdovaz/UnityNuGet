@@ -1595,7 +1595,7 @@
     },
     "Redis.OM": {
         "listed": true,
-        "version": "1.3.0"
+        "version": "0.1.0"
     },
     "RestSharp": {
         "listed": true,
