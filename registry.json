@@ -2170,6 +2170,10 @@
         "listed": true,
         "version": "1.4.0"
     },
+    "Ulid": {
+        "listed": true,
+        "version": "0.1.0"
+    },
     "UniRxAnalyzer": {
         "listed": true,
         "version": "1.0.4.1",
@@ -2190,10 +2194,6 @@
     "UnitsNet.Serialization.JsonNet": {
         "listed": true,
         "version": "5.28.0"
-    },
-    "Ulid": {
-        "listed": true,
-        "version": "0.1.0"
     },
     "Utf8StringInterpolation": {
         "listed": true,
