@@ -1601,6 +1601,10 @@
         "listed": true,
         "version": "0.1.0"
     },
+    "RESPite": {
+        "listed": true,
+        "version": "3.0.0"
+    },
     "RestSharp": {
         "listed": true,
         "version": "106.0.0"
