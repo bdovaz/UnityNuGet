@@ -1477,6 +1477,10 @@
         "listed": true,
         "version": "1.2.0"
     },
+    "Pipelines.Sockets.Unofficial": {
+        "listed": true,
+        "version": "1.0.0"
+    },
     "PlaceframeApiClient": {
         "listed": true,
         "version": "0.1.3"
@@ -1863,7 +1867,7 @@
     },
     "StackExchange.Redis": {
         "listed": true,
-        "version": "2.7.17"
+        "version": "2.0.495"
     },
     "Stateless": {
         "listed": true,
@@ -2176,7 +2180,7 @@
     },
     "Ulid": {
         "listed": true,
-        "version": "1.2.6"
+        "version": "0.1.0"
     },
     "Validation": {
         "listed": true,
