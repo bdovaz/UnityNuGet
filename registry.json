@@ -1477,6 +1477,10 @@
         "listed": true,
         "version": "1.2.0"
     },
+    "Pipelines.Sockets.Unofficial": {
+        "listed": true,
+        "version": "1.0.0"
+    },
     "PlaceframeApiClient": {
         "listed": true,
         "version": "0.1.3"
@@ -1592,6 +1596,14 @@
     "ReactiveProperty.Core": {
         "listed": true,
         "version": "7.0.0"
+    },
+    "Redis.OM": {
+        "listed": true,
+        "version": "0.1.0"
+    },
+    "RESPite": {
+        "listed": true,
+        "version": "3.0.0"
     },
     "RestSharp": {
         "listed": true,
@@ -1857,6 +1869,10 @@
         "listed": true,
         "version": "1.3.0"
     },
+    "StackExchange.Redis": {
+        "listed": true,
+        "version": "2.0.495"
+    },
     "Stateless": {
         "listed": true,
         "version": "4.3.0"
@@ -1926,6 +1942,10 @@
         "version": "4.5.0"
     },
     "System.Diagnostics.EventLog": {
+        "listed": true,
+        "version": "4.5.0"
+    },
+    "System.Diagnostics.PerformanceCounter": {
         "listed": true,
         "version": "4.5.0"
     },
@@ -2140,6 +2160,10 @@
     "TxFileManager": {
         "listed": true,
         "version": "1.4.0"
+    },
+    "Ulid": {
+        "listed": true,
+        "version": "0.1.0"
     },
     "UniRxAnalyzer": {
         "listed": true,
