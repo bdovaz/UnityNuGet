@@ -1249,7 +1249,7 @@
     },
     "Microsoft.NET.StringTools": {
         "listed": true,
-        "version": "[1.0.0]"
+        "version": "1.0.0"
     },
     "Microsoft.NETCore.Platforms": {
         "ignore": true
