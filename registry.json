@@ -1,4 +1,8 @@
 {
+    "AdvancedStringBuilder": {
+        "listed": true,
+        "version": "0.1.0"
+    },
     "AdysTech.CredentialManager": {
         "listed": true,
         "version": "2.3.0"
@@ -151,7 +155,7 @@
     },
     "BinaryEx": {
         "listed": true,
-        "version": "0.3.0"
+        "version": "0.1.0"
     },
     "BouncyCastle.Cryptography": {
         "listed": true,
@@ -343,7 +347,7 @@
     },
     "com.IvanMurzak.ReflectorNet": {
         "listed": true,
-        "version": "0.1.12"
+        "version": "0.1.0"
     },
     "CommandLineParser": {
         "listed": true,
@@ -359,7 +363,7 @@
     },
     "ComradeVanti.CSharpTools.Opt": {
         "listed": true,
-        "version": "1.0.2"
+        "version": "1.0.1"
     },
     "ComradeVanti.CSharpTools.Res": {
         "listed": true,
@@ -657,19 +661,19 @@
     },
     "Grpc.Net.Client": {
         "listed": true,
-        "version": "2.36.0"
+        "version": "2.23.2"
     },
     "Grpc.Net.Client.Web": {
         "listed": true,
-        "version": "2.36.0"
+        "version": "2.29.0"
     },
     "Grpc.Net.ClientFactory": {
         "listed": true,
-        "version": "2.37.0"
+        "version": "2.23.2"
     },
     "Grpc.Net.Common": {
         "listed": true,
-        "version": "2.36.0"
+        "version": "2.23.2"
     },
     "H.InputSimulator": {
         "listed": true,
@@ -680,7 +684,7 @@
     },
     "HarmonyX": {
         "listed": true,
-        "version": "2.0.2",
+        "version": "2.0.0",
         "defineConstraints": [
             "UNITY_EDITOR"
         ]
@@ -731,6 +735,14 @@
         "listed": true,
         "version": "1.5.0"
     },
+    "JavaScriptEngineSwitcher.Core": {
+        "listed": true,
+        "version": "3.0.0"
+    },
+    "JavaScriptEngineSwitcher.Jurassic": {
+        "listed": true,
+        "version": "3.0.0"
+    },
     "Jdenticon-net": {
         "listed": true,
         "version": "2.2.0"
@@ -742,6 +754,10 @@
     "Jurassic": {
         "listed": true,
         "version": "3.0.0"
+    },
+    "Jurassic.Unofficial": {
+        "listed": true,
+        "version": "2017.9.1"
     },
     "JWT": {
         "listed": true,
@@ -1245,7 +1261,7 @@
     },
     "Microsoft.IO.RecyclableMemoryStream": {
         "listed": true,
-        "version": "1.4.0"
+        "version": "1.3.0"
     },
     "Microsoft.NET.StringTools": {
         "listed": true,
@@ -1479,11 +1495,11 @@
     },
     "PlaceframeApiClient": {
         "listed": true,
-        "version": "0.1.3"
+        "version": "0.1.0"
     },
     "PlaceframeZedClient": {
         "listed": true,
-        "version": "0.1.3"
+        "version": "0.1.0"
     },
     "Polly": {
         "listed": true,
@@ -1555,7 +1571,7 @@
     },
     "protobuf-net.Grpc.ClientFactory": {
         "listed": true,
-        "version": "1.0.177"
+        "version": "1.0.75"
     },
     "pythonnet": {
         "listed": true,
@@ -1807,7 +1823,7 @@
     },
     "SourceCraftCommunity.SimplifiedCSharp": {
         "listed": true,
-        "version": "1.1.0"
+        "version": "1.0.0"
     },
     "SourceGear.sqlite3": {
         "listed": true,
@@ -2148,7 +2164,7 @@
     },
     "UniTask": {
         "listed": true,
-        "version": "2.0.14"
+        "version": "2.0.13"
     },
     "UnitsNet": {
         "listed": true,
@@ -2172,7 +2188,7 @@
     },
     "VideoLibrary": {
         "listed": true,
-        "version": "3.2.2"
+        "version": "3.2.0"
     },
     "VoltRpc": {
         "listed": true,
@@ -2192,11 +2208,20 @@
     },
     "VYaml": {
         "listed": true,
-        "version": "1.1.0"
+        "version": "0.0.999"
     },
     "VYaml.Annotations": {
         "listed": true,
-        "version": "0.28.0"
+        "version": "0.0.999"
+    },
+    "VYaml.Core": {
+        "ignore": true
+    },
+    "VYaml.SourceGenerator": {
+        "ignore": true
+    },
+    "VYaml.SourceGenerator.Roslyn3": {
+        "ignore": true
     },
     "WebDav.Client": {
         "listed": true,
@@ -2216,7 +2241,7 @@
     },
     "YamlDotNet": {
         "listed": true,
-        "version": "12.0.0"
+        "version": "9.1.4"
     },
     "Zirou.Tomlyn.Extensions.Configuration": {
         "listed": true,
@@ -2224,7 +2249,7 @@
     },
     "ZLinq": {
         "listed": true,
-        "version": "0.5.0"
+        "version": "0.1.0"
     },
     "ZLinq.DropInGenerator": {
         "listed": true,
@@ -2237,7 +2262,7 @@
     },
     "ZstdSharp.Port": {
         "listed": true,
-        "version": "0.5.0"
+        "version": "0.1.0"
     },
     "ZString": {
         "listed": true,
