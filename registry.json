@@ -1817,6 +1817,10 @@
         "listed": true,
         "version": "1.0.0"
     },
+    "SQLite": {
+        "listed": true,
+        "version": "3.53.4"
+    },
     "SQLitePCLRaw.bundle_e_sqlite3": {
         "listed": true,
         "version": "2.0.0"
