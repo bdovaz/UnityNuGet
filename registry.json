@@ -775,6 +775,11 @@
         "listed": true,
         "version": "2.0.0"
     },
+    "linq2db.Analyzers": {
+        "listed": true,
+        "version": "6.4.0",
+        "analyzer": true
+    },
     "LiteDB": {
         "listed": true,
         "version": "4.0.0"
