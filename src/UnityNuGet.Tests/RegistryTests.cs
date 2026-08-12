@@ -91,7 +91,7 @@ namespace UnityNuGet.Tests
 
             // Make sure we have runtime libraries
             List<(string file, UnityOs, UnityCpu?)> runtimeLibs = await RuntimeLibraries
-                .GetSupportedRuntimeLibsAsync(downloadResult.PackageReader, CommonFrameworks.NetStandard20, logger)
+                .GetSupportedRuntimeLibsAsync(downloadResult.PackageReader!, CommonFrameworks.NetStandard20, logger)
                 .ToListAsync();
             Assert.That(runtimeLibs, Is.Not.Empty);
 
@@ -104,7 +104,7 @@ namespace UnityNuGet.Tests
             }
 
             // Get the lib files
-            IEnumerable<FrameworkSpecificGroup> versions = await downloadResult.PackageReader.GetLibItemsAsync(CancellationToken.None);
+            IEnumerable<FrameworkSpecificGroup> versions = await downloadResult.PackageReader!.GetLibItemsAsync(CancellationToken.None);
             IEnumerable<(FrameworkSpecificGroup, RegistryTargetFramework)> closestVersions = NuGetHelper.GetClosestFrameworkSpecificGroups(
                 versions,
                 [
@@ -143,7 +143,7 @@ namespace UnityNuGet.Tests
 
             // Make sure we have native libraries for osx (Universal Binary)
             List<(string file, string[] folders, UnityOs os, UnityCpu cpu)> nativeLibs = await NativeLibraries
-                .GetSupportedNativeLibsAsync(downloadResult.PackageReader, logger)
+                .GetSupportedNativeLibsAsync(downloadResult.PackageReader!, logger)
                 .ToListAsync();
 
             // Should have at least one osx native library
@@ -171,7 +171,7 @@ namespace UnityNuGet.Tests
 
             SourceCacheContext cache = new();
             SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
-            PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>();
+            PackageMetadataResource? resource = await repository.GetResourceAsync<PackageMetadataResource>();
 
             RegistryTargetFramework[] nuGetFrameworks = [new() { Framework = CommonFrameworks.NetStandard20 }];
 
@@ -301,7 +301,7 @@ namespace UnityNuGet.Tests
                         SettingsUtility.GetGlobalPackagesFolder(settings),
                         logger, CancellationToken.None);
 
-                bool hasNativeLib = await NativeLibraries.GetSupportedNativeLibsAsync(downloadResult.PackageReader, logger).AnyAsync();
+                bool hasNativeLib = await NativeLibraries.GetSupportedNativeLibsAsync(downloadResult.PackageReader!, logger).AnyAsync();
                 Assert.That(hasNativeLib, packageId);
             }
         }

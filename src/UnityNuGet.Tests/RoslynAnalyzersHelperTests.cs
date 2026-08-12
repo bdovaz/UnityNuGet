@@ -223,7 +223,7 @@ namespace UnityNuGet.Tests
 
             IDictionary<string, string> supportedFiles = await RoslynAnalyzersHelper
                 .GetUnitySupportedFiles(
-                downloadResult.PackageReader,
+                downloadResult.PackageReader!,
                 s_roslynAnalyzerVersions,
                 CancellationToken.None);
 
@@ -277,7 +277,7 @@ namespace UnityNuGet.Tests
 
             IDictionary<string, string> supportedFiles = await RoslynAnalyzersHelper
                 .GetUnitySupportedFiles(
-                    downloadResult.PackageReader,
+                    downloadResult.PackageReader!,
                     s_roslynAnalyzerVersions,
                     CancellationToken.None);
 
