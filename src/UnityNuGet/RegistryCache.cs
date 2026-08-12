@@ -212,9 +212,9 @@ namespace UnityNuGet
         {
             foreach (SourceRepository source in _sourceRepositories)
             {
-                PackageMetadataResource packageMetadataResource = await source.GetResourceAsync<PackageMetadataResource>(cancellationToken);
+                PackageMetadataResource? packageMetadataResource = await source.GetResourceAsync<PackageMetadataResource>(cancellationToken);
 
-                IEnumerable<IPackageSearchMetadata> result = await packageMetadataResource.GetMetadataAsync(
+                IEnumerable<IPackageSearchMetadata> result = await packageMetadataResource!.GetMetadataAsync(
                     packageName,
                     includePrerelease,
                     includeUnlisted,
@@ -344,7 +344,7 @@ namespace UnityNuGet
                         using DownloadResourceResult downloadResult = await GetPackageDownloadResourceResult(packageIdentity, cancellationToken);
 
                         bool hasNativeLib = await NativeLibraries
-                            .GetSupportedNativeLibsAsync(downloadResult.PackageReader, _logger)
+                            .GetSupportedNativeLibsAsync(downloadResult.PackageReader!, _logger)
                             .AnyAsync(cancellationToken);
 
                         if (!hasNativeLib)
@@ -502,7 +502,7 @@ namespace UnityNuGet
                     {
                         using DownloadResourceResult downloadResult = await GetPackageDownloadResourceResult(packageIdentity, cancellationToken);
 
-                        using PackageReaderBase packageReader = downloadResult.PackageReader;
+                        using PackageReaderBase packageReader = downloadResult.PackageReader!;
 
                         string releaseNotes = packageReader.NuspecReader.GetReleaseNotes();
 
