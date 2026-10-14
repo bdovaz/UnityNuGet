@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 using NuGet.Versioning;
 using NUnit.Framework;
-using NUnit.Framework.Legacy;
 using UnityNuGet.Npm;
 
 namespace UnityNuGet.Tests
@@ -28,7 +27,7 @@ namespace UnityNuGet.Tests
             Assert.That(RegistryCache.GetNpmVersion(NuGetVersion.Parse(version)), Is.EqualTo(expected));
         }
 
-        [Test, Order(99)]
+        [Test]
         public async Task TestBuild()
         {
             bool errorsTriggered = false;
