@@ -1,4 +1,8 @@
 {
+    "Acornima": {
+        "listed": true,
+        "version": "0.9.0"
+    },
     "AdysTech.CredentialManager": {
         "listed": true,
         "version": "2.3.0"
@@ -401,6 +405,10 @@
         "listed": true,
         "version": "1.0.26"
     },
+    "DefaultEcs": {
+        "listed": true,
+        "version": "0.14.3"
+    },
     "Dev.ComradeVanti.Nothing": {
         "listed": true,
         "version": "1.0.0"
@@ -473,6 +481,10 @@
         "listed": true,
         "version": "0.1.2",
         "analyzer": true
+    },
+    "Esprima": {
+        "listed": true,
+        "version": "1.0.1246"
     },
     "ExcelDataReader": {
         "listed": true,
@@ -734,6 +746,10 @@
     "Jdenticon-net": {
         "listed": true,
         "version": "2.2.0"
+    },
+    "Jint": {
+        "listed": true,
+        "version": "2.11.55"
     },
     "JsonSubTypes": {
         "listed": true,
@@ -1257,6 +1273,9 @@
         "version": "[1.0.0]"
     },
     "Microsoft.NETCore.Platforms": {
+        "ignore": true
+    },
+    "Microsoft.SourceLink.GitHub": {
         "ignore": true
     },
     "Microsoft.Unity.Analyzers": {
