@@ -2267,6 +2267,18 @@
         "listed": true,
         "version": "1.0.0"
     },
+    "Xapi.Client": {
+        "listed": true,
+        "version": "0.2.0"
+    },
+    "Xapi.Client.Outbox": {
+        "listed": true,
+        "version": "0.2.0"
+    },
+    "Xapi.Core": {
+        "listed": true,
+        "version": "0.2.0"
+    },
     "XLParser": {
         "listed": true,
         "version": "1.7.0"
