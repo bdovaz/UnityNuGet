@@ -14,7 +14,7 @@
     <PackageVersion Include="Moq" Version="4.21.0" />
     <PackageVersion Include="NuGet.PackageManagement" Version="7.9.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.14" />
-    <PackageVersion Include="NUglify" Version="1.23.5" />
+    <PackageVersion Include="NUglify" Version="1.23.6" />
     <PackageVersion Include="nunit" Version="5.0.0" />
     <PackageVersion Include="NUnit.Analyzers" Version="4.15.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.3.1" />
