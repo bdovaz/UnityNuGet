@@ -136,6 +136,10 @@
         "listed": true,
         "version": "4.0.0"
     },
+    "AWSSDK.Extensions.Numerics": {
+        "listed": true,
+        "version": "4.0.0.2"
+    },
     "AWSSDK.S3": {
         "listed": true,
         "version": "4.0.0"
@@ -1048,6 +1052,10 @@
     "Microsoft.Extensions.Compliance.Abstractions": {
         "listed": true,
         "version": "9.0.0"
+    },
+    "Microsoft.Extensions.Compliance.Redaction": {
+        "listed": true,
+        "version": "11.0.0"
     },
     "Microsoft.Extensions.Configuration": {
         "listed": true,
