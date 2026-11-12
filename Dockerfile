@@ -4,6 +4,11 @@ ARG TARGETARCH
 
 WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install -y clang && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN mkdir -p src/UnityNuGet && \
     mkdir -p src/UnityNuGet.Server && \
     mkdir -p src/UnityNuGet.Server.Tests && \
@@ -32,6 +37,7 @@ ARG TARGETPLATFORM
 
 RUN apt-get update && \
     apt-get install -y curl unzip && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     # linux/arm64 images do not support the upm-cli tool, so we only install it on other platforms
     # https://discussions.unity.com/t/package-manager-changes-package-signing-and-status-labels/1688660/72

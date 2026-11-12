@@ -158,27 +158,21 @@ namespace Microsoft.AspNetCore.Builder
                     message = $"Time remaining for the next update: {(registryCacheReport.TimeRemainingForNextUpdate != null ? registryCacheReport.TimeRemainingForNextUpdate.Value.ToString(@"hh\:mm\:ss") : string.Empty)}";
                 }
 
-                var model = new
+                Template template = Template.Parse(text);
+
+                ScriptObject scriptObject = new()
                 {
-                    message,
-                    informationMessages = registryCacheReport.InformationMeessages,
-                    warningMessages = registryCacheReport.WarningMessages,
-                    errorMessages = registryCacheReport.ErrorMessages
+                    ["message"] = message,
+                    ["information_messages"] = registryCacheReport.InformationMeessages,
+                    ["warning_messages"] = registryCacheReport.WarningMessages,
+                    ["error_messages"] = registryCacheReport.ErrorMessages
                 };
-
-                var template = Template
-                    .Parse(text);
-
-                var scriptObject = new ScriptObject();
-                scriptObject.Import(model);
 
                 TemplateContext templateContext = template.LexerOptions.Lang == ScriptLang.Liquid ? new LiquidTemplateContext() : new TemplateContext();
                 templateContext.LoopLimit = 0;
                 templateContext.PushGlobal(scriptObject);
 
-                string output = Template
-                    .Parse(text)
-                    .Render(templateContext);
+                string output = template.Render(templateContext);
 
                 await context.Response.WriteAsync(output);
             });
