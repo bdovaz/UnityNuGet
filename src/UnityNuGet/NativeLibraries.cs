@@ -16,6 +16,7 @@ namespace UnityNuGet
         {
             IEnumerable<FrameworkSpecificGroup> versions = await packageReader.GetItemsAsync(PackagingConstants.Folders.Runtimes, CancellationToken.None);
             IEnumerable<string> files = versions.SelectMany(v => v.Items);
+            PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
 
             foreach (string? file in files)
             {
@@ -36,12 +37,15 @@ namespace UnityNuGet
                     continue;
                 }
 
-                UnityOs? os = system[0][..3] switch
+                // https://learn.microsoft.com/en-us/dotnet/core/rid-catalog
+                UnityOs? os = system[0] switch
                 {
-                    "lin" => UnityOs.Linux,
-                    "osx" => UnityOs.OSX,
-                    "win" => UnityOs.Windows,
-                    "ios" => UnityOs.iOS,
+                    string name when name.StartsWith("linux", StringComparison.OrdinalIgnoreCase) => UnityOs.Linux,
+                    string name when name.StartsWith("osx", StringComparison.OrdinalIgnoreCase) => UnityOs.OSX,
+                    string name when name.StartsWith("win", StringComparison.OrdinalIgnoreCase) => UnityOs.Windows,
+                    string name when name.StartsWith("ios", StringComparison.OrdinalIgnoreCase) => UnityOs.iOS,
+                    "android" => UnityOs.Android,
+                    "browser" when system.Length > 1 && system[1] == "wasm" => UnityOs.WebGL,
                     _ => null
                 };
 
@@ -52,19 +56,20 @@ namespace UnityNuGet
                 }
 
                 UnityCpu? cpu = null;
-                if (system.Length > 1)
+                if (os == UnityOs.WebGL || (system.Length == 1 && (os == UnityOs.OSX || os == UnityOs.iOS)))
+                {
+                    cpu = UnityCpu.AnyCpu;
+                }
+                else if (system.Length > 1)
                 {
                     cpu = system[1] switch
                     {
                         "x86" => UnityCpu.X86,
                         "x64" => UnityCpu.X64,
+                        "arm" => UnityCpu.ARMv7,
                         "arm64" => UnityCpu.ARM64,
                         _ => null
                     };
-                }
-                else if (os == UnityOs.OSX)
-                {
-                    cpu = UnityCpu.AnyCpu;
                 }
 
                 if (cpu is null)
@@ -73,8 +78,23 @@ namespace UnityNuGet
                     continue;
                 }
 
+                if (platformDefs.Find(os.Value, cpu.Value) == null || !IsSupportedNativeFile(file, os.Value))
+                {
+                    logger.LogInformation($"Skipping unsupported native library: {file} ...");
+                    continue;
+                }
+
                 yield return (file, folders, os.Value, cpu.Value);
             }
+        }
+
+        public static bool IsSupportedNativeFile(string file, UnityOs os)
+        {
+            string extension = Path.GetExtension(file);
+            return extension.Equals(".dll", StringComparison.OrdinalIgnoreCase)
+                || extension.Equals(".so", StringComparison.OrdinalIgnoreCase)
+                || extension.Equals(".dylib", StringComparison.OrdinalIgnoreCase)
+                || (extension.Equals(".a", StringComparison.OrdinalIgnoreCase) && (os == UnityOs.WebGL || os == UnityOs.iOS));
         }
     }
 }

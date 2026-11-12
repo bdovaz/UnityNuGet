@@ -1,0 +1,14 @@
+{
+    "OpusSharp": {
+        "listed": true,
+        "version": "1.6.8"
+    },
+    "OpusSharp.Core": {
+        "listed": true,
+        "version": "1.6.1.4"
+    },
+    "OpusSharp.Natives": {
+        "listed": true,
+        "version": "1.6.1.4"
+    }
+}

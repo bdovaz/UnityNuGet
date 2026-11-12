@@ -187,8 +187,7 @@ namespace UnityNuGet
             // Recurse to children
             return _children
                 .Select(c => c.Find(os, cpu))
-                .Where(c => c != null)
-                .FirstOrDefault();
+                .FirstOrDefault(c => c != null);
         }
 
         /// <summary>
@@ -207,8 +206,7 @@ namespace UnityNuGet
             // Recurse to children
             return _children
                 .Select(c => c.FindEditor())
-                .Where(c => c != null)
-                .FirstOrDefault();
+                .FirstOrDefault(c => c != null);
         }
 
         /// <summary>
@@ -280,7 +278,16 @@ namespace UnityNuGet
                         ],
                     },
                     new(UnityOs.Linux, UnityCpu.X64, isEditorConfig: true),
-                    new(UnityOs.Android, UnityCpu.ARMv7, isEditorConfig: false),
+                    new(UnityOs.Android, UnityCpu.AnyCpu, isEditorConfig: false)
+                    {
+                        Children =
+                        [
+                            new(UnityOs.Android, UnityCpu.ARMv7, isEditorConfig: false),
+                            new(UnityOs.Android, UnityCpu.ARM64, isEditorConfig: false),
+                            new(UnityOs.Android, UnityCpu.X86, isEditorConfig: false),
+                            new(UnityOs.Android, UnityCpu.X64, isEditorConfig: false),
+                        ],
+                    },
                     new(UnityOs.WebGL, UnityCpu.AnyCpu, isEditorConfig: false),
                     new(UnityOs.iOS, UnityCpu.AnyCpu, isEditorConfig: false),
                     new(UnityOs.OSX, UnityCpu.AnyCpu, isEditorConfig: true)
