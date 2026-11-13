@@ -93,7 +93,9 @@ This service provides only a [curated list](registry.json) of NuGet packages.
 Your NuGet package needs to respect a few constraints in order to be listed in the curated list:
 
 - It must have non-preview versions (e.g `1.0.0` but not `1.0.0-preview.1`).
-- It must provide at least `.NETStandard2.0` (and optionally `.NETStandard2.1`) assemblies as part of its package.
+- Managed assemblies must support `.NETStandard2.0` (and optionally `.NETStandard2.1`). Packages without managed assemblies can also be listed if they have compatible dependencies or supported native libraries.
+
+Native libraries are only included for supported runtime identifiers and file formats. Nested native bundles such as iOS `.xcframework`, Windows ARM64, and Linux architectures other than x64 are not currently converted; verify platform support before using a native package in Unity.
 
 You can send a PR to this repository to modify the [registry.json](registry.json) file (don't forget to maintain the alphabetical order and format).
 
