@@ -33,7 +33,7 @@ namespace UnityNuGet
         public static readonly bool IsRunningAsContinuousIntegration = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI"));
 
         // Change this version number if the content of the packages are changed by an update of this class
-        private const string CurrentRegistryVersion = "1.9.1";
+        private const string CurrentRegistryVersion = "1.9.2";
 
         private static readonly Encoding s_utf8EncodingNoBom = new UTF8Encoding(false, false);
         private readonly Registry _registry;
@@ -700,9 +700,23 @@ namespace UnityNuGet
                         frameworksPerGroup.Add(targetFramework);
                     }
 
+                    var platformDefs = PlatformDefinition.CreateAllPlatforms();
+                    List<(string file, string[] folders, UnityOs os, UnityCpu cpu)> nativeFiles = await NativeLibraries
+                        .GetSupportedNativeLibsAsync(packageReader, _logger)
+                        .ToListAsync(cancellationToken);
+
                     if (!packageEntry.Analyzer && collectedItems.Count == 0)
                     {
-                        throw new InvalidOperationException($"The package does not contain a compatible .NET assembly {string.Join(",", _targetFrameworks.Select(x => x.Name))}");
+                        bool hasManagedAssemblies = versions.SelectMany(x => x.Items)
+                            .Any(x => x.EndsWith(".dll", StringComparison.OrdinalIgnoreCase));
+                        bool hasCompatibleDependencies = NuGetHelper
+                            .GetCompatiblePackageDependencyGroups(packageMeta.DependencySets, _targetFrameworks)
+                            .Any(x => x.Packages.Any());
+
+                        if (hasManagedAssemblies || (!hasCompatibleDependencies && nativeFiles.Count == 0))
+                        {
+                            throw new InvalidOperationException($"The package does not contain a compatible .NET assembly, compatible dependencies, or supported native libraries for {string.Join(",", _targetFrameworks.Select(x => x.Name))}");
+                        }
                     }
 
                     bool isPackageNetStandard21Assembly = DotNetHelper.IsNetStandard21Assembly(identity.Id);
@@ -768,8 +782,6 @@ namespace UnityNuGet
                             cancellationToken);
                     }
 
-                    // Get all known platform definitions
-                    var platformDefs = PlatformDefinition.CreateAllPlatforms();
                     var packageFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                     foreach ((FrameworkSpecificGroup item, HashSet<RegistryTargetFramework> frameworks) in collectedItems)
@@ -906,15 +918,8 @@ namespace UnityNuGet
                         }
                     }
 
-                    if (!packageEntry.Analyzer && collectedItems.Count == 0)
-                    {
-                        throw new InvalidOperationException($"The package does not contain a compatible .NET assembly {string.Join(",", _targetFrameworks.Select(x => x.Name))}");
-                    }
-
                     // Write the native libraries
-                    IAsyncEnumerable<(string file, string[] folders, UnityOs os, UnityCpu cpu)> nativeFiles = NativeLibraries.GetSupportedNativeLibsAsync(packageReader, _logger);
-
-                    await foreach ((string file, string[] folders, UnityOs os, UnityCpu cpu) in nativeFiles)
+                    foreach ((string file, string[] folders, UnityOs os, UnityCpu cpu) in nativeFiles)
                     {
                         PlatformDefinition? platformDef = platformDefs.Find(os, cpu);
                         if (platformDef == null)
@@ -923,11 +928,11 @@ namespace UnityNuGet
                             continue;
                         }
 
-                        string extension = Path.GetExtension(file);
+                        string extension = Path.GetExtension(file).ToLowerInvariant();
                         Guid guid = GetStableGuid(identity, file);
                         string? meta = extension switch
                         {
-                            ".dll" or ".so" or ".dylib" => UnityMeta.GetMetaForDll(guid, platformDef!, [], []),
+                            ".dll" or ".so" or ".dylib" or ".a" => UnityMeta.GetMetaForDll(guid, platformDef!, [], []),
                             _ => UnityMeta.GetMetaForExtension(guid, extension)
                         };
 
