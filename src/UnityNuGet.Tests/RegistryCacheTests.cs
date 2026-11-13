@@ -85,11 +85,11 @@ namespace UnityNuGet.Tests
             Assert.That(scribanPackage, Is.Not.Null);
             string scribanPackageJson = await scribanPackage!.ToJson(UnityNuGetJsonSerializerContext.Default.NpmPackage);
             Assert.That(scribanPackageJson, Does.Contain("org.nuget.scriban"));
-            Assert.That(scribanPackageJson, Does.Contain("7.0.0"));
+            Assert.That(scribanPackageJson, Does.Contain("7.2.2"));
 
             List<string> entries = [];
 
-            await using (FileStream fileStream = File.OpenRead(Path.Combine("unity_packages", "org.nuget.scriban-7.0.0.tgz")))
+            await using (FileStream fileStream = File.OpenRead(Path.Combine("unity_packages", "org.nuget.scriban-7.2.2.tgz")))
             await using (GZipStream gzipStream = new(fileStream, CompressionMode.Decompress, leaveOpen: false))
             await using (TarReader tarReader = new(gzipStream))
             {
