@@ -226,6 +226,8 @@ namespace UnityNuGet.Tests
                 @"MumbleSharp",
                 // It takes up a lot of space, the minimum version is lifted so as not to process so many versions
                 @"Scriban",
+                // It takes up a lot of space, the minimum version is lifted so as not to process so many versions
+                @"Scrutor",
                 // Versions < 3.2.1 depend on Nullable which doesn't ship .netstandard2.0.
                 @"Serilog.Expressions",
                 // < 3.0.0 versions target "Any" and not .netstandard2.0 / 2.1
