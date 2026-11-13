@@ -176,8 +176,8 @@ namespace UnityNuGet.Tests
             RegistryTargetFramework[] nuGetFrameworks = [new() { Framework = CommonFrameworks.NetStandard20 }];
 
             string[] excludedPackages = [
-                // Versions 1.4.23 - 1.4.25 depend on a package that no longer exists: LightningDB.Vendored.Akka
-                @"Akka.DistributedData.LightningDB",
+                // It has too many versions, the minimum version is lifted so as not to process so many versions
+                @"Akka.*",
                 // All versions target "Any" and not .netstandard2.0 / 2.1
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
                 @"AWSSDK.*",
@@ -199,16 +199,24 @@ namespace UnityNuGet.Tests
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
                 @"Google.Apis.AndroidPublisher.v3",
                 // It has too many versions, the minimum version is lifted so as not to process so many versions
+                @"Google.Apis.Drive.v3",
+                // It has too many versions, the minimum version is lifted so as not to process so many versions
+                @"Google.Apis.Script.v1",
+                // It has too many versions, the minimum version is lifted so as not to process so many versions
                 @"Google.Apis.Sheets.v4",
                 // Version 3.1.8 has dependency on `Panic.StringUtils` which doesn't support .netstandard2.0 or 2.1. Rest of versions are fine.
                 @"GraphQL.Client.Serializer.Newtonsoft",
                 // Version 3.1.8 has dependency on `Panic.StringUtils` which doesn't support .netstandard2.0 or 2.1. Rest of versions are fine.
                 @"GraphQL.Client.Serializer.SystemTextJson",
+                // It takes up a lot of space, the minimum version is lifted so as not to process so many versions
+                @"HtmlAgilityPack",
                 // Version 3.0.0 has a dependency on MasterMemory.SourceGenerator that no longer exists
                 @"MasterMemory",
                 // Although 2.x targets .netstandard2.0 it has an abandoned dependency (Remotion.Linq) that does not target .netstandard2.0.
                 // 3.1.0 is set because 3.0.x only targets .netstandard2.1.
                 @"Microsoft.EntityFrameworkCore.*",
+                // It takes up a lot of space, the minimum version is lifted so as not to process so many versions
+                @"Miniexcel",
                 // It takes up a lot of space, the minimum version is lifted so as not to process so many versions
                 @"MongoDB.Libmongocrypt",
                 // Monomod Versions < 18.11.9.9 depend on System.Runtime.Loader which doesn't ship .netstandard2.0.
@@ -216,6 +224,8 @@ namespace UnityNuGet.Tests
                 @"MonoMod.RuntimeDetour",
                 // Versions < 2.0.0 depend on NAudio which doesn't ship .netstandard2.0.
                 @"MumbleSharp",
+                // It takes up a lot of space, the minimum version is lifted so as not to process so many versions
+                @"Scriban",
                 // Versions < 3.2.1 depend on Nullable which doesn't ship .netstandard2.0.
                 @"Serilog.Expressions",
                 // < 3.0.0 versions target "Any" and not .netstandard2.0 / 2.1
