@@ -9,72 +9,72 @@
     },
     "Akka": {
         "listed": true,
-        "version": "1.4.1"
+        "version": "1.5.74"
     },
     "Akka.Analyzers": {
         "listed": true,
-        "version": "0.1.1",
+        "version": "0.3.3",
         "analyzer": true
     },
     "Akka.Cluster": {
         "listed": true,
-        "version": "1.4.1"
+        "version": "1.5.74"
     },
     "Akka.Cluster.Hosting": {
         "listed": true,
-        "version": "0.1.0"
+        "version": "1.5.74"
     },
     "Akka.Cluster.Sharding": {
         "listed": true,
-        "version": "1.4.1"
+        "version": "1.5.74"
     },
     "Akka.Cluster.Tools": {
         "listed": true,
-        "version": "1.4.1"
+        "version": "1.5.74"
     },
     "Akka.Coordination": {
         "listed": true,
-        "version": "1.4.4"
+        "version": "1.5.74"
     },
     "Akka.DependencyInjection": {
         "listed": true,
-        "version": "1.4.15"
+        "version": "1.5.74"
     },
     "Akka.Discovery": {
         "listed": true,
-        "version": "1.4.29"
+        "version": "1.5.74"
     },
     "Akka.DistributedData": {
         "listed": true,
-        "version": "1.4.1"
+        "version": "1.5.74"
     },
     "Akka.DistributedData.LightningDB": {
         "listed": true,
-        "version": "1.5.0"
+        "version": "1.5.74"
     },
     "Akka.Hosting": {
         "listed": true,
-        "version": "0.1.0"
+        "version": "1.5.74"
     },
     "Akka.Persistence": {
         "listed": true,
-        "version": "1.4.1"
+        "version": "1.5.74"
     },
     "Akka.Persistence.Hosting": {
         "listed": true,
-        "version": "0.3.3"
+        "version": "1.5.74"
     },
     "Akka.Remote": {
         "listed": true,
-        "version": "1.4.1"
+        "version": "1.5.74"
     },
     "Akka.Remote.Hosting": {
         "listed": true,
-        "version": "0.1.0"
+        "version": "1.5.74"
     },
     "Akka.Streams": {
         "listed": true,
-        "version": "1.4.1"
+        "version": "1.5.74"
     },
     "Antlr4.Runtime.Standard": {
         "listed": true,
@@ -130,23 +130,23 @@
     },
     "AWSSDK.CognitoIdentityProvider": {
         "listed": true,
-        "version": "4.0.0"
+        "version": "4.1.0"
     },
     "AWSSDK.Core": {
         "listed": true,
-        "version": "4.0.0"
+        "version": "4.1.0"
     },
     "AWSSDK.Extensions.Numerics": {
         "listed": true,
-        "version": "4.0.0.2"
+        "version": "4.1.0"
     },
     "AWSSDK.S3": {
         "listed": true,
-        "version": "4.0.0"
+        "version": "4.1.0"
     },
     "AWSSDK.SecurityToken": {
         "listed": true,
-        "version": "4.0.0"
+        "version": "4.1.0"
     },
     "BannedApiAnalyzers.Unity": {
         "listed": true,
@@ -601,11 +601,11 @@
     },
     "Google.Apis.Drive.v3": {
         "listed": true,
-        "version": "1.35.1.1312"
+        "version": "1.73.0.4045"
     },
     "Google.Apis.Script.v1": {
         "listed": true,
-        "version": "1.35.1.1314"
+        "version": "1.74.0.3888"
     },
     "Google.Apis.Sheets.v4": {
         "listed": true,
@@ -711,7 +711,7 @@
     },
     "HtmlAgilityPack": {
         "listed": true,
-        "version": "1.5.3"
+        "version": "1.12.0"
     },
     "Humanizer.Core": {
         "listed": true,
@@ -1314,7 +1314,7 @@
     },
     "MiniExcel": {
         "listed": true,
-        "version": "0.2.0"
+        "version": "1.41.4"
     },
     "ModelContextProtocol": {
         "listed": true,
@@ -1706,11 +1706,11 @@
     },
     "Scriban": {
         "listed": true,
-        "version": "1.2.4"
+        "version": "7.2.2"
     },
     "Scrutor": {
         "listed": true,
-        "version": "3.0.1"
+        "version": "7.0.0"
     },
     "Semver": {
         "listed": true,
