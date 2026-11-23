@@ -1316,6 +1316,18 @@
         "listed": true,
         "version": "1.41.4"
     },
+    "MiniExcel.Core": {
+        "listed": true,
+        "version": "2.0.0"
+    },
+    "MiniExcel.Csv": {
+        "listed": true,
+        "version": "2.0.0"
+    },
+    "MiniExcel.OpenXml": {
+        "listed": true,
+        "version": "2.0.0"
+    },
     "ModelContextProtocol": {
         "listed": true,
         "version": "1.0.0"
