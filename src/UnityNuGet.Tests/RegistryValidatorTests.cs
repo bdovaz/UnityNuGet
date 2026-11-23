@@ -301,6 +301,50 @@ namespace UnityNuGet.Tests
         }
 
         [Test]
+        public async Task ValidateAsync_RejectsNullEntryWithoutThrowing()
+        {
+            string filePath = WriteRegistryFile("""
+            {
+                "NullPkg": null
+            }
+            """);
+
+            RegistryValidator validator = new();
+            RegistryValidationResult result = await validator.ValidateAsync(new RegistryValidationOptions
+            {
+                RegistryFilePath = filePath,
+            });
+
+            Assert.That(result.IsValid, Is.False);
+            Assert.That(result.Errors, Has.Some.Contains("must not be null"));
+        }
+
+        [Test]
+        public void HasConvertedVersion_RequiresNonEmptyShasum()
+        {
+            Assert.That(RegistryValidator.HasConvertedVersion(null), Is.False);
+
+            Npm.NpmPackage emptyPkg = new();
+            Assert.That(RegistryValidator.HasConvertedVersion(emptyPkg), Is.False);
+
+            Npm.NpmPackage unbuiltVersionPkg = new();
+            unbuiltVersionPkg.Versions["1.0.0"] = new Npm.NpmPackageVersion
+            {
+                Version = "1.0.0",
+            };
+            Assert.That(RegistryValidator.HasConvertedVersion(unbuiltVersionPkg), Is.False);
+
+            Npm.NpmPackage builtVersionPkg = new();
+            Npm.NpmPackageVersion builtVersion = new()
+            {
+                Version = "1.0.0",
+            };
+            builtVersion.Distribution.Shasum = "0123456789abcdef";
+            builtVersionPkg.Versions["1.0.0"] = builtVersion;
+            Assert.That(RegistryValidator.HasConvertedVersion(builtVersionPkg), Is.True);
+        }
+
+        [Test]
         public void ValidateCommand_TryParseArgs_HandlesValidAndInvalidInputs()
         {
             Assert.That(

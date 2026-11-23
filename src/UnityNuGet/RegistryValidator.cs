@@ -201,7 +201,13 @@ namespace UnityNuGet
                     result.Errors.Add($"Package `{packageName}` is already included in .NET Standard 2.0 and must not be in registry.json.");
                 }
 
-                if (registryEntries.TryGetValue(packageName, out RegistryEntry? entry) && !entry.Ignored && (entry.Version == null || entry.Version.MinVersion == null))
+                if (!registryEntries.TryGetValue(packageName, out RegistryEntry? entry) || entry == null)
+                {
+                    result.Errors.Add($"Package `{packageName}` entry must not be null.");
+                    continue;
+                }
+
+                if (!entry.Ignored && (entry.Version == null || entry.Version.MinVersion == null))
                 {
                     result.Errors.Add($"Package `{packageName}` must specify a valid minimum version unless `ignore` is true.");
                 }
@@ -285,7 +291,7 @@ namespace UnityNuGet
             ISettings settings = Settings.LoadDefaultSettings(root: Directory.GetCurrentDirectory());
             SourceRepositoryProvider sourceRepositoryProvider = new(new PackageSourceProvider(settings), Repository.Provider.GetCoreV3());
             IEnumerable<SourceRepository> sourceRepositories = sourceRepositoryProvider.GetRepositories();
-            SourceCacheContext sourceCacheContext = new();
+            using SourceCacheContext sourceCacheContext = new();
 
             PackageMetadataFetcher fetchMetadata = _metadataFetcherOverride ?? ((packageId, includePrerelease, includeUnlisted, ct) =>
                 GetMetadataFromSourcesAsync(sourceRepositories, sourceCacheContext, nuGetLogger, packageId, includePrerelease, includeUnlisted, ct));
@@ -378,6 +384,24 @@ namespace UnityNuGet
             return result;
         }
 
+        internal static bool HasConvertedVersion(NpmPackage? convertedPackage)
+        {
+            if (convertedPackage == null)
+            {
+                return false;
+            }
+
+            foreach (NpmPackageVersion version in convertedPackage.Versions.Values)
+            {
+                if (!string.IsNullOrEmpty(version.Distribution.Shasum))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private async Task ValidateConversionAsync(
             string registryFilePath,
             List<KeyValuePair<string, RegistryEntry>> targetPackages,
@@ -425,7 +449,7 @@ namespace UnityNuGet
                 {
                     string npmPackageId = $"{registryOptions.UnityScope}.{packageId.ToLowerInvariant()}";
                     NpmPackage? convertedPackage = cache.GetPackage(npmPackageId);
-                    if (convertedPackage == null || convertedPackage.Versions.Count == 0)
+                    if (!HasConvertedVersion(convertedPackage))
                     {
                         result.Errors.Add($"Package `{packageId}` did not produce any converted Unity package versions.");
                     }
