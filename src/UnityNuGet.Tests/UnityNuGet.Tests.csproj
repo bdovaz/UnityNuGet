@@ -23,6 +23,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <ProjectReference Include="..\UnityNuGet\UnityNuGet.csproj" />
+    <ProjectReference Include="..\UnityNuGet.Tool\UnityNuGet.Tool.csproj" />
   </ItemGroup>
 
 </Project>
