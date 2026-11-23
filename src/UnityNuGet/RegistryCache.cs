@@ -632,7 +632,7 @@ namespace UnityNuGet
             // Signed packages are kept on disk so the conversion can reuse the existing
             // signed artifact when the unsigned content did not change; forceUpdate alone
             // still forces the conversion to run.
-            if (forceUpdate && !_canSignPackages)
+            if (forceUpdate && (!_canSignPackages || !_unityPackageSigner.CanSign(identity.Id)))
             {
                 DeleteUnityPackage(identity, npmPackageVersion);
             }
@@ -1035,18 +1035,17 @@ namespace UnityNuGet
 
                     File.Delete(unsignedPackageFilePath);
                 }
-                else
+                else if (canSign)
                 {
-                    File.Move(unsignedPackageFilePath, unityPackageFilePath, overwrite: true);
-                    packageFileWritten = true;
+                    string tempPackageDirectoryPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                    string tempSignedDirectoryPath = Path.Combine(_rootPersistentFolder, $".signing-{Path.GetRandomFileName()}");
 
-                    if (canSign)
+                    Directory.CreateDirectory(tempPackageDirectoryPath);
+                    Directory.CreateDirectory(tempSignedDirectoryPath);
+
+                    try
                     {
-                        string tempPackageDirectoryPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-
-                        Directory.CreateDirectory(tempPackageDirectoryPath);
-
-                        using (FileStream fileStream = File.OpenRead(unityPackageFilePath))
+                        using (FileStream fileStream = File.OpenRead(unsignedPackageFilePath))
                         {
                             using (GZipStream gzipStream = new(fileStream, CompressionMode.Decompress))
                             {
@@ -1054,14 +1053,55 @@ namespace UnityNuGet
                             }
                         }
 
-                        await _unityPackageSigner.Sign(Path.Combine(tempPackageDirectoryPath, "package"), _rootPersistentFolder, cancellationToken);
+                        await _unityPackageSigner.Sign(Path.Combine(tempPackageDirectoryPath, "package"), tempSignedDirectoryPath, cancellationToken);
 
-                        Directory.Delete(tempPackageDirectoryPath, recursive: true);
+                        string signedPackageFilePath = Path.Combine(tempSignedDirectoryPath, unityPackageFileName);
+                        var signedPackageFile = new FileInfo(signedPackageFilePath);
 
-                        if (unsignedSha256 is not null)
+                        if (!signedPackageFile.Exists || signedPackageFile.Length == 0)
                         {
-                            await WriteUnsignedPackageSha256(identity, npmPackageVersion, unsignedSha256, cancellationToken);
+                            throw new InvalidOperationException($"The Unity package signer did not produce `{unityPackageFileName}`.");
                         }
+
+                        File.Move(signedPackageFilePath, unityPackageFilePath, overwrite: true);
+                        packageFileWritten = true;
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            if (Directory.Exists(tempPackageDirectoryPath))
+                            {
+                                Directory.Delete(tempPackageDirectoryPath, recursive: true);
+                            }
+
+                            if (Directory.Exists(tempSignedDirectoryPath))
+                            {
+                                Directory.Delete(tempSignedDirectoryPath, recursive: true);
+                            }
+                        }
+                        catch
+                        {
+                            // ignored
+                        }
+                    }
+
+                    File.Delete(unsignedPackageFilePath);
+
+                    if (unsignedSha256 is not null)
+                    {
+                        await WriteUnsignedPackageSha256(identity, npmPackageVersion, unsignedSha256, cancellationToken);
+                    }
+                }
+                else
+                {
+                    File.Move(unsignedPackageFilePath, unityPackageFilePath, overwrite: true);
+                    packageFileWritten = true;
+
+                    string unsignedSha256Path = GetUnsignedPackageSha256Path(identity, npmPackageVersion);
+                    if (File.Exists(unsignedSha256Path))
+                    {
+                        File.Delete(unsignedSha256Path);
                     }
                 }
 

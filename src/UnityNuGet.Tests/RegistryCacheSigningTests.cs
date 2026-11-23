@@ -388,6 +388,123 @@ namespace UnityNuGet.Tests
                     Assert.That(File.Exists(sha1Path), Is.True);
                     Assert.That(File.Exists(sidecarPath), Is.False);
                 }
+
+                await File.WriteAllTextAsync(sidecarPath, "stale-digest");
+
+                NpmPackageVersion rebuiltVersion = CreateNpmVersion("org.nuget.example", "1.0.0");
+                await ConvertPackage(cache, identity, rebuiltVersion, "dll-v1", forceUpdate: true);
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(signerShim.GetCallCount(), Is.EqualTo(0));
+                    Assert.That(File.Exists(tgzPath), Is.True);
+                    Assert.That(File.Exists(sha1Path), Is.True);
+                    Assert.That(File.Exists(sidecarPath), Is.False);
+                }
+            }
+            finally
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+
+        [Test]
+        public async Task FailedSigner_OnFirstBuild_DoesNotWritePackageOrSidecar_AndRecoversWhenSignerSucceeds()
+        {
+            string directory = CreateTempDirectory();
+
+            try
+            {
+                FakeUpmSigner signerShim = CreateFakeUpmSigner(directory);
+                signerShim.SetShouldFail(true);
+
+                using LoggerFactory loggerFactory = new();
+                List<string> warnings = [];
+                RegistryCache cache = CreateCache(directory, loggerFactory, signerShim.CreateOptions());
+                cache.OnWarning += (_, e) => warnings.Add(e.Message);
+
+                PackageIdentity identity = new("Example", NuGetVersion.Parse("1.0.0"));
+                NpmPackageVersion firstAttempt = CreateNpmVersion("org.nuget.example", "1.0.0");
+
+                await ConvertPackage(cache, identity, firstAttempt, "dll-v1", forceUpdate: false);
+
+                string tgzPath = Path.Combine(directory, "org.nuget.example-1.0.0.tgz");
+                string sha1Path = Path.Combine(directory, "org.nuget.example-1.0.0.sha1");
+                string sidecarPath = $"{tgzPath}.unsigned.sha256";
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(signerShim.GetCallCount(), Is.EqualTo(1));
+                    Assert.That(warnings, Has.Some.Contains("Error while processing package"));
+                    Assert.That(File.Exists(tgzPath), Is.False);
+                    Assert.That(File.Exists(sha1Path), Is.False);
+                    Assert.That(File.Exists(sidecarPath), Is.False);
+                    Assert.That(File.Exists($"{tgzPath}.unsigned"), Is.False);
+                    Assert.That(firstAttempt.Distribution.Shasum, Is.Null);
+                }
+
+                signerShim.SetShouldFail(false);
+
+                NpmPackageVersion secondAttempt = CreateNpmVersion("org.nuget.example", "1.0.0");
+                bool converted = await ConvertPackage(cache, identity, secondAttempt, "dll-v1", forceUpdate: false);
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(converted, Is.True);
+                    Assert.That(signerShim.GetCallCount(), Is.EqualTo(2));
+                    Assert.That(File.Exists(tgzPath), Is.True);
+                    Assert.That(File.Exists(sha1Path), Is.True);
+                    Assert.That(File.Exists(sidecarPath), Is.True);
+                    Assert.That(secondAttempt.Distribution.Shasum, Is.EqualTo(ComputeSha1Hex(await File.ReadAllBytesAsync(tgzPath))));
+                }
+            }
+            finally
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+
+        [Test]
+        public async Task FailedSigner_OnForcedRebuildWithChangedContent_PreservesExistingSignedArtifacts()
+        {
+            string directory = CreateTempDirectory();
+
+            try
+            {
+                FakeUpmSigner signerShim = CreateFakeUpmSigner(directory);
+                using LoggerFactory loggerFactory = new();
+                List<string> warnings = [];
+                RegistryCache cache = CreateCache(directory, loggerFactory, signerShim.CreateOptions());
+                cache.OnWarning += (_, e) => warnings.Add(e.Message);
+
+                PackageIdentity identity = new("Example", NuGetVersion.Parse("1.0.0"));
+                NpmPackageVersion firstVersion = CreateNpmVersion("org.nuget.example", "1.0.0");
+
+                await ConvertPackage(cache, identity, firstVersion, "dll-v1", forceUpdate: false);
+
+                string tgzPath = Path.Combine(directory, "org.nuget.example-1.0.0.tgz");
+                string sha1Path = Path.Combine(directory, "org.nuget.example-1.0.0.sha1");
+                string sidecarPath = $"{tgzPath}.unsigned.sha256";
+
+                byte[] firstSignedTgz = await File.ReadAllBytesAsync(tgzPath);
+                string firstSha1 = await File.ReadAllTextAsync(sha1Path);
+                string firstSidecar = await File.ReadAllTextAsync(sidecarPath);
+
+                signerShim.SetShouldFail(true);
+
+                NpmPackageVersion secondVersion = CreateNpmVersion("org.nuget.example", "1.0.0");
+                await ConvertPackage(cache, identity, secondVersion, "dll-v2-changed", forceUpdate: true);
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(signerShim.GetCallCount(), Is.EqualTo(2));
+                    Assert.That(warnings, Has.Some.Contains("Error while processing package"));
+                    Assert.That(File.Exists($"{tgzPath}.unsigned"), Is.False);
+                    Assert.That(Directory.GetDirectories(directory, ".signing-*"), Is.Empty);
+                    Assert.That(await File.ReadAllBytesAsync(tgzPath), Is.EqualTo(firstSignedTgz));
+                    Assert.That(await File.ReadAllTextAsync(sha1Path), Is.EqualTo(firstSha1));
+                    Assert.That(await File.ReadAllTextAsync(sidecarPath), Is.EqualTo(firstSidecar));
+                }
             }
             finally
             {
@@ -556,6 +673,7 @@ namespace UnityNuGet.Tests
         private static FakeUpmSigner CreateFakeUpmSigner(string directory)
         {
             string countFilePath = Path.Combine(directory, "signer-calls.count");
+            string failFlagPath = Path.Combine(directory, "signer-fail.flag");
 
             if (OperatingSystem.IsWindows())
             {
@@ -593,6 +711,7 @@ namespace UnityNuGet.Tests
                     $"if exist \"{countFilePath}\" set /p COUNT=<\"{countFilePath}\"",
                     "set /a COUNT+=1",
                     $">\"{countFilePath}\" echo !COUNT!",
+                    $"if exist \"{failFlagPath}\" exit /b 1",
                     "for /f \"usebackq tokens=1,2 delims=|\" %%A in (`powershell -NoProfile -Command \"$j = Get-Content -Raw -LiteralPath '%PKG%\\package.json' | ConvertFrom-Json; Write-Output ($j.name + '|' + $j.version)\"`) do (",
                     "    set \"NAME=%%A\"",
                     "    set \"VERSION=%%B\"",
@@ -604,12 +723,13 @@ namespace UnityNuGet.Tests
                 ]);
 
                 File.WriteAllText(scriptPath, script, new UTF8Encoding(false));
-                return new FakeUpmSigner(scriptPath, countFilePath);
+                return new FakeUpmSigner(scriptPath, countFilePath, failFlagPath);
             }
             else
             {
                 string scriptPath = Path.Combine(directory, "fake-upm.sh");
                 string escapedCountFile = countFilePath.Replace("'", "'\\''");
+                string escapedFailFlag = failFlagPath.Replace("'", "'\\''");
                 string script = string.Join('\n',
                 [
                     "#!/bin/sh",
@@ -629,12 +749,17 @@ namespace UnityNuGet.Tests
                     "  exit 1",
                     "fi",
                     $"count_file='{escapedCountFile}'",
+                    $"fail_flag='{escapedFailFlag}'",
                     "n=0",
                     "if [ -f \"$count_file\" ]; then",
                     "  n=$(cat \"$count_file\")",
                     "fi",
                     "n=$((n + 1))",
                     "printf '%s' \"$n\" > \"$count_file\"",
+                    "if [ -f \"$fail_flag\" ]; then",
+                    "  echo \"simulated signer failure\" >&2",
+                    "  exit 1",
+                    "fi",
                     "name=$(tr -d '\\r\\n' < \"$pkg/package.json\" | sed -n 's/.*\"name\":\"\\([^\"]*\\)\".*/\\1/p')",
                     "version=$(tr -d '\\r\\n' < \"$pkg/package.json\" | sed -n 's/.*\"version\":\"\\([^\"]*\\)\".*/\\1/p')",
                     "if [ -z \"$name\" ] || [ -z \"$version\" ]; then",
@@ -651,11 +776,11 @@ namespace UnityNuGet.Tests
                 File.SetUnixFileMode(
                     scriptPath,
                     UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-                return new FakeUpmSigner(scriptPath, countFilePath);
+                return new FakeUpmSigner(scriptPath, countFilePath, failFlagPath);
             }
         }
 
-        private sealed class FakeUpmSigner(string executablePath, string countFilePath)
+        private sealed class FakeUpmSigner(string executablePath, string countFilePath, string failFlagPath)
         {
             public SigningOptions CreateOptions() => new()
             {
@@ -664,6 +789,18 @@ namespace UnityNuGet.Tests
                 UnityOrganizationId = 12345,
                 UpmExecutableFilePath = executablePath
             };
+
+            public void SetShouldFail(bool shouldFail)
+            {
+                if (shouldFail)
+                {
+                    File.WriteAllText(failFlagPath, "1");
+                }
+                else if (File.Exists(failFlagPath))
+                {
+                    File.Delete(failFlagPath);
+                }
+            }
 
             public int GetCallCount()
             {
