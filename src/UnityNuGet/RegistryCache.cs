@@ -618,7 +618,7 @@ namespace UnityNuGet
         /// <summary>
         /// Converts a NuGet package to Unity package if not already
         /// </summary>
-        private async Task<bool> ConvertNuGetToUnityPackageIfDoesNotExist(
+        internal async Task<bool> ConvertNuGetToUnityPackageIfDoesNotExist(
             PackageIdentity identity,
             NpmPackageInfo npmPackageInfo,
             NpmPackageVersion npmPackageVersion,
@@ -1278,7 +1278,7 @@ namespace UnityNuGet
             return $"{_unityScope}.{identity.Id.ToLowerInvariant()}-{packageVersion.Version}.sha1";
         }
 
-        private void DeleteUnityPackage(PackageIdentity identity, NpmPackageVersion packageVersion)
+        internal void DeleteUnityPackage(PackageIdentity identity, NpmPackageVersion packageVersion)
         {
             var packageFile = new FileInfo(GetUnityPackagePath(identity, packageVersion));
 
