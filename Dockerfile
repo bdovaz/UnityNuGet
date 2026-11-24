@@ -23,6 +23,7 @@ COPY src/UnityNuGet.Server/*.csproj src/UnityNuGet.Server
 COPY src/UnityNuGet.Server.Tests/*.csproj src/UnityNuGet.Server.Tests
 COPY src/UnityNuGet.Tests/*.csproj src/UnityNuGet.Tests
 COPY src/UnityNuGet.Tool/*.csproj src/UnityNuGet.Tool
+COPY src/UnityNuGet.Tool.Tests/*.csproj src/UnityNuGet.Tool.Tests
 
 RUN dotnet restore src -a "$TARGETARCH"
 
