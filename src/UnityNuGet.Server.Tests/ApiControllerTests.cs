@@ -200,7 +200,7 @@ namespace UnityNuGet.Server.Tests
         public async Task Status_ShowsProgressAndReportMessages()
         {
             var cache = new RegistryCacheSingleton { ProgressPackageIndex = 1, ProgressTotalPackageCount = 4 };
-            var report = new RegistryCacheReport(cache, Options.Create(new RegistryOptions()));
+            var report = new RegistryCacheReport(cache, Options.Create(new RegistryOptions()), TimeProvider.System);
 
             using WebApplicationFactory<Program> factory = _webApplicationFactory
                 .WithWebHostBuilder(builder => builder.ConfigureServices(services =>

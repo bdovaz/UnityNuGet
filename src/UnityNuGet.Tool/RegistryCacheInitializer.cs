@@ -9,7 +9,7 @@ using Microsoft.Extensions.Options;
 
 namespace UnityNuGet.Tool
 {
-    public class RegistryCacheInitializer(IHostEnvironment hostEnvironment, ILoggerFactory loggerFactory, IOptions<RegistryOptions> registryOptionsAccessor, RegistryCacheSingleton registryCacheSingleton) : IHostedService
+    internal sealed class RegistryCacheInitializer(IHostEnvironment hostEnvironment, ILoggerFactory loggerFactory, IOptions<RegistryOptions> registryOptionsAccessor, RegistryCacheSingleton registryCacheSingleton) : IHostedService
     {
         private readonly IHostEnvironment _hostEnvironment = hostEnvironment;
         private readonly ILoggerFactory _loggerFactory = loggerFactory;

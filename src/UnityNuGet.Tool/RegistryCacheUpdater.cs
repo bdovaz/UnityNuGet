@@ -48,7 +48,6 @@ namespace UnityNuGet.Tool
                         _unityPackageSigner)
                     {
                         Filter = _registryOptions.Filter,
-                        // Update progress
                         OnProgress = (_, e) =>
                         {
                             _currentRegistryCache.ProgressTotalPackageCount = e.Total;

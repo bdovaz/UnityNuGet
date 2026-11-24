@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ builder.Services.AddHostedService<RegistryCacheInitializer>();
 builder.Services.AddHostedService<RegistryCacheUpdater>();
 
 builder.Services.AddSingleton<RegistryCacheReport>();
+builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddSingleton<RegistryCacheSingleton>();
 
