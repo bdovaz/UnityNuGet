@@ -13,7 +13,8 @@ RUN mkdir -p src/UnityNuGet && \
     mkdir -p src/UnityNuGet.Server && \
     mkdir -p src/UnityNuGet.Server.Tests && \
     mkdir -p src/UnityNuGet.Tests && \
-    mkdir -p src/UnityNuGet.Tool
+    mkdir -p src/UnityNuGet.Tool && \
+    mkdir -p src/UnityNuGet.Tool.Tests
 
 COPY src/Directory.Build.props src/Directory.Build.props
 COPY src/Directory.Packages.props src/Directory.Packages.props
