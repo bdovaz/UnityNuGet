@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
-using UnityNuGet;
 using UnityNuGet.Npm;
 
 namespace UnityNuGet.Server.Tests

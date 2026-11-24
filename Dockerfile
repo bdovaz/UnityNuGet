@@ -13,7 +13,8 @@ RUN mkdir -p src/UnityNuGet && \
     mkdir -p src/UnityNuGet.Server && \
     mkdir -p src/UnityNuGet.Server.Tests && \
     mkdir -p src/UnityNuGet.Tests && \
-    mkdir -p src/UnityNuGet.Tool
+    mkdir -p src/UnityNuGet.Tool && \
+    mkdir -p src/UnityNuGet.Tool.Tests
 
 COPY src/Directory.Build.props src/Directory.Build.props
 COPY src/Directory.Packages.props src/Directory.Packages.props
@@ -23,6 +24,7 @@ COPY src/UnityNuGet.Server/*.csproj src/UnityNuGet.Server
 COPY src/UnityNuGet.Server.Tests/*.csproj src/UnityNuGet.Server.Tests
 COPY src/UnityNuGet.Tests/*.csproj src/UnityNuGet.Tests
 COPY src/UnityNuGet.Tool/*.csproj src/UnityNuGet.Tool
+COPY src/UnityNuGet.Tool.Tests/*.csproj src/UnityNuGet.Tool.Tests
 
 RUN dotnet restore src -a "$TARGETARCH"
 

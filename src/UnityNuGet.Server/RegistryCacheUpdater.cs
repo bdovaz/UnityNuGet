@@ -45,7 +45,6 @@ namespace UnityNuGet.Server
                         _unityPackageSigner)
                     {
                         Filter = _registryOptions.Filter,
-                        // Update progress
                         OnProgress = (_, e) =>
                         {
                             _currentRegistryCache.ProgressTotalPackageCount = e.Total;
@@ -61,6 +60,7 @@ namespace UnityNuGet.Server
                     if (_registryCacheReport.ErrorMessages.Any())
                     {
                         bool onlyMissingDependencyErrors = _registryCacheReport.ErrorMessages.All(IsMissingDependencyError);
+
                         if (_allowServingWithMissingDependencies && onlyMissingDependencyErrors)
                         {
                             _currentRegistryCache.Instance = newRegistryCache;
@@ -88,7 +88,10 @@ namespace UnityNuGet.Server
             {
                 string message = "RegistryCache update canceled";
 
-                _logger.LogInformation("{Message}", message);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("{Message}", message);
+                }
 
                 _registryCacheReport.AddInformation($"{message}.");
                 _registryCacheReport.Complete();

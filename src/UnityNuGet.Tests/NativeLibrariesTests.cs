@@ -38,7 +38,7 @@ namespace UnityNuGet.Tests
             Assert.That(results, Has.Count.EqualTo(1));
             var result = results[0];
             Assert.That(result.file.Replace('\\', '/'), Is.EqualTo(path));
-            Assert.That(result.folders, Is.EqualTo(new[] { "runtimes", rid, "native" }));
+            Assert.That(result.folders, Is.EqualTo(["runtimes", rid, "native"]));
             Assert.That(result.os, Is.EqualTo(os));
             Assert.That(result.cpu, Is.EqualTo(cpu));
             Assert.That(logger.Messages, Is.Empty);

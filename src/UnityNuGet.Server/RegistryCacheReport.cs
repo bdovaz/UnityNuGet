@@ -7,10 +7,11 @@ namespace UnityNuGet.Server
     /// <summary>
     /// Main class that stores relevant messages that may appear during the build of the Unity packages with <see cref="RegistryCache"/>.
     /// </summary>
-    public class RegistryCacheReport(RegistryCacheSingleton registryCacheSingleton, IOptions<RegistryOptions> registryOptionsAccessor)
+    public class RegistryCacheReport(RegistryCacheSingleton registryCacheSingleton, IOptions<RegistryOptions> registryOptionsAccessor, TimeProvider timeProvider)
     {
         private readonly RegistryCacheSingleton _registryCacheSingleton = registryCacheSingleton;
         private readonly RegistryOptions _registryOptions = registryOptionsAccessor.Value;
+        private readonly TimeProvider _timeProvider = timeProvider;
 
         private readonly List<string> _informationMessages = [];
         private readonly List<string> _warningMessages = [];
@@ -44,7 +45,7 @@ namespace UnityNuGet.Server
             {
                 if (_errorMessages.Count == 0)
                 {
-                    return _lastUpdate != null ? _lastUpdate.Value.Add(_registryOptions.UpdateInterval) - DateTime.UtcNow : null;
+                    return _lastUpdate != null ? _lastUpdate.Value.Add(_registryOptions.UpdateInterval) - _timeProvider.GetUtcNow().UtcDateTime : null;
                 }
                 else
                 {
@@ -72,7 +73,7 @@ namespace UnityNuGet.Server
         {
             Running = false;
 
-            _lastUpdate = DateTime.UtcNow;
+            _lastUpdate = _timeProvider.GetUtcNow().UtcDateTime;
         }
     }
 }
