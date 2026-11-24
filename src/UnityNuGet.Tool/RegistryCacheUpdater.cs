@@ -5,9 +5,15 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace UnityNuGet.Server
+namespace UnityNuGet.Tool
 {
-    internal sealed class RegistryCacheUpdater(Registry registry, RegistryCacheSingleton currentRegistryCache, IHostApplicationLifetime hostApplicationLifetime, ILogger<RegistryCacheUpdater> logger, IOptions<RegistryOptions> registryOptionsAccessor, UnityPackageSigner unityPackageSigner) : BackgroundService
+    internal sealed class RegistryCacheUpdater(
+        Registry registry,
+        RegistryCacheSingleton currentRegistryCache,
+        IHostApplicationLifetime hostApplicationLifetime,
+        ILogger<RegistryCacheUpdater> logger,
+        IOptions<RegistryOptions> registryOptionsAccessor,
+        UnityPackageSigner unityPackageSigner) : BackgroundService
     {
         private readonly Registry _registry = registry;
         private readonly RegistryCacheSingleton _currentRegistryCache = currentRegistryCache;
@@ -60,17 +66,13 @@ namespace UnityNuGet.Server
             }
             catch (TaskCanceledException)
             {
-                string message = "RegistryCache update canceled";
-
-                _logger.LogInformation("{Message}", message);
+                _logger.LogInformation("RegistryCache update canceled");
 
                 exitCode = -1;
             }
             catch (Exception ex)
             {
-                string message = "Error while building a new registry cache";
-
-                _logger.LogError(ex, "{Message}", message);
+                _logger.LogError(ex, "Error while building a new registry cache");
 
                 exitCode = -1;
             }

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace UnityNuGet.Server
+namespace UnityNuGet.Tool
 {
     public class RegistryCacheInitializer(IHostEnvironment hostEnvironment, ILoggerFactory loggerFactory, IOptions<RegistryOptions> registryOptionsAccessor, RegistryCacheSingleton registryCacheSingleton) : IHostedService
     {
@@ -18,7 +18,7 @@ namespace UnityNuGet.Server
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            ILogger logger = _loggerFactory.CreateLogger("NuGet");
+            ILogger logger = _loggerFactory.CreateNuGetLogger();
             var loggerRedirect = new NuGetRedirectLogger(logger);
 
             Uri uri = _registryOptions.RootHttpUrl!;
@@ -48,7 +48,10 @@ namespace UnityNuGet.Server
                 unityPackageFolder = Path.Combine(currentDirectory, _registryOptions.RootPersistentFolder!);
             }
 
-            logger.LogInformation("Using Unity Package folder `{UnityPackageFolder}`", unityPackageFolder);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Using Unity Package folder `{UnityPackageFolder}`", unityPackageFolder);
+            }
 
             // Add the cache accessible from the services
             _registryCacheSingleton.UnityPackageFolder = unityPackageFolder;
