@@ -36,7 +36,7 @@ namespace UnityNuGet.Tool.Tests
         [Test]
         public async Task StartLogsConstructionFailureWhenPackageFolderIsMissing()
         {
-            // The singleton's folder is null; the null-forgiving operator passes it to RegistryCache, whose constructor throws ArgumentNullException.
+            // The singleton's folder is null; the null-forgiving operator passes it to RegistryCache, whose directory setup throws ArgumentNullException.
             using RegistryCacheUpdaterContext context = await CreateContext(setPackageFolder: false);
             Environment.ExitCode = 0;
 
@@ -49,7 +49,7 @@ namespace UnityNuGet.Tool.Tests
                 Assert.That(context.Logger.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
                 Assert.That(context.Logger.LatestRecord.Message, Is.EqualTo("Error while building a new registry cache"));
                 Assert.That(context.Logger.LatestRecord.Exception, Is.TypeOf<ArgumentNullException>());
-                Assert.That(((ArgumentNullException)context.Logger.LatestRecord.Exception!).ParamName, Is.EqualTo("rootPersistentFolder"));
+                Assert.That(((ArgumentNullException)context.Logger.LatestRecord.Exception!).ParamName, Is.EqualTo("path"));
             }
 
             context.HostApplicationLifetime.Verify(lifetime => lifetime.StopApplication(), Times.Once);
