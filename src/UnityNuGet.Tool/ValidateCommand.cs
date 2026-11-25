@@ -121,7 +121,7 @@ namespace UnityNuGet.Tool
         {
             if (!TryParseArgs(args, out RegistryValidationOptions? options, out bool showHelp, out string? errorMessage))
             {
-                await Console.Error.WriteLineAsync(errorMessage);
+                await Console.Error.WriteLineAsync(errorMessage, cancellationToken);
                 PrintUsage(Console.Error);
                 return 1;
             }
@@ -156,12 +156,12 @@ namespace UnityNuGet.Tool
 
             foreach (string error in result.Errors)
             {
-                await Console.Error.WriteLineAsync($"ERROR: {error}");
+                await Console.Error.WriteLineAsync($"ERROR: {error}", cancellationToken);
             }
 
             if (!result.IsValid)
             {
-                await Console.Error.WriteLineAsync($"Validation failed with {result.Errors.Count} error(s).");
+                await Console.Error.WriteLineAsync($"Validation failed with {result.Errors.Count} error(s).", cancellationToken);
                 return 1;
             }
 
