@@ -92,6 +92,29 @@ namespace UnityNuGet.Server.Tests
         }
 
         [Test]
+        public async Task StartDoesNotServeMissingDependencyCacheWhenOptionIsDisabled()
+        {
+            using RegistryCacheUpdaterContext context = await CreateContext(
+                registryPath: Path.Combine(AppContext.BaseDirectory, "registry.test.missing-dep.json"),
+                filter: "Serilog.Sinks.File",
+                allowServingWithMissingDependencies: false);
+            RegistryCache originalInstance = CreatePlaceholderCache(context.Options);
+            context.Singleton.Instance = originalInstance;
+
+            await context.Updater.StartAsync(CancellationToken.None);
+            await WaitUntil(() => !context.Report.Running && context.Report.ErrorMessages.Any());
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(context.Report.ErrorMessages.Any(), Is.True);
+                Assert.That(context.Singleton.Instance, Is.SameAs(originalInstance));
+                Assert.That(context.LoggerMessages.Any(message => message.Contains("RegistryCache not updated due to errors", StringComparison.Ordinal)), Is.True);
+            }
+
+            await context.Updater.StopAsync(CancellationToken.None);
+        }
+
+        [Test]
         public async Task StartReportsUnexpectedConstructionFailure()
         {
             using RegistryCacheUpdaterContext context = await CreateContext(setPackageFolder: false);
