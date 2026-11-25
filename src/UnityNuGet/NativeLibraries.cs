@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using NuGet.Common;
+using Microsoft.Extensions.Logging;
 using NuGet.Packaging;
 
 namespace UnityNuGet
@@ -25,7 +25,7 @@ namespace UnityNuGet
 
                 if (folders.Length != 3 || !folders[2].Equals("native", StringComparison.OrdinalIgnoreCase))
                 {
-                    logger.LogInformation($"Skipping non-native library file located in the runtimes folder: {file} ...");
+                    logger.LogInformation("Skipping non-native library file located in the runtimes folder: {File} ...", file);
                     continue;
                 }
 
@@ -33,7 +33,7 @@ namespace UnityNuGet
 
                 if (system.Length < 1)
                 {
-                    logger.LogInformation($"Skipping file located in the runtime folder that does not specify platform: {file} ...");
+                    logger.LogInformation("Skipping file located in the runtime folder that does not specify platform: {File} ...", file);
                     continue;
                 }
 
@@ -51,7 +51,7 @@ namespace UnityNuGet
 
                 if (os is null)
                 {
-                    logger.LogInformation($"Skipping file for unsupported OS: {file} ...");
+                    logger.LogInformation("Skipping file for unsupported OS: {File} ...", file);
                     continue;
                 }
 
@@ -74,13 +74,13 @@ namespace UnityNuGet
 
                 if (cpu is null)
                 {
-                    logger.LogInformation($"Skipping file for unsupported CPU: {file} ...");
+                    logger.LogInformation("Skipping file for unsupported CPU: {File} ...", file);
                     continue;
                 }
 
                 if (platformDefs.Find(os.Value, cpu.Value) == null || !IsSupportedNativeFile(file, os.Value))
                 {
-                    logger.LogInformation($"Skipping unsupported native library: {file} ...");
+                    logger.LogInformation("Skipping unsupported native library: {File} ...", file);
                     continue;
                 }
 

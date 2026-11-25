@@ -42,6 +42,7 @@ namespace UnityNuGet.Server.Tests
             {
                 Assert.That(context.Report.Running, Is.False);
                 Assert.That(context.Report.ErrorMessages, Is.Empty);
+                Assert.That(context.Report.InformationMeessages.Any(message => message.StartsWith("NuGet packages directory:", StringComparison.Ordinal)), Is.True);
                 Assert.That(context.Singleton.Instance, Is.Not.Null);
                 Assert.That(context.LoggerMessages, Does.Contain("RegistryCache successfully updated"));
             }
@@ -165,16 +166,18 @@ namespace UnityNuGet.Server.Tests
                 NuGetRedirectLogger = new NuGetRedirectLogger(logger)
             };
             RegistryCacheReport report = new(singleton, Options.Create(options), TimeProvider.System);
+            ILoggerFactory registryCacheLoggerFactory = LoggerFactory.Create(builder => builder.AddProvider(new RegistryCacheReportLoggerProvider(report)));
             UnityPackageSigner signer = new(NullLogger<UnityPackageSigner>.Instance, Options.Create(new SigningOptions()));
             RegistryCacheUpdater updater = new(
                 registry,
                 report,
                 singleton,
                 logger,
+                registryCacheLoggerFactory.CreateLogger<RegistryCache>(),
                 Options.Create(options),
                 signer);
 
-            return new RegistryCacheUpdaterContext(updater, logger, singleton, report, options, workingFolder);
+            return new RegistryCacheUpdaterContext(updater, logger, singleton, report, options, workingFolder, registryCacheLoggerFactory);
         }
 
         private static RegistryCache CreatePlaceholderCache(RegistryOptions options)
@@ -190,6 +193,7 @@ namespace UnityNuGet.Server.Tests
                 options.TargetFrameworks!,
                 options.RoslynAnalyzerVersions!,
                 new NuGet.Common.NullLogger(),
+                NullLogger<RegistryCache>.Instance,
                 new UnityPackageSigner(NullLogger<UnityPackageSigner>.Instance, Options.Create(new SigningOptions())));
         }
 
@@ -208,8 +212,11 @@ namespace UnityNuGet.Server.Tests
             RegistryCacheSingleton singleton,
             RegistryCacheReport report,
             RegistryOptions options,
-            string workingFolder) : IDisposable
+            string workingFolder,
+            ILoggerFactory registryCacheLoggerFactory) : IDisposable
         {
+            private readonly ILoggerFactory _registryCacheLoggerFactory = registryCacheLoggerFactory;
+
             public RegistryCacheUpdater Updater { get; } = updater;
             public FakeLogger<RegistryCacheUpdater> Logger { get; } = logger;
             public RegistryCacheSingleton Singleton { get; } = singleton;
@@ -219,6 +226,8 @@ namespace UnityNuGet.Server.Tests
 
             public void Dispose()
             {
+                _registryCacheLoggerFactory.Dispose();
+
                 if (Directory.Exists(workingFolder))
                 {
                     Directory.Delete(workingFolder, recursive: true);

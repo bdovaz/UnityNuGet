@@ -45,7 +45,7 @@ namespace UnityNuGet.Tool.Tests
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(Environment.ExitCode, Is.EqualTo(-1));
+                Assert.That(Environment.ExitCode, Is.EqualTo(1));
                 Assert.That(context.Logger.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
                 Assert.That(context.Logger.LatestRecord.Message, Is.EqualTo("Error while building a new registry cache"));
                 Assert.That(context.Logger.LatestRecord.Exception, Is.TypeOf<ArgumentNullException>());
@@ -59,7 +59,7 @@ namespace UnityNuGet.Tool.Tests
         public async Task StartCompletesSuccessfullyAndCopiesProgressFromRealRegistryBuild()
         {
             using RegistryCacheUpdaterContext context = await CreateContext(registryJson: """{"IgnoredPackage":{"ignore":true}}""");
-            Environment.ExitCode = -1;
+            Environment.ExitCode = 1;
 
             await context.Updater.StartAsync(CancellationToken.None);
             await context.Updater.ExecuteTask!;
@@ -87,8 +87,11 @@ namespace UnityNuGet.Tool.Tests
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(Environment.ExitCode, Is.EqualTo(-1));
-                Assert.That(context.Logger.Collector.GetSnapshot().Any(record => record.Level == LogLevel.Error && record.Message.Contains("Invalid pattern", StringComparison.Ordinal)), Is.True);
+                Assert.That(Environment.ExitCode, Is.EqualTo(1));
+                Assert.That(context.RegistryCacheLogger.Collector.GetSnapshot().Any(record =>
+                    record.Level == LogLevel.Error
+                    && record.Exception is ArgumentException exception
+                    && exception.Message.Contains("Invalid pattern", StringComparison.Ordinal)), Is.True);
             }
 
             context.HostApplicationLifetime.Verify(lifetime => lifetime.StopApplication(), Times.Once);
@@ -118,6 +121,7 @@ namespace UnityNuGet.Tool.Tests
             };
 
             FakeLogger<RegistryCacheUpdater> logger = new();
+            FakeLogger<RegistryCache> registryCacheLogger = new();
             Mock<IHostApplicationLifetime> hostApplicationLifetime = new();
             Registry registry = new(NullLoggerFactory.Instance, Options.Create(options));
             await registry.StartAsync(CancellationToken.None);
@@ -133,15 +137,17 @@ namespace UnityNuGet.Tool.Tests
                 singleton,
                 hostApplicationLifetime.Object,
                 logger,
+                registryCacheLogger,
                 Options.Create(options),
                 signer);
 
-            return new RegistryCacheUpdaterContext(updater, logger, singleton, hostApplicationLifetime, workingFolder, options);
+            return new RegistryCacheUpdaterContext(updater, logger, registryCacheLogger, singleton, hostApplicationLifetime, workingFolder, options);
         }
 
         private sealed class RegistryCacheUpdaterContext(
             RegistryCacheUpdater updater,
             FakeLogger<RegistryCacheUpdater> logger,
+            FakeLogger<RegistryCache> registryCacheLogger,
             RegistryCacheSingleton singleton,
             Mock<IHostApplicationLifetime> hostApplicationLifetime,
             string workingFolder,
@@ -149,6 +155,7 @@ namespace UnityNuGet.Tool.Tests
         {
             public RegistryCacheUpdater Updater { get; } = updater;
             public FakeLogger<RegistryCacheUpdater> Logger { get; } = logger;
+            public FakeLogger<RegistryCache> RegistryCacheLogger { get; } = registryCacheLogger;
             public RegistryCacheSingleton Singleton { get; } = singleton;
             public Mock<IHostApplicationLifetime> HostApplicationLifetime { get; } = hostApplicationLifetime;
             public RegistryOptions Options { get; } = options;
