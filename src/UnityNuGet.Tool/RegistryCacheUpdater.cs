@@ -12,9 +12,13 @@ namespace UnityNuGet.Tool
         RegistryCacheSingleton currentRegistryCache,
         IHostApplicationLifetime hostApplicationLifetime,
         ILogger<RegistryCacheUpdater> logger,
+        ILogger<RegistryCache> registryCacheLogger,
         IOptions<RegistryOptions> registryOptionsAccessor,
         UnityPackageSigner unityPackageSigner) : BackgroundService
     {
+        private const int SuccessExitCode = 0;
+        private const int FailureExitCode = 1;
+
         private readonly Registry _registry = registry;
         private readonly RegistryCacheSingleton _currentRegistryCache = currentRegistryCache;
         private readonly IHostApplicationLifetime _hostApplicationLifetime = hostApplicationLifetime;
@@ -24,15 +28,13 @@ namespace UnityNuGet.Tool
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            int exitCode = 0;
+            int exitCode = SuccessExitCode;
 
             try
             {
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     _logger.LogInformation("Starting to update RegistryCache");
-
-                    int errorCount = 0;
 
                     var newRegistryCache = new RegistryCache(
                         _registry,
@@ -45,6 +47,7 @@ namespace UnityNuGet.Tool
                         _registryOptions.TargetFrameworks!,
                         _registryOptions.RoslynAnalyzerVersions!,
                         _currentRegistryCache.NuGetRedirectLogger!,
+                        registryCacheLogger,
                         _unityPackageSigner)
                     {
                         Filter = _registryOptions.Filter,
@@ -52,13 +55,12 @@ namespace UnityNuGet.Tool
                         {
                             _currentRegistryCache.ProgressTotalPackageCount = e.Total;
                             _currentRegistryCache.ProgressPackageIndex = e.Current;
-                        },
-                        OnError = (_, _) => errorCount++
+                        }
                     };
 
-                    await newRegistryCache.Build(stoppingToken);
+                    bool buildSucceeded = await newRegistryCache.Build(stoppingToken);
 
-                    exitCode = errorCount == 0 ? 0 : -1;
+                    exitCode = buildSucceeded ? SuccessExitCode : FailureExitCode;
 
                     break;
                 }
@@ -67,13 +69,13 @@ namespace UnityNuGet.Tool
             {
                 _logger.LogInformation("RegistryCache update canceled");
 
-                exitCode = -1;
+                exitCode = FailureExitCode;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while building a new registry cache");
 
-                exitCode = -1;
+                exitCode = FailureExitCode;
             }
 
             Environment.ExitCode = exitCode;

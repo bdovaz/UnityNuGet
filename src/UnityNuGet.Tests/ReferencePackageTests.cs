@@ -9,6 +9,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 using Moq;
 using NuGet.Configuration;
@@ -42,7 +44,8 @@ namespace UnityNuGet.Tests
                 using LoggerFactory loggerFactory = new();
 
                 Registry registry = new(loggerFactory, Options.Create(new RegistryOptions { RegistryFilePath = "registry.json" }));
-                RegistryCache cache = CreateCache(registry, directory, loggerFactory);
+                FakeLogger<RegistryCache> cacheLogger = new();
+                RegistryCache cache = CreateCache(registry, directory, cacheLogger);
                 PackageIdentity identity = new(id, NuGetVersion.Parse(version));
 
                 using DownloadResourceResult download = await DownloadPackage(identity);
@@ -54,10 +57,6 @@ namespace UnityNuGet.Tests
                 metadata.Setup(x => x.DependencySets).Returns(dependencyGroups);
 
                 NpmPackageVersion npmVersion = new() { Name = $"org.nuget.{id.ToLowerInvariant()}", Version = version };
-
-                List<string> warnings = [];
-
-                cache.OnWarning = (_, e) => warnings.Add(e.Message);
 
                 List<string> sourceFiles = [.. await reader.GetFilesAsync(CancellationToken.None)];
 
@@ -76,6 +75,9 @@ namespace UnityNuGet.Tests
                 }
 
                 await cache.ConvertNuGetPackageToUnity(identity, new NpmPackageInfo(), npmVersion, metadata.Object, reader, new RegistryEntry());
+                string[] warnings = [.. cacheLogger.Collector.GetSnapshot()
+                    .Where(record => record.Level == LogLevel.Warning)
+                    .Select(record => record.Exception is null ? record.Message : $"{record.Message} {record.Exception}")];
 
                 string path = Path.Combine(directory, $"org.nuget.{id.ToLowerInvariant()}-{version}.tgz");
 
@@ -156,19 +158,17 @@ namespace UnityNuGet.Tests
 
                 await registry.StartAsync(CancellationToken.None);
 
-                RegistryCache cache = CreateCache(registry, directory, loggerFactory);
+                FakeLogger<RegistryCache> cacheLogger = new();
+                RegistryCache cache = CreateCache(registry, directory, cacheLogger);
 
                 cache.Filter = $"^{Regex.Escape(id)}$";
 
-                List<string> errors = [];
-                List<string> warnings = [];
+                bool buildSucceeded = await cache.Build();
+                string[] warnings = [.. cacheLogger.Collector.GetSnapshot()
+                    .Where(record => record.Level == LogLevel.Warning)
+                    .Select(record => record.Exception is null ? record.Message : $"{record.Message} {record.Exception}")];
 
-                cache.OnError = (_, e) => errors.Add(e.Message);
-                cache.OnWarning = (_, e) => warnings.Add(e.Message);
-
-                await cache.Build();
-
-                Assert.That(errors, Is.Empty);
+                Assert.That(buildSucceeded, Is.True);
 
                 string path = Path.Combine(directory, $"org.nuget.{id.ToLowerInvariant()}-{version}.tgz");
 
@@ -240,19 +240,17 @@ namespace UnityNuGet.Tests
 
                 await registry.StartAsync(CancellationToken.None);
 
-                RegistryCache cache = CreateCache(registry, directory, loggerFactory);
+                FakeLogger<RegistryCache> cacheLogger = new();
+                RegistryCache cache = CreateCache(registry, directory, cacheLogger);
 
-                List<string> warnings = [];
-                List<string> errors = [];
-
-                cache.OnWarning = (_, e) => warnings.Add(e.Message);
-                cache.OnError = (_, e) => errors.Add(e.Message);
-
-                await cache.Build();
+                bool buildSucceeded = await cache.Build();
+                string[] warnings = [.. cacheLogger.Collector.GetSnapshot()
+                    .Where(record => record.Level == LogLevel.Warning)
+                    .Select(record => record.Exception is null ? record.Message : $"{record.Message} {record.Exception}")];
 
                 using (Assert.EnterMultipleScope())
                 {
-                    Assert.That(errors, Is.Empty);
+                    Assert.That(buildSucceeded, Is.True);
                     Assert.That(warnings, Has.Some.Contains("doesn't support"));
                     Assert.That(File.Exists(Path.Combine(directory, "org.nuget.grpc.tools-2.67.0.tgz")), Is.False);
                     Assert.That(cache.GetPackage("org.nuget.grpc.tools"), Is.Null);
@@ -264,13 +262,14 @@ namespace UnityNuGet.Tests
             }
         }
 
-        private static RegistryCache CreateCache(Registry registry, string directory, LoggerFactory loggerFactory)
+        private static RegistryCache CreateCache(Registry registry, string directory, ILogger<RegistryCache> logger)
         {
             return new RegistryCache(
                 registry, directory, new Uri("http://localhost/"), "org.nuget", "2019.1", " (NuGet)", [],
                 [new() { Name = "netstandard2.0" }, new() { Name = "netstandard2.1" }], [],
                 new NuGetConsoleTestLogger(),
-                new UnityPackageSigner(loggerFactory.CreateLogger<UnityPackageSigner>(), Options.Create(new SigningOptions())));
+                logger,
+                new UnityPackageSigner(NullLogger<UnityPackageSigner>.Instance, Options.Create(new SigningOptions())));
         }
 
         private static async Task<DownloadResourceResult> DownloadPackage(PackageIdentity identity)

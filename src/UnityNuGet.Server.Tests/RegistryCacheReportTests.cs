@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using NUnit.Framework;
@@ -56,6 +57,40 @@ namespace UnityNuGet.Server.Tests
                 Assert.That(report.WarningMessages, Is.EqualTo(["Warning"]));
                 Assert.That(report.ErrorMessages, Is.EqualTo(["Error"]));
             }
+        }
+
+        [Test]
+        public void LoggerProviderCapturesOnlyRegistryCacheCategoryBySeverity()
+        {
+            RegistryCacheReport report = CreateReport();
+            using RegistryCacheReportLoggerProvider provider = new(report);
+            ILogger registryCacheLogger = provider.CreateLogger(RegistryCache.LoggerCategoryName);
+            ILogger unrelatedLogger = provider.CreateLogger("NuGet");
+
+            registryCacheLogger.LogInformation("Cache information");
+            registryCacheLogger.LogWarning("Cache warning");
+            registryCacheLogger.LogError("Cache error");
+            unrelatedLogger.LogError("NuGet detail");
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(report.InformationMeessages, Is.EqualTo(["Cache information"]));
+                Assert.That(report.WarningMessages, Is.EqualTo(["Cache warning"]));
+                Assert.That(report.ErrorMessages, Is.EqualTo(["Cache error"]));
+                Assert.That(provider.CreateLogger(RegistryCache.LoggerCategoryName), Is.SameAs(registryCacheLogger));
+            }
+        }
+
+        [Test]
+        public void LoggerIncludesExceptionDetailsInReport()
+        {
+            RegistryCacheReport report = CreateReport();
+            RegistryCacheReportLogger logger = new(report, RegistryCache.LoggerCategoryName);
+            InvalidOperationException exception = new("Failure details");
+
+            logger.LogError(exception, "Cache failed");
+
+            Assert.That(report.ErrorMessages, Is.EqualTo([$"Cache failed. Reason: {exception}"]));
         }
 
         [Test]

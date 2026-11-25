@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 using NuGet.Configuration;
@@ -91,7 +92,7 @@ namespace UnityNuGet.Tests
 
             // Make sure we have runtime libraries
             List<(string file, UnityOs, UnityCpu?)> runtimeLibs = await RuntimeLibraries
-                .GetSupportedRuntimeLibsAsync(downloadResult.PackageReader!, CommonFrameworks.NetStandard20, logger)
+                .GetSupportedRuntimeLibsAsync(downloadResult.PackageReader!, CommonFrameworks.NetStandard20, NullLogger<RegistryCache>.Instance)
                 .ToListAsync();
             Assert.That(runtimeLibs, Is.Not.Empty);
 
@@ -143,7 +144,7 @@ namespace UnityNuGet.Tests
 
             // Make sure we have native libraries for osx (Universal Binary)
             List<(string file, string[] folders, UnityOs os, UnityCpu cpu)> nativeLibs = await NativeLibraries
-                .GetSupportedNativeLibsAsync(downloadResult.PackageReader!, logger)
+                .GetSupportedNativeLibsAsync(downloadResult.PackageReader!, NullLogger<RegistryCache>.Instance)
                 .ToListAsync();
 
             // Should have at least one osx native library
@@ -313,7 +314,7 @@ namespace UnityNuGet.Tests
                         SettingsUtility.GetGlobalPackagesFolder(settings),
                         logger, CancellationToken.None);
 
-                bool hasNativeLib = await NativeLibraries.GetSupportedNativeLibsAsync(downloadResult.PackageReader!, logger).AnyAsync();
+                bool hasNativeLib = await NativeLibraries.GetSupportedNativeLibsAsync(downloadResult.PackageReader!, NullLogger<RegistryCache>.Instance).AnyAsync();
                 Assert.That(hasNativeLib, packageId);
             }
         }
