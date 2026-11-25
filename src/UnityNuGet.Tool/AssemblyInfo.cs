@@ -1,3 +1,3 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("UnityNuGet.Tests")]
+[assembly: InternalsVisibleTo("UnityNuGet.Tool.Tests")]

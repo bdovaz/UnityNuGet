@@ -1,9 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using UnityNuGet;
 using UnityNuGet.Server;
@@ -18,6 +18,7 @@ builder.Services.AddHostedService<RegistryCacheInitializer>();
 builder.Services.AddHostedService<RegistryCacheUpdater>();
 
 builder.Services.AddSingleton<RegistryCacheReport>();
+builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddSingleton<RegistryCacheSingleton>();
 
@@ -43,7 +44,6 @@ WebApplication app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.LogRequestHeaders(app.Services.GetRequiredService<ILoggerFactory>());
 }
 else
 {
@@ -55,7 +55,3 @@ app.MapHealthChecks("/health");
 app.MapUnityNuGetEndpoints();
 
 app.Run();
-
-public partial class Program
-{
-}

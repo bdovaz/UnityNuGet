@@ -12,16 +12,22 @@ namespace UnityNuGet
     /// </summary>
     public class NuGetRedirectLogger(ILogger logger) : LoggerBase
     {
-        private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        public ILogger Logger { get; } = logger;
 
         public override void Log(ILogMessage message)
         {
-            LoggerExtensions.Log(_logger, GetLogLevel(message.Level), "{Message}", message.Message);
+            Microsoft.Extensions.Logging.LogLevel logLevel = GetLogLevel(message.Level);
+
+            if (Logger.IsEnabled(logLevel))
+            {
+                Logger.Log(logLevel, "{Message}", message.Message);
+            }
         }
 
         public override Task LogAsync(ILogMessage message)
         {
-            LoggerExtensions.Log(_logger, GetLogLevel(message.Level), "{Message}", message.Message);
+            Log(message);
+
             return Task.CompletedTask;
         }
 
