@@ -144,24 +144,9 @@ namespace UnityNuGet.Tool
             RegistryValidator validator = new(loggerFactory);
             RegistryValidationResult result = await validator.ValidateAsync(options!, cancellationToken);
 
-            foreach (string info in result.Information)
-            {
-                Console.WriteLine($"INFO: {info}");
-            }
-
-            foreach (string warning in result.Warnings)
-            {
-                Console.WriteLine($"WARN: {warning}");
-            }
-
-            foreach (string error in result.Errors)
-            {
-                await Console.Error.WriteLineAsync($"ERROR: {error}", cancellationToken);
-            }
-
             if (!result.IsValid)
             {
-                await Console.Error.WriteLineAsync($"Validation failed with {result.Errors.Count} error(s).", cancellationToken);
+                await Console.Error.WriteLineAsync("Validation failed", cancellationToken);
                 return 1;
             }
 

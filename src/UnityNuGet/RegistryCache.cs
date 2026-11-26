@@ -132,7 +132,10 @@ namespace UnityNuGet
 
             _canSignPackages = _unityPackageSigner.CanSign();
 
-            _logger.LogInformation("NuGet packages directory: {GlobalPackagesFolder}", GlobalPackagesFolder);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("NuGet packages directory: {GlobalPackagesFolder}", GlobalPackagesFolder);
+            }
         }
 
         /// <summary>
@@ -252,7 +255,10 @@ namespace UnityNuGet
 
             if (forceUpdate)
             {
-                _logger.LogInformation("Registry version changed to {RegistryVersion} - Regenerating all packages", CurrentRegistryVersion);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Registry version changed to {RegistryVersion} - Regenerating all packages", CurrentRegistryVersion);
+                }
 
                 // Clear the cache entirely
                 _npmPackageRegistry.Reset();
@@ -262,7 +268,10 @@ namespace UnityNuGet
 
             if (regexFilter != null)
             {
-                _logger.LogInformation("Filtering with regex: {Filter}", Filter);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Filtering with regex: {Filter}", Filter);
+                }
             }
 
             int progressCount = 0;
@@ -560,7 +569,10 @@ namespace UnityNuGet
                             {
                                 Directory.Delete(localPackagePath, true);
 
-                                _logger.LogInformation("The NuGet package cache folder has been deleted: {LocalPackagePath}", localPackagePath);
+                                if (_logger.IsEnabled(LogLevel.Information))
+                                {
+                                    _logger.LogInformation("The NuGet package cache folder has been deleted: {LocalPackagePath}", localPackagePath);
+                                }
                             }
                             else
                             {
@@ -675,7 +687,10 @@ namespace UnityNuGet
             string unityPackageFileName = GetUnityPackageFileName(identity, npmPackageVersion);
             string unityPackageFilePath = Path.Combine(_rootPersistentFolder, unityPackageFileName);
 
-            _logger.LogInformation("Converting NuGet package {PackageIdentity} to Unity `{UnityPackageFileName}`", identity, unityPackageFileName);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Converting NuGet package {PackageIdentity} to Unity `{UnityPackageFileName}`", identity, unityPackageFileName);
+            }
 
             try
             {
@@ -731,7 +746,10 @@ namespace UnityNuGet
 
                     if (isPackageNetStandard21Assembly)
                     {
-                        _logger.LogInformation("Package {PackageId} is a system package for netstandard2.1 and will be only used for netstandard 2.0", identity.Id);
+                        if (_logger.IsEnabled(LogLevel.Information))
+                        {
+                            _logger.LogInformation("Package {PackageId} is a system package for netstandard2.1 and will be only used for netstandard 2.0", identity.Id);
+                        }
                     }
 
                     // There are packages that have embedded analyzers, e.g.: CommunityToolkit.Mvvm
@@ -809,7 +827,10 @@ namespace UnityNuGet
                             PlatformDefinition? platformDef = platformDefs.Find(os, cpu);
                             if (platformDef == null)
                             {
-                                _logger.LogInformation("Failed to find a platform definition for: {OperatingSystem}, {Cpu}", os, cpu);
+                                if (_logger.IsEnabled(LogLevel.Information))
+                                {
+                                    _logger.LogInformation("Failed to find a platform definition for: {OperatingSystem}, {Cpu}", os, cpu);
+                                }
                                 continue;
                             }
 
@@ -926,7 +947,10 @@ namespace UnityNuGet
                         PlatformDefinition? platformDef = platformDefs.Find(os, cpu);
                         if (platformDef == null)
                         {
-                            _logger.LogInformation("Failed to find a platform definition for: {OperatingSystem}, {Cpu}", os, cpu);
+                            if (_logger.IsEnabled(LogLevel.Information))
+                            {
+                                _logger.LogInformation("Failed to find a platform definition for: {OperatingSystem}, {Cpu}", os, cpu);
+                            }
                             continue;
                         }
 
@@ -940,7 +964,10 @@ namespace UnityNuGet
 
                         if (meta == null)
                         {
-                            _logger.LogInformation("Skipping file without meta: {File} ...", file);
+                            if (_logger.IsEnabled(LogLevel.Information))
+                            {
+                                _logger.LogInformation("Skipping file without meta: {File} ...", file);
+                            }
                             continue;
                         }
 

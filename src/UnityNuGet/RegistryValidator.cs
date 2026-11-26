@@ -16,8 +16,6 @@ using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 using UnityNuGet.Npm;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
-using NuGetCommonLogger = NuGet.Common.ILogger;
 
 namespace UnityNuGet
 {
@@ -113,7 +111,8 @@ namespace UnityNuGet
 
             if (!File.Exists(registryFilePath))
             {
-                result.Errors.Add($"Registry file does not exist: `{registryFilePath}`.");
+                _logger.LogError("Registry file does not exist: `{RegistryFilePath}`.", registryFilePath);
+                result.IsValid = false;
                 return result;
             }
 
@@ -124,7 +123,8 @@ namespace UnityNuGet
             }
             catch (Exception ex)
             {
-                result.Errors.Add($"Failed to read `{registryFilePath}`: {ex.Message}");
+                _logger.LogError(ex, "Failed to read `{RegistryFilePath}`", registryFilePath);
+                result.IsValid = false;
                 return result;
             }
 
@@ -134,22 +134,25 @@ namespace UnityNuGet
                 using JsonDocument document = JsonDocument.Parse(json);
                 if (document.RootElement.ValueKind != JsonValueKind.Object)
                 {
-                    result.Errors.Add("Registry JSON root must be an object mapping package IDs to entries.");
+                    _logger.LogError("Registry JSON root must be an object mapping package IDs to entries.");
+                    result.IsValid = false;
                     return result;
                 }
 
-                HashSet<string> seenKeys = new(StringComparer.OrdinalIgnoreCase);
+                HashSet<string> seenKeys = [with(StringComparer.OrdinalIgnoreCase)];
                 foreach (JsonProperty property in document.RootElement.EnumerateObject())
                 {
                     if (string.IsNullOrWhiteSpace(property.Name))
                     {
-                        result.Errors.Add("Registry contains an empty package key.");
+                        _logger.LogError("Registry contains an empty package key.");
+                        result.IsValid = false;
                         continue;
                     }
 
                     if (!seenKeys.Add(property.Name))
                     {
-                        result.Errors.Add($"Duplicate package key (case-insensitive) in registry.json: `{property.Name}`.");
+                        _logger.LogError("Duplicate package key (case-insensitive) in registry.json: `{PackageId}`.", property.Name);
+                        result.IsValid = false;
                     }
 
                     originalPackageNames.Add(property.Name);
@@ -157,7 +160,8 @@ namespace UnityNuGet
             }
             catch (JsonException ex)
             {
-                result.Errors.Add($"Invalid JSON in `{registryFilePath}`: {ex.Message}");
+                _logger.LogError(ex, "Invalid JSON in `{RegistryFilePath}`", registryFilePath);
+                result.IsValid = false;
                 return result;
             }
 
@@ -168,13 +172,15 @@ namespace UnityNuGet
             }
             catch (Exception ex) when (ex is JsonException or FormatException or ArgumentException)
             {
-                result.Errors.Add($"Invalid registry entry schema in `{registryFilePath}`: {ex.Message}");
+                _logger.LogError(ex, "Invalid registry entry schema in `{RegistryFilePath}`", registryFilePath);
+                result.IsValid = false;
                 return result;
             }
 
             if (deserialized == null)
             {
-                result.Errors.Add($"Registry file `{registryFilePath}` deserialized to null.");
+                _logger.LogError("Registry file `{RegistryFilePath}` deserialized to null.", registryFilePath);
+                result.IsValid = false;
                 return result;
             }
 
@@ -183,12 +189,13 @@ namespace UnityNuGet
             {
                 if (!string.Equals(originalPackageNames[i], sortedPackageNames[i], StringComparison.Ordinal))
                 {
-                    result.Errors.Add($"Registry keys are not sorted alphabetically (found `{originalPackageNames[i]}`, expected `{sortedPackageNames[i]}`).");
+                    _logger.LogError("Registry keys are not sorted alphabetically (found `{OriginalPackage}`, expected `{SortedPackage}`).", originalPackageNames[i], sortedPackageNames[i]);
+                    result.IsValid = false;
                     break;
                 }
             }
 
-            Dictionary<string, RegistryEntry> registryEntries = new(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, RegistryEntry> registryEntries = [with(StringComparer.OrdinalIgnoreCase)];
             foreach (KeyValuePair<string, RegistryEntry> pair in deserialized)
             {
                 registryEntries.TryAdd(pair.Key, pair.Value);
@@ -198,36 +205,41 @@ namespace UnityNuGet
             {
                 if (DotNetHelper.IsNetStandard20Assembly(packageName))
                 {
-                    result.Errors.Add($"Package `{packageName}` is already included in .NET Standard 2.0 and must not be in registry.json.");
+                    _logger.LogError("Package `{PackageName}` is already included in .NET Standard 2.0 and must not be in registry.json.", packageName);
+                    result.IsValid = false;
                 }
 
                 if (!registryEntries.TryGetValue(packageName, out RegistryEntry? entry) || entry == null)
                 {
-                    result.Errors.Add($"Package `{packageName}` entry must not be null.");
+                    _logger.LogError("Package `{PackageName}` entry must not be null.", packageName);
+                    result.IsValid = false;
                     continue;
                 }
 
                 if (!entry.Ignored && (entry.Version == null || entry.Version.MinVersion == null))
                 {
-                    result.Errors.Add($"Package `{packageName}` must specify a valid minimum version unless `ignore` is true.");
+                    _logger.LogError("Package `{PackageName}` must specify a valid minimum version unless `ignore` is true.", packageName);
+                    result.IsValid = false;
                 }
             }
 
             HashSet<string>? requestedPackageSet = null;
             if (options.PackageNames.Count > 0)
             {
-                requestedPackageSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                requestedPackageSet = [with(StringComparer.OrdinalIgnoreCase)];
                 foreach (string requestedName in options.PackageNames)
                 {
                     if (string.IsNullOrWhiteSpace(requestedName))
                     {
-                        result.Errors.Add("Package name passed to --package must not be empty.");
+                        _logger.LogError("Package name passed to --package must not be empty.");
+                        result.IsValid = false;
                         continue;
                     }
 
                     if (!registryEntries.ContainsKey(requestedName))
                     {
-                        result.Errors.Add($"Requested package `{requestedName}` was not found in `{options.RegistryFilePath}`.");
+                        _logger.LogError("Requested package `{RequestedName}` was not found in `{RegistryFilePath}`.", requestedName, options.RegistryFilePath);
+                        result.IsValid = false;
                         continue;
                     }
 
@@ -244,7 +256,8 @@ namespace UnityNuGet
                 }
                 catch (ArgumentException ex)
                 {
-                    result.Errors.Add($"Invalid --filter regex `{options.Filter}`: {ex.Message}");
+                    _logger.LogError(ex, "Invalid --filter regex `{Filter}`", options.Filter);
+                    result.IsValid = false;
                 }
             }
 
@@ -271,7 +284,10 @@ namespace UnityNuGet
                 {
                     if (requestedPackageSet != null && requestedPackageSet.Contains(packageName))
                     {
-                        result.Information.Add($"Package `{packageName}` has `ignore: true` and was skipped.");
+                        if (_logger.IsEnabled(LogLevel.Information))
+                        {
+                            _logger.LogInformation("Package `{PackageName}` has `ignore: true` and was skipped.", packageName);
+                        }
                     }
 
                     continue;
@@ -283,11 +299,11 @@ namespace UnityNuGet
             result.CheckedPackageCount = targetPackages.Count;
             if (targetPackages.Count == 0)
             {
-                result.Information.Add("No non-ignored packages matched the validation selection.");
+                _logger.LogInformation("No non-ignored packages matched the validation selection.");
                 return result;
             }
 
-            NuGetCommonLogger nuGetLogger = new NuGetRedirectLogger(_logger);
+            NuGet.Common.ILogger nuGetLogger = new NuGetRedirectLogger(_logger);
             ISettings settings = Settings.LoadDefaultSettings(root: Directory.GetCurrentDirectory());
             SourceRepositoryProvider sourceRepositoryProvider = new(new PackageSourceProvider(settings), Repository.Provider.GetCoreV3());
             IEnumerable<SourceRepository> sourceRepositories = sourceRepositoryProvider.GetRepositories();
@@ -297,7 +313,7 @@ namespace UnityNuGet
                 GetMetadataFromSourcesAsync(sourceRepositories, sourceCacheContext, nuGetLogger, packageId, includePrerelease, includeUnlisted, ct));
 
             NativeLibraryChecker checkNativeLibs = _nativeLibraryCheckerOverride ?? ((identity, ct) =>
-                HasSupportedNativeLibsAsync(sourceRepositories, settings, sourceCacheContext, nuGetLogger, identity, ct));
+                HasSupportedNativeLibsAsync(sourceRepositories, settings, sourceCacheContext, nuGetLogger, _logger, identity, ct));
 
             RegistryTargetFramework[] netStandard20Frameworks =
             [
@@ -323,7 +339,8 @@ namespace UnityNuGet
 
                 if (metas.Count == 0)
                 {
-                    result.Errors.Add($"The package `{packageId}` was not found in any NuGet registry.");
+                    _logger.LogError("The package `{PackageId}` was not found in any NuGet registry.", packageId);
+                    result.IsValid = false;
                     continue;
                 }
 
@@ -335,11 +352,15 @@ namespace UnityNuGet
                 {
                     if (configuredMinVersion < minNs20.Version)
                     {
-                        result.Errors.Add($"Package `{packageId}` specifies minimum version `{configuredMinVersion}`, which is lower than the earliest compatible .NET Standard 2.0 version `{minNs20.Version}`.");
+                        _logger.LogError("Package `{PackageId}` specifies minimum version `{ConfiguredMinVersion}`, which is lower than the earliest compatible .NET Standard 2.0 version `{MinNs20Version}`.", packageId, configuredMinVersion, minNs20.Version);
+                        result.IsValid = false;
                     }
                     else if (configuredMinVersion > minNs20.Version)
                     {
-                        result.Information.Add($"Package `{packageId}` starts at `{configuredMinVersion}`, which is higher than the earliest compatible .NET Standard 2.0 version `{minNs20.Version}`.");
+                        if (_logger.IsEnabled(LogLevel.Information))
+                        {
+                            _logger.LogInformation("Package `{PackageId}` starts at `{ConfiguredMinVersion}`, which is higher than the earliest compatible .NET Standard 2.0 version `{MinNs20Version}`.", packageId, configuredMinVersion, minNs20.Version);
+                        }
                     }
 
                     continue;
@@ -350,11 +371,15 @@ namespace UnityNuGet
                 {
                     if (configuredMinVersion < minNs21.Version)
                     {
-                        result.Errors.Add($"Package `{packageId}` specifies minimum version `{configuredMinVersion}`, which is lower than the earliest compatible .NET Standard 2.1 version `{minNs21.Version}`.");
+                        _logger.LogError("Package `{PackageId}` specifies minimum version `{ConfiguredMinVersion}`, which is lower than the earliest compatible .NET Standard 2.1 version `{MinNs21Version}`.", packageId, configuredMinVersion, minNs21.Version);
+                        result.IsValid = false;
                     }
                     else if (configuredMinVersion > minNs21.Version)
                     {
-                        result.Information.Add($"Package `{packageId}` starts at `{configuredMinVersion}`, which is higher than the earliest compatible .NET Standard 2.1 version `{minNs21.Version}`.");
+                        if (_logger.IsEnabled(LogLevel.Information))
+                        {
+                            _logger.LogInformation("Package `{PackageId}` starts at `{ConfiguredMinVersion}`, which is higher than the earliest compatible .NET Standard 2.1 version `{MinNs21Version}`.", packageId, configuredMinVersion, minNs21.Version);
+                        }
                     }
 
                     continue;
@@ -369,7 +394,8 @@ namespace UnityNuGet
                     bool hasNativeLib = await checkNativeLibs(new PackageIdentity(packageId, configuredMinVersion), cancellationToken);
                     if (!hasNativeLib)
                     {
-                        result.Errors.Add($"Package `{packageId}` at version `{configuredMinVersion}` has no compatible .NET Standard 2.0/2.1 target or supported native library.");
+                        _logger.LogError("Package `{PackageId}` at version `{ConfiguredMinVersion}` has no compatible .NET Standard 2.0/2.1 target or supported native library.", packageId, configuredMinVersion);
+                        result.IsValid = false;
                     }
                 }
             }
@@ -379,7 +405,7 @@ namespace UnityNuGet
                 return result;
             }
 
-            await ValidateConversionAsync(registryFilePath, targetPackages, options.ValidateAll, result, cancellationToken);
+            result.IsValid = await ValidateConversionAsync(registryFilePath, targetPackages, options.ValidateAll, cancellationToken);
 
             return result;
         }
@@ -402,13 +428,14 @@ namespace UnityNuGet
             return false;
         }
 
-        private async Task ValidateConversionAsync(
+        private async Task<bool> ValidateConversionAsync(
             string registryFilePath,
             List<KeyValuePair<string, RegistryEntry>> targetPackages,
             bool validateAll,
-            RegistryValidationResult result,
             CancellationToken cancellationToken)
         {
+            bool hasErrors = false;
+
             string tempFolder = Path.Combine(Path.GetTempPath(), $"unitynuget-validate-{Guid.NewGuid():N}");
             string? previousNugetPackagesEnv = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
 
@@ -424,7 +451,7 @@ namespace UnityNuGet
                     _loggerFactory.CreateLogger<UnityPackageSigner>(),
                     Options.Create(new SigningOptions()));
 
-                NuGetCommonLogger nuGetLogger = new NuGetRedirectLogger(_logger);
+                NuGet.Common.ILogger nuGetLogger = new NuGetRedirectLogger(_logger);
                 RegistryCache cache = new(
                     registry,
                     tempFolder,
@@ -436,11 +463,10 @@ namespace UnityNuGet
                     registryOptions.TargetFrameworks!,
                     registryOptions.RoslynAnalyzerVersions!,
                     nuGetLogger,
+                    _loggerFactory.CreateLogger<RegistryCache>(),
                     signer)
                 {
                     Filter = validateAll ? null : BuildExactPackageFilterRegex(targetPackages.Select(p => p.Key)),
-                    OnError = (_, e) => result.Errors.Add(e.Message),
-                    OnWarning = (_, e) => result.Warnings.Add(e.Message),
                 };
 
                 await cache.Build(cancellationToken);
@@ -451,7 +477,8 @@ namespace UnityNuGet
                     NpmPackage? convertedPackage = cache.GetPackage(npmPackageId);
                     if (!HasConvertedVersion(convertedPackage))
                     {
-                        result.Errors.Add($"Package `{packageId}` did not produce any converted Unity package versions.");
+                        _logger.LogError("Package `{PackageId}` did not produce any converted Unity package versions.", packageId);
+                        hasErrors = true;
                     }
                 }
             }
@@ -471,12 +498,14 @@ namespace UnityNuGet
                     // Best-effort temp directory cleanup.
                 }
             }
+
+            return hasErrors;
         }
 
         private static async Task<IReadOnlyList<IPackageSearchMetadata>> GetMetadataFromSourcesAsync(
             IEnumerable<SourceRepository> sourceRepositories,
             SourceCacheContext cache,
-            NuGetCommonLogger logger,
+            NuGet.Common.ILogger nuGetLogger,
             string packageId,
             bool includePrerelease,
             bool includeUnlisted,
@@ -495,7 +524,7 @@ namespace UnityNuGet
                     includePrerelease,
                     includeUnlisted,
                     cache,
-                    logger,
+                    nuGetLogger,
                     cancellationToken);
 
                 List<IPackageSearchMetadata> list = [.. metadata];
@@ -512,7 +541,8 @@ namespace UnityNuGet
             IEnumerable<SourceRepository> sourceRepositories,
             ISettings settings,
             SourceCacheContext cache,
-            NuGetCommonLogger logger,
+            NuGet.Common.ILogger nuGetLogger,
+            ILogger logger,
             PackageIdentity packageIdentity,
             CancellationToken cancellationToken)
         {
@@ -521,7 +551,7 @@ namespace UnityNuGet
                 packageIdentity,
                 new PackageDownloadContext(cache),
                 SettingsUtility.GetGlobalPackagesFolder(settings),
-                logger,
+                nuGetLogger,
                 cancellationToken);
 
             if (downloadResult.Status != DownloadResourceResultStatus.Available || downloadResult.PackageReader == null)

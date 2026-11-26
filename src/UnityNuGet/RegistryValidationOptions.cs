@@ -17,13 +17,7 @@ namespace UnityNuGet
 
     public sealed class RegistryValidationResult
     {
-        public bool IsValid => Errors.Count == 0;
-
-        public List<string> Errors { get; } = [];
-
-        public List<string> Warnings { get; } = [];
-
-        public List<string> Information { get; } = [];
+        public bool IsValid { get; internal set; }
 
         public int CheckedPackageCount { get; internal set; }
     }
