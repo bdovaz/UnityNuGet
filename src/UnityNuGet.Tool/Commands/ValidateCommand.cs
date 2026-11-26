@@ -16,7 +16,7 @@ namespace UnityNuGet.Tool.Commands
 
             Option<string[]> packageOption = new("--package")
             {
-                Description = "Exact NuGet package ID to validate online and convert."
+                Description = "Exact NuGet package ID to validate online and convert (repeatable)."
             };
             packageOption.Aliases.Add("-p");
 
