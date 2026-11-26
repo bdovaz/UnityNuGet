@@ -1,31 +1,17 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using UnityNuGet;
 using UnityNuGet.Tool;
-
-if (args.Length > 0 && string.Equals(args[0], "validate", StringComparison.OrdinalIgnoreCase))
-{
-    return await ValidateCommand.RunAsync(args[1..]);
-}
-
-if (args.Length > 0 && args[0] is "-h" or "--help")
-{
-    Console.WriteLine("Usage:");
-    Console.WriteLine("  unityNuGet                     Build all packages from appsettings.json configuration");
-    Console.WriteLine("  unityNuGet validate ...        Validate registry.json entries without requiring appsettings.json");
-    Console.WriteLine();
-    ValidateCommand.PrintUsage(Console.Out);
-    return 0;
-}
+using UnityNuGet.Tool.Commands;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddSingleton<Registry>();
 builder.Services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<Registry>());
 builder.Services.AddHostedService<RegistryCacheInitializer>();
-builder.Services.AddHostedService<RegistryCacheUpdater>();
+builder.Services.AddSingleton<IRegistryCacheUpdater, RegistryCacheUpdater>();
 builder.Services.AddSingleton<RegistryCacheSingleton>();
 
 builder.Services.Configure<RegistryOptions>(builder.Configuration.GetSection("Registry"));
@@ -35,7 +21,24 @@ builder.Services.AddOptionsWithValidateOnStart<RegistryOptions, ValidateRegistry
 builder.Services.Configure<SigningOptions>(builder.Configuration.GetSection("Signing"));
 builder.Services.AddSingleton<UnityPackageSigner>();
 
+builder.Services.AddRegistryValidator();
+
 IHost host = builder.Build();
 
-await host.RunAsync();
-return Environment.ExitCode;
+await host.StartAsync();
+
+try
+{
+    UnityNuGetCommand rootCommand = new(host.Services.GetRequiredService<IRegistryCacheUpdater>());
+    rootCommand.Subcommands.Add(new ValidateCommand(
+        host.Services.GetRequiredService<ILogger<ValidateCommand>>(),
+        host.Services.GetRequiredService<IRegistryValidator>()));
+
+    return await rootCommand.Parse(args).InvokeAsync();
+}
+finally
+{
+    await host.StopAsync();
+
+    host.Dispose();
+}

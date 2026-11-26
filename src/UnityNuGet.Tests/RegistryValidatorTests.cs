@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 using Moq;
 using NuGet.Frameworks;
 using NuGet.Packaging;
@@ -33,6 +37,14 @@ namespace UnityNuGet.Tests
             }
         }
 
+        private static (LoggerFactory LoggerFactory, FakeLoggerProvider Provider) CreateLoggerFactory()
+        {
+            LoggerFactory loggerFactory = new();
+            FakeLoggerProvider provider = new();
+            loggerFactory.AddProvider(provider);
+            return (loggerFactory, provider);
+        }
+
         private string WriteRegistryFile(string json)
         {
             string filePath = Path.Combine(_tempDir, "registry.json");
@@ -58,23 +70,27 @@ namespace UnityNuGet.Tests
         }
 
         [Test]
-        public async Task ValidateAsync_StaticChecksPassOnRepoRegistry()
+        public async Task Validate_StaticChecksPassOnRepoRegistry()
         {
-            RegistryValidator validator = new();
-            RegistryValidationResult result = await validator.ValidateAsync(new RegistryValidationOptions
+            (LoggerFactory loggerFactory, FakeLoggerProvider provider) = CreateLoggerFactory();
+            using (loggerFactory)
             {
-                RegistryFilePath = "registry.json",
-            });
+                RegistryValidator validator = new(loggerFactory);
+                RegistryValidationResult result = await validator.Validate(new RegistryValidationOptions
+                {
+                    RegistryFilePath = "registry.json",
+                });
 
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(result.IsValid, Is.True, string.Join(Environment.NewLine, result.Errors));
-                Assert.That(result.CheckedPackageCount, Is.Zero);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(result.IsValid, Is.True, string.Join(Environment.NewLine, provider.Collector.GetSnapshot().Select(record => record.Message)));
+                    Assert.That(result.CheckedPackageCount, Is.Zero);
+                }
             }
         }
 
         [Test]
-        public async Task ValidateAsync_RejectsDuplicateKeysCaseInsensitive()
+        public async Task Validate_RejectsDuplicateKeysCaseInsensitive()
         {
             string filePath = WriteRegistryFile("""
             {
@@ -83,21 +99,25 @@ namespace UnityNuGet.Tests
             }
             """);
 
-            RegistryValidator validator = new();
-            RegistryValidationResult result = await validator.ValidateAsync(new RegistryValidationOptions
+            (LoggerFactory loggerFactory, FakeLoggerProvider provider) = CreateLoggerFactory();
+            using (loggerFactory)
             {
-                RegistryFilePath = filePath,
-            });
+                RegistryValidator validator = new(loggerFactory);
+                RegistryValidationResult result = await validator.Validate(new RegistryValidationOptions
+                {
+                    RegistryFilePath = filePath,
+                });
 
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(result.IsValid, Is.False);
-                Assert.That(result.Errors, Has.Some.Contains("Duplicate package key"));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(provider.Collector.GetSnapshot(), Has.Some.Property("Message").Contains("Duplicate package key"));
+                }
             }
         }
 
         [Test]
-        public async Task ValidateAsync_RejectsUnsortedKeys()
+        public async Task Validate_RejectsUnsortedKeys()
         {
             string filePath = WriteRegistryFile("""
             {
@@ -106,21 +126,25 @@ namespace UnityNuGet.Tests
             }
             """);
 
-            RegistryValidator validator = new();
-            RegistryValidationResult result = await validator.ValidateAsync(new RegistryValidationOptions
+            (LoggerFactory loggerFactory, FakeLoggerProvider provider) = CreateLoggerFactory();
+            using (loggerFactory)
             {
-                RegistryFilePath = filePath,
-            });
+                RegistryValidator validator = new(loggerFactory);
+                RegistryValidationResult result = await validator.Validate(new RegistryValidationOptions
+                {
+                    RegistryFilePath = filePath,
+                });
 
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(result.IsValid, Is.False);
-                Assert.That(result.Errors, Has.Some.Contains("not sorted alphabetically"));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(provider.Collector.GetSnapshot(), Has.Some.Property("Message").Contains("not sorted alphabetically"));
+                }
             }
         }
 
         [Test]
-        public async Task ValidateAsync_RejectsNetStandard20BuiltInAssembly()
+        public async Task Validate_RejectsNetStandard20BuiltInAssembly()
         {
             string filePath = WriteRegistryFile("""
             {
@@ -128,21 +152,25 @@ namespace UnityNuGet.Tests
             }
             """);
 
-            RegistryValidator validator = new();
-            RegistryValidationResult result = await validator.ValidateAsync(new RegistryValidationOptions
+            (LoggerFactory loggerFactory, FakeLoggerProvider provider) = CreateLoggerFactory();
+            using (loggerFactory)
             {
-                RegistryFilePath = filePath,
-            });
+                RegistryValidator validator = new(loggerFactory);
+                RegistryValidationResult result = await validator.Validate(new RegistryValidationOptions
+                {
+                    RegistryFilePath = filePath,
+                });
 
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(result.IsValid, Is.False);
-                Assert.That(result.Errors, Has.Some.Contains(".NET Standard 2.0"));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(provider.Collector.GetSnapshot(), Has.Some.Property("Message").Contains(".NET Standard 2.0"));
+                }
             }
         }
 
         [Test]
-        public async Task ValidateAsync_RequiresVersionUnlessIgnored()
+        public async Task Validate_RequiresVersionUnlessIgnored()
         {
             string invalidPath = WriteRegistryFile("""
             {
@@ -150,34 +178,38 @@ namespace UnityNuGet.Tests
             }
             """);
 
-            RegistryValidator validator = new();
-            RegistryValidationResult invalidResult = await validator.ValidateAsync(new RegistryValidationOptions
+            (LoggerFactory loggerFactory, FakeLoggerProvider provider) = CreateLoggerFactory();
+            using (loggerFactory)
             {
-                RegistryFilePath = invalidPath,
-            });
+                RegistryValidator validator = new(loggerFactory);
+                RegistryValidationResult invalidResult = await validator.Validate(new RegistryValidationOptions
+                {
+                    RegistryFilePath = invalidPath,
+                });
 
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(invalidResult.IsValid, Is.False);
-                Assert.That(invalidResult.Errors, Has.Some.Contains("must specify a valid minimum version"));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(invalidResult.IsValid, Is.False);
+                    Assert.That(provider.Collector.GetSnapshot(), Has.Some.Property("Message").Contains("must specify a valid minimum version"));
+                }
+
+                string ignoredPath = WriteRegistryFile("""
+                {
+                    "Microsoft.CSharp": { "ignore": true }
+                }
+                """);
+
+                RegistryValidationResult ignoredResult = await validator.Validate(new RegistryValidationOptions
+                {
+                    RegistryFilePath = ignoredPath,
+                });
+
+                Assert.That(ignoredResult.IsValid, Is.True);
             }
-
-            string ignoredPath = WriteRegistryFile("""
-            {
-                "Microsoft.CSharp": { "ignore": true }
-            }
-            """);
-
-            RegistryValidationResult ignoredResult = await validator.ValidateAsync(new RegistryValidationOptions
-            {
-                RegistryFilePath = ignoredPath,
-            });
-
-            Assert.That(ignoredResult.IsValid, Is.True);
         }
 
         [Test]
-        public async Task ValidateAsync_RejectsUnknownRequestedPackage()
+        public async Task Validate_RejectsUnknownRequestedPackage()
         {
             string filePath = WriteRegistryFile("""
             {
@@ -185,23 +217,27 @@ namespace UnityNuGet.Tests
             }
             """);
 
-            RegistryValidator validator = new();
-            RegistryValidationResult result = await validator.ValidateAsync(new RegistryValidationOptions
+            (LoggerFactory loggerFactory, FakeLoggerProvider provider) = CreateLoggerFactory();
+            using (loggerFactory)
             {
-                RegistryFilePath = filePath,
-                PackageNames = ["DoesNotExist"],
-                SkipConversion = true,
-            });
+                RegistryValidator validator = new(loggerFactory);
+                RegistryValidationResult result = await validator.Validate(new RegistryValidationOptions
+                {
+                    RegistryFilePath = filePath,
+                    PackageNames = ["DoesNotExist"],
+                    SkipConversion = true,
+                });
 
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(result.IsValid, Is.False);
-                Assert.That(result.Errors, Has.Some.Contains("was not found"));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(provider.Collector.GetSnapshot(), Has.Some.Property("Message").Contains("was not found"));
+                }
             }
         }
 
         [Test]
-        public async Task ValidateAsync_ChecksMinVersionLowerEqualAndHigher()
+        public async Task Validate_ChecksMinVersionLowerEqualAndHigher()
         {
             Dictionary<string, IReadOnlyList<IPackageSearchMetadata>> catalog = new(StringComparer.OrdinalIgnoreCase)
             {
@@ -222,19 +258,22 @@ namespace UnityNuGet.Tests
                 ],
             };
 
-            RegistryValidator validator = new(
-                null,
-                (id, _, _, _) => Task.FromResult(catalog.TryGetValue(id, out IReadOnlyList<IPackageSearchMetadata>? metas) ? metas : []),
-                (_, _) => Task.FromResult(false));
+            (LoggerFactory loggerFactory, FakeLoggerProvider provider) = CreateLoggerFactory();
+            using (loggerFactory)
+            {
+                RegistryValidator validator = new(
+                    loggerFactory,
+                    (id, _, _, _) => Task.FromResult(catalog.TryGetValue(id, out IReadOnlyList<IPackageSearchMetadata>? metas) ? metas : []),
+                    (_, _) => Task.FromResult(false));
 
-            string validPath = WriteRegistryFile("""
+                string validPath = WriteRegistryFile("""
             {
                 "ExactPkg": { "listed": true, "version": "1.0.0" },
                 "HigherPkg": { "listed": true, "version": "1.5.0" }
             }
             """);
 
-            RegistryValidationResult validResult = await validator.ValidateAsync(new RegistryValidationOptions
+            RegistryValidationResult validResult = await validator.Validate(new RegistryValidationOptions
             {
                 RegistryFilePath = validPath,
                 PackageNames = ["ExactPkg", "HigherPkg"],
@@ -243,9 +282,9 @@ namespace UnityNuGet.Tests
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(validResult.IsValid, Is.True, string.Join(Environment.NewLine, validResult.Errors));
+                Assert.That(validResult.IsValid, Is.True, string.Join(Environment.NewLine, provider.Collector.GetSnapshot().Select(record => record.Message)));
                 Assert.That(validResult.CheckedPackageCount, Is.EqualTo(2));
-                Assert.That(validResult.Information, Has.Some.Contains("HigherPkg"));
+                Assert.That(provider.Collector.GetSnapshot(), Has.Some.Property("Message").Contains("HigherPkg"));
             }
 
             string tooLowPath = WriteRegistryFile("""
@@ -254,7 +293,7 @@ namespace UnityNuGet.Tests
             }
             """);
 
-            RegistryValidationResult tooLowResult = await validator.ValidateAsync(new RegistryValidationOptions
+            RegistryValidationResult tooLowResult = await validator.Validate(new RegistryValidationOptions
             {
                 RegistryFilePath = tooLowPath,
                 PackageNames = ["TooLowPkg"],
@@ -264,12 +303,13 @@ namespace UnityNuGet.Tests
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(tooLowResult.IsValid, Is.False);
-                Assert.That(tooLowResult.Errors, Has.Some.Contains("lower than the earliest compatible .NET Standard 2.0 version `1.2.0`"));
+                Assert.That(provider.Collector.GetSnapshot(), Has.Some.Property("Message").Contains("lower than the earliest compatible .NET Standard 2.0 version `1.2.0`"));
+            }
             }
         }
 
         [Test]
-        public async Task ValidateAsync_SkipsMinVersionForAnalyzerAndFallsBackToNativeLibs()
+        public async Task Validate_SkipsMinVersionForAnalyzerAndFallsBackToNativeLibs()
         {
             Dictionary<string, IReadOnlyList<IPackageSearchMetadata>> catalog = new(StringComparer.OrdinalIgnoreCase)
             {
@@ -283,19 +323,22 @@ namespace UnityNuGet.Tests
                 ],
             };
 
-            RegistryValidator validator = new(
-                null,
-                (id, _, _, _) => Task.FromResult(catalog.TryGetValue(id, out IReadOnlyList<IPackageSearchMetadata>? metas) ? metas : []),
-                (identity, _) => Task.FromResult(identity.Id == "NativeOnly"));
+            (LoggerFactory loggerFactory, FakeLoggerProvider provider) = CreateLoggerFactory();
+            using (loggerFactory)
+            {
+                RegistryValidator validator = new(
+                    loggerFactory,
+                    (id, _, _, _) => Task.FromResult(catalog.TryGetValue(id, out IReadOnlyList<IPackageSearchMetadata>? metas) ? metas : []),
+                    (identity, _) => Task.FromResult(identity.Id == "NativeOnly"));
 
-            string filePath = WriteRegistryFile("""
+                string filePath = WriteRegistryFile("""
             {
                 "MyAnalyzer": { "listed": true, "version": "1.0.0", "analyzer": true },
                 "NativeOnly": { "listed": true, "version": "2.0.0" }
             }
             """);
 
-            RegistryValidationResult result = await validator.ValidateAsync(new RegistryValidationOptions
+            RegistryValidationResult result = await validator.Validate(new RegistryValidationOptions
             {
                 RegistryFilePath = filePath,
                 PackageNames = ["MyAnalyzer", "NativeOnly"],
@@ -304,8 +347,9 @@ namespace UnityNuGet.Tests
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(result.IsValid, Is.True, string.Join(Environment.NewLine, result.Errors));
+                Assert.That(result.IsValid, Is.True, string.Join(Environment.NewLine, provider.Collector.GetSnapshot().Select(record => record.Message)));
                 Assert.That(result.CheckedPackageCount, Is.EqualTo(2));
+            }
             }
         }
 
@@ -313,7 +357,7 @@ namespace UnityNuGet.Tests
         public void BuildExactPackageFilterRegex_AnchorsExactIds()
         {
             string regexPattern = RegistryValidator.BuildExactPackageFilterRegex(["Serilog", "Acornima.Extras"]);
-            System.Text.RegularExpressions.Regex regex = new(regexPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            Regex regex = new(regexPattern, RegexOptions.IgnoreCase);
 
             using (Assert.EnterMultipleScope())
             {
@@ -326,7 +370,7 @@ namespace UnityNuGet.Tests
         }
 
         [Test]
-        public async Task ValidateAsync_RejectsNullEntryWithoutThrowing()
+        public async Task Validate_RejectsNullEntryWithoutThrowing()
         {
             string filePath = WriteRegistryFile("""
             {
@@ -334,16 +378,20 @@ namespace UnityNuGet.Tests
             }
             """);
 
-            RegistryValidator validator = new();
-            RegistryValidationResult result = await validator.ValidateAsync(new RegistryValidationOptions
+            (LoggerFactory loggerFactory, FakeLoggerProvider provider) = CreateLoggerFactory();
+            using (loggerFactory)
             {
-                RegistryFilePath = filePath,
-            });
+                RegistryValidator validator = new(loggerFactory);
+                RegistryValidationResult result = await validator.Validate(new RegistryValidationOptions
+                {
+                    RegistryFilePath = filePath,
+                });
 
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(result.IsValid, Is.False);
-                Assert.That(result.Errors, Has.Some.Contains("must not be null"));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(provider.Collector.GetSnapshot(), Has.Some.Property("Message").Contains("must not be null"));
+                }
             }
         }
 

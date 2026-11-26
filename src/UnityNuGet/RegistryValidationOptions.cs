@@ -14,11 +14,4 @@ namespace UnityNuGet
 
         public bool SkipConversion { get; init; }
     }
-
-    public sealed class RegistryValidationResult
-    {
-        public bool IsValid { get; internal set; }
-
-        public int CheckedPackageCount { get; internal set; }
-    }
 }
