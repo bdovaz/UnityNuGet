@@ -48,6 +48,30 @@ namespace UnityNuGet.Server.Tests
         }
 
         [Test]
+        public async Task GetAll_NotInitialized()
+        {
+            using WebApplicationFactory<Program> factory = _webApplicationFactory
+                .WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+                    services.RemoveAll<IHostedService>()));
+            using HttpClient httpClient = factory.CreateDefaultClient();
+
+            HttpResponseMessage response = await httpClient.GetAsync("/-/all");
+
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+            string responseContent = await response.Content.ReadAsStringAsync();
+            NpmError npmError = JsonSerializer.Deserialize(
+                responseContent,
+                UnityNuGetJsonSerializerContext.Default.NpmError)!;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(npmError.Error, Is.EqualTo("not_initialized"));
+                Assert.That(npmError.Reason, Does.Contain("initializing"));
+            }
+        }
+
+        [Test]
         public async Task GetAll_Success()
         {
             using HttpClient httpClient = _webApplicationFactory.CreateDefaultClient();

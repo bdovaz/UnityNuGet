@@ -30,8 +30,6 @@ namespace UnityNuGet.Tests
         [Test]
         public async Task TestBuild()
         {
-            bool errorsTriggered = false;
-
             LoggerFactory loggerFactory = new();
             loggerFactory.AddProvider(new FakeLoggerProvider());
 
@@ -59,20 +57,15 @@ namespace UnityNuGet.Tests
                     new() { Version = new Version(4, 3, 0, 0), DefineConstraints = ["UNITY_6000_0_OR_NEWER"] },
                 ],
                 new NuGetConsoleTestLogger(),
-                new UnityPackageSigner(loggerFactory.CreateLogger<UnityPackageSigner>(), Options.Create(new SigningOptions())))
-            {
-                OnError = (_, _) =>
-                {
-                    errorsTriggered = true;
-                }
-            };
+                loggerFactory.CreateLogger<RegistryCache>(),
+                new UnityPackageSigner(loggerFactory.CreateLogger<UnityPackageSigner>(), Options.Create(new SigningOptions())));
 
             // Uncomment when testing locally
             // registryCache.Filter = "scriban|bcl\\.asyncinterfaces|compilerservices\\.unsafe";
 
-            await registryCache.Build();
+            bool buildSucceeded = await registryCache.Build();
 
-            Assert.That(errorsTriggered, Is.False, "The registry failed to build, check the logs");
+            Assert.That(buildSucceeded, Is.True, "The registry failed to build, check the logs");
 
             NpmPackageListAllResponse allResult = registryCache.All();
             Assert.That(allResult.Packages, Has.Count.GreaterThanOrEqualTo(3));

@@ -22,8 +22,6 @@ namespace UnityNuGet.Tests
             string unityPackages = Path.Combine(Path.GetDirectoryName(typeof(RegistryCacheTests).Assembly.Location)!, "unity_packages");
             Directory.Delete(unityPackages, true);
 
-            bool errorsTriggered = false;
-
             Registry registry = new(loggerFactory, Options.Create(new RegistryOptions { RegistryFilePath = "registry.json" }));
 
             await registry.StartAsync(CancellationToken.None);
@@ -47,18 +45,15 @@ namespace UnityNuGet.Tests
                     new() { Version = new Version(4, 3, 0, 0), DefineConstraints = ["UNITY_6000_0_OR_NEWER"] },
                 ],
                 new NuGetConsoleTestLogger(),
+                loggerFactory.CreateLogger<RegistryCache>(),
                 new UnityPackageSigner(loggerFactory.CreateLogger<UnityPackageSigner>(), Options.Create(new SigningOptions())))
             {
-                Filter = "rhino3dm",
-                OnError = (_, _) =>
-                {
-                    errorsTriggered = true;
-                }
+                Filter = "rhino3dm"
             };
 
-            await registryCache.Build();
+            bool buildSucceeded = await registryCache.Build();
 
-            Assert.That(errorsTriggered, Is.False, "The registry failed to build, check the logs");
+            Assert.That(buildSucceeded, Is.True, "The registry failed to build, check the logs");
 
             NpmPackageListAllResponse allResult = registryCache.All();
             string allResultJson = await allResult.ToJson(UnityNuGetJsonSerializerContext.Default.NpmPackageListAllResponse);

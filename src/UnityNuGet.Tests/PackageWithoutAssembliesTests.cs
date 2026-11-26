@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 using Moq;
 using NuGet.Frameworks;
@@ -38,6 +39,7 @@ namespace UnityNuGet.Tests
             try
             {
                 using LoggerFactory loggerFactory = new();
+                FakeLogger<RegistryCache> cacheLogger = new();
 
                 Registry registry = new(loggerFactory, Options.Create(new RegistryOptions { RegistryFilePath = "registry.json" }));
 
@@ -45,6 +47,7 @@ namespace UnityNuGet.Tests
                     registry, directory, new Uri("http://localhost/"), "org.nuget", "2019.1", " (NuGet)", [],
                     [new() { Name = "netstandard2.0" }, new() { Name = "netstandard2.1" }], [],
                     new NuGetConsoleTestLogger(),
+                    cacheLogger,
                     new UnityPackageSigner(loggerFactory.CreateLogger<UnityPackageSigner>(), Options.Create(new SigningOptions())));
 
                 using MemoryStream packageStream = new();
@@ -90,13 +93,12 @@ namespace UnityNuGet.Tests
                     npmVersion.Dependencies.Add("org.nuget.example.core", "1.0.0");
                 }
 
-                List<string> warnings = [];
-
-                cache.OnWarning = (_, e) => warnings.Add(e.Message);
-
                 await cache.ConvertNuGetPackageToUnity(
                     new PackageIdentity("Example", NuGetVersion.Parse("1.0.0")),
                     new NpmPackageInfo(), npmVersion, metadata.Object, reader, new RegistryEntry());
+                string[] warnings = [.. cacheLogger.Collector.GetSnapshot()
+                    .Where(record => record.Level == LogLevel.Warning)
+                    .Select(record => record.Exception is null ? record.Message : $"{record.Message} {record.Exception}")];
 
                 string outputPath = Path.Combine(directory, "org.nuget.example-1.0.0.tgz");
 
@@ -184,19 +186,17 @@ namespace UnityNuGet.Tests
 
                 await registry.StartAsync(CancellationToken.None);
 
+                FakeLogger<RegistryCache> cacheLogger = new();
                 RegistryCache cache = new(
                     registry, directory, new Uri("http://localhost/"), "org.nuget", "2019.1", " (NuGet)", [],
                     [new() { Name = "netstandard2.0" }, new() { Name = "netstandard2.1" }], [],
                     new NuGetConsoleTestLogger(),
+                    cacheLogger,
                     new UnityPackageSigner(loggerFactory.CreateLogger<UnityPackageSigner>(), Options.Create(new SigningOptions())));
 
-                List<string> errors = [];
+                bool buildSucceeded = await cache.Build();
 
-                cache.OnError = (_, e) => errors.Add(e.Message);
-
-                await cache.Build();
-
-                Assert.That(errors, Is.Empty);
+                Assert.That(buildSucceeded, Is.True);
 
                 string metaPath = Path.Combine(directory, "org.nuget.opussharp-1.6.8.tgz");
                 string corePath = Path.Combine(directory, "org.nuget.opussharp.core-1.6.1-4.tgz");

@@ -22,6 +22,7 @@ namespace UnityNuGet.Server
         public Task StartAsync(CancellationToken cancellationToken)
         {
             ILogger logger = _loggerFactory.CreateNuGetLogger();
+
             var loggerRedirect = new NuGetRedirectLogger(logger);
 
             Uri uri = _registryOptions.RootHttpUrl!;

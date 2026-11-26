@@ -38,6 +38,36 @@ namespace UnityNuGet.Tests
             Assert.That(and, Is.Null);
         }
 
+        [TestCase(UnityOs.Windows)]
+        [TestCase(UnityOs.Linux)]
+        [TestCase(UnityOs.OSX)]
+        public void FindEditor_ReturnsConfigurationForEditorPlatform(UnityOs os)
+        {
+            PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
+
+            PlatformDefinition? definition = platformDefs.Find(os);
+            PlatformDefinition? editor = definition?.FindEditor();
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(definition, Is.Not.Null);
+                Assert.That(editor, Is.Not.Null);
+                Assert.That(editor!.Os, Is.EqualTo(os));
+            }
+        }
+
+        [TestCase(UnityOs.Android)]
+        [TestCase(UnityOs.iOS)]
+        [TestCase(UnityOs.WebGL)]
+        public void FindEditor_ReturnsNullForNonEditorPlatform(UnityOs os)
+        {
+            PlatformDefinition platformDefs = PlatformDefinition.CreateAllPlatforms();
+
+            PlatformDefinition? definition = platformDefs.Find(os);
+
+            Assert.That(definition?.FindEditor(), Is.Null);
+        }
+
         [Test]
         public void RemainingPlatforms_NoneVisited()
         {

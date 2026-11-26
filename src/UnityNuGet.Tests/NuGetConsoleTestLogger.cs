@@ -21,6 +21,7 @@ namespace UnityNuGet.Tests
         public override Task LogAsync(ILogMessage message)
         {
             Log(message);
+
             return Task.CompletedTask;
         }
     }
