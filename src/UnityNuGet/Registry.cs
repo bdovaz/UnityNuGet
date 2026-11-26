@@ -44,9 +44,12 @@ namespace UnityNuGet
                 registryFilePath = Path.Combine(Directory.GetCurrentDirectory(), _registryOptions.RegistryFilePath!);
             }
 
-            ILogger logger = _loggerFactory.CreateLogger("NuGet");
+            ILogger logger = _loggerFactory.CreateNuGetLogger();
 
-            logger.LogInformation("Using Unity registry file `{UnityRegistryFile}`", registryFilePath);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Using Unity registry file `{UnityRegistryFile}`", registryFilePath);
+            }
 
             using Stream stream = File.OpenRead(registryFilePath);
 

@@ -11,7 +11,7 @@ namespace UnityNuGet.Server
     /// <summary>
     /// Update the RegistryCache at a regular interval
     /// </summary>
-    internal sealed class RegistryCacheUpdater(Registry registry, RegistryCacheReport registryCacheReport, RegistryCacheSingleton currentRegistryCache, ILogger<RegistryCacheUpdater> logger, IOptions<RegistryOptions> registryOptionsAccessor, UnityPackageSigner unityPackageSigner) : BackgroundService
+    internal sealed class RegistryCacheUpdater(Registry registry, RegistryCacheReport registryCacheReport, RegistryCacheSingleton currentRegistryCache, ILogger<RegistryCacheUpdater> logger, ILogger<RegistryCache> registryCacheLogger, IOptions<RegistryOptions> registryOptionsAccessor, UnityPackageSigner unityPackageSigner) : BackgroundService
     {
         private readonly Registry _registry = registry;
         private readonly RegistryCacheReport _registryCacheReport = registryCacheReport;
@@ -42,18 +42,15 @@ namespace UnityNuGet.Server
                         _registryOptions.TargetFrameworks!,
                         _registryOptions.RoslynAnalyzerVersions!,
                         _currentRegistryCache.NuGetRedirectLogger!,
+                        registryCacheLogger,
                         _unityPackageSigner)
                     {
                         Filter = _registryOptions.Filter,
-                        // Update progress
                         OnProgress = (_, e) =>
                         {
                             _currentRegistryCache.ProgressTotalPackageCount = e.Total;
                             _currentRegistryCache.ProgressPackageIndex = e.Current;
-                        },
-                        OnInformation = (_, e) => _registryCacheReport.AddInformation(e.Message),
-                        OnWarning = (_, e) => _registryCacheReport.AddWarning(e.Message),
-                        OnError = (_, e) => _registryCacheReport.AddError(e.Message)
+                        }
                     };
 
                     await newRegistryCache.Build(stoppingToken);
@@ -61,6 +58,7 @@ namespace UnityNuGet.Server
                     if (_registryCacheReport.ErrorMessages.Any())
                     {
                         bool onlyMissingDependencyErrors = _registryCacheReport.ErrorMessages.All(IsMissingDependencyError);
+
                         if (_allowServingWithMissingDependencies && onlyMissingDependencyErrors)
                         {
                             _currentRegistryCache.Instance = newRegistryCache;
@@ -88,7 +86,10 @@ namespace UnityNuGet.Server
             {
                 string message = "RegistryCache update canceled";
 
-                _logger.LogInformation("{Message}", message);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("{Message}", message);
+                }
 
                 _registryCacheReport.AddInformation($"{message}.");
                 _registryCacheReport.Complete();

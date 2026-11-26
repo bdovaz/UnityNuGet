@@ -5,10 +5,20 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace UnityNuGet.Server
+namespace UnityNuGet.Tool
 {
-    internal sealed class RegistryCacheUpdater(Registry registry, RegistryCacheSingleton currentRegistryCache, IHostApplicationLifetime hostApplicationLifetime, ILogger<RegistryCacheUpdater> logger, IOptions<RegistryOptions> registryOptionsAccessor, UnityPackageSigner unityPackageSigner) : BackgroundService
+    internal sealed class RegistryCacheUpdater(
+        Registry registry,
+        RegistryCacheSingleton currentRegistryCache,
+        IHostApplicationLifetime hostApplicationLifetime,
+        ILogger<RegistryCacheUpdater> logger,
+        ILogger<RegistryCache> registryCacheLogger,
+        IOptions<RegistryOptions> registryOptionsAccessor,
+        UnityPackageSigner unityPackageSigner) : BackgroundService
     {
+        private const int SuccessExitCode = 0;
+        private const int FailureExitCode = 1;
+
         private readonly Registry _registry = registry;
         private readonly RegistryCacheSingleton _currentRegistryCache = currentRegistryCache;
         private readonly IHostApplicationLifetime _hostApplicationLifetime = hostApplicationLifetime;
@@ -18,15 +28,13 @@ namespace UnityNuGet.Server
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            int exitCode = 0;
+            int exitCode = SuccessExitCode;
 
             try
             {
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     _logger.LogInformation("Starting to update RegistryCache");
-
-                    int errorCount = 0;
 
                     var newRegistryCache = new RegistryCache(
                         _registry,
@@ -39,40 +47,35 @@ namespace UnityNuGet.Server
                         _registryOptions.TargetFrameworks!,
                         _registryOptions.RoslynAnalyzerVersions!,
                         _currentRegistryCache.NuGetRedirectLogger!,
+                        registryCacheLogger,
                         _unityPackageSigner)
                     {
                         Filter = _registryOptions.Filter,
-                        // Update progress
                         OnProgress = (_, e) =>
                         {
                             _currentRegistryCache.ProgressTotalPackageCount = e.Total;
                             _currentRegistryCache.ProgressPackageIndex = e.Current;
-                        },
-                        OnError = (_, _) => errorCount++
+                        }
                     };
 
-                    await newRegistryCache.Build(stoppingToken);
+                    bool buildSucceeded = await newRegistryCache.Build(stoppingToken);
 
-                    exitCode = errorCount == 0 ? 0 : -1;
+                    exitCode = buildSucceeded ? SuccessExitCode : FailureExitCode;
 
                     break;
                 }
             }
             catch (TaskCanceledException)
             {
-                string message = "RegistryCache update canceled";
+                _logger.LogInformation("RegistryCache update canceled");
 
-                _logger.LogInformation("{Message}", message);
-
-                exitCode = -1;
+                exitCode = FailureExitCode;
             }
             catch (Exception ex)
             {
-                string message = "Error while building a new registry cache";
+                _logger.LogError(ex, "Error while building a new registry cache");
 
-                _logger.LogError(ex, "{Message}", message);
-
-                exitCode = -1;
+                exitCode = FailureExitCode;
             }
 
             Environment.ExitCode = exitCode;

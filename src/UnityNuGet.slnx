@@ -13,6 +13,7 @@
   <Project Path="UnityNuGet.Server.Tests/UnityNuGet.Server.Tests.csproj" />
   <Project Path="UnityNuGet.Server/UnityNuGet.Server.csproj" />
   <Project Path="UnityNuGet.Tests/UnityNuGet.Tests.csproj" />
+  <Project Path="UnityNuGet.Tool.Tests/UnityNuGet.Tool.Tests.csproj" Id="3bb27e52-f2e7-4fcd-a987-8137abbad5c4" />
   <Project Path="UnityNuGet.Tool/UnityNuGet.Tool.csproj" />
   <Project Path="UnityNuGet/UnityNuGet.csproj" />
 </Solution>

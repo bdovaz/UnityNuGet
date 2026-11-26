@@ -12,7 +12,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using NuGet.Common;
+using Microsoft.Extensions.Logging;
 using NuGet.Configuration;
 using NuGet.Frameworks;
 using NuGet.PackageManagement;
@@ -36,6 +36,9 @@ namespace UnityNuGet
         private const string CurrentRegistryVersion = "1.9.2";
 
         private static readonly Encoding s_utf8EncodingNoBom = new UTF8Encoding(false, false);
+
+        public static readonly string LoggerCategoryName = typeof(RegistryCache).FullName!;
+
         private readonly Registry _registry;
         private readonly string _rootPersistentFolder;
         private readonly Uri _rootHttpUri;
@@ -45,7 +48,8 @@ namespace UnityNuGet
         private readonly string[] _packageKeywords;
         private readonly RegistryTargetFramework[] _targetFrameworks;
         private readonly RoslynAnalyzerVersion[] _roslynAnalyzerVersions;
-        private readonly ILogger _logger;
+        private readonly NuGet.Common.ILogger _nuGetLogger;
+        private readonly ILogger<RegistryCache> _logger;
         private readonly ISettings _settings;
         private readonly IEnumerable<SourceRepository> _sourceRepositories;
         private readonly SourceCacheContext _sourceCacheContext;
@@ -63,6 +67,7 @@ namespace UnityNuGet
             registryCache._packageKeywords,
             registryCache._targetFrameworks,
             registryCache._roslynAnalyzerVersions,
+            registryCache._nuGetLogger,
             registryCache._logger,
             unityPackageSigner)
         {
@@ -78,18 +83,19 @@ namespace UnityNuGet
             string[] packageKeywords,
             RegistryTargetFramework[] targetFrameworks,
             RoslynAnalyzerVersion[] roslynAnalyzerVersions,
-            ILogger logger,
+            NuGet.Common.ILogger nuGetLogger,
+            ILogger<RegistryCache> logger,
             UnityPackageSigner unityPackageSigner)
         {
             _registry = registry;
-            _rootPersistentFolder = rootPersistentFolder ?? throw new ArgumentNullException(nameof(rootPersistentFolder));
-            _rootHttpUri = rootHttpUri ?? throw new ArgumentNullException(nameof(rootHttpUri));
-            _unityScope = unityScope ?? throw new ArgumentNullException(nameof(unityScope));
-            _minimumUnityVersion = minimumUnityVersion ?? throw new ArgumentNullException(nameof(minimumUnityVersion));
-            _packageNameNuGetPostFix = packageNameNuGetPostFix ?? throw new ArgumentNullException(nameof(packageNameNuGetPostFix));
-            _packageKeywords = packageKeywords ?? throw new ArgumentNullException(nameof(packageKeywords));
-            _targetFrameworks = targetFrameworks ?? throw new ArgumentNullException(nameof(targetFrameworks));
-            _roslynAnalyzerVersions = roslynAnalyzerVersions ?? throw new ArgumentNullException(nameof(roslynAnalyzerVersions));
+            _rootPersistentFolder = rootPersistentFolder;
+            _rootHttpUri = rootHttpUri;
+            _unityScope = unityScope;
+            _minimumUnityVersion = minimumUnityVersion;
+            _packageNameNuGetPostFix = packageNameNuGetPostFix;
+            _packageKeywords = packageKeywords;
+            _targetFrameworks = targetFrameworks;
+            _roslynAnalyzerVersions = roslynAnalyzerVersions;
 
             if (!Directory.Exists(_rootPersistentFolder))
             {
@@ -100,12 +106,16 @@ namespace UnityNuGet
             if (IsRunningAsContinuousIntegration)
             {
                 string nugetFolder = Path.Combine(_rootPersistentFolder, ".nuget");
+
                 Environment.SetEnvironmentVariable("NUGET_PACKAGES", nugetFolder);
             }
 
             _settings = Settings.LoadDefaultSettings(root: Directory.GetCurrentDirectory());
+
             var sourceRepositoryProvider = new SourceRepositoryProvider(new PackageSourceProvider(_settings), Repository.Provider.GetCoreV3());
+
             _sourceRepositories = sourceRepositoryProvider.GetRepositories();
+            _nuGetLogger = nuGetLogger;
             _logger = logger;
             _unityPackageSigner = unityPackageSigner;
 
@@ -122,7 +132,7 @@ namespace UnityNuGet
 
             _canSignPackages = _unityPackageSigner.CanSign();
 
-            LogInformation($"NuGet packages directory: {GlobalPackagesFolder}");
+            _logger.LogInformation("NuGet packages directory: {GlobalPackagesFolder}", GlobalPackagesFolder);
         }
 
         /// <summary>
@@ -139,21 +149,6 @@ namespace UnityNuGet
         /// OnProgress event (number of packages initialized, total number of packages)
         /// </summary>
         public EventHandler<RegistryProgressEventArgs> OnProgress = (sender, e) => { };
-
-        /// <summary>
-        /// OnInformation event (information message)
-        /// </summary>
-        public EventHandler<RegistryLogEventArgs> OnInformation = (sender, e) => { };
-
-        /// <summary>
-        /// OnWarning event (warning message)
-        /// </summary>
-        public EventHandler<RegistryLogEventArgs> OnWarning = (sender, e) => { };
-
-        /// <summary>
-        /// OnError event (error message)
-        /// </summary>
-        public EventHandler<RegistryLogEventArgs> OnError = (sender, e) => { };
 
         /// <summary>
         /// Get all packages registered.
@@ -192,15 +187,17 @@ namespace UnityNuGet
         /// <summary>
         /// Build the registry cache.
         /// </summary>
-        public async Task Build(CancellationToken cancellationToken = default)
+        /// <returns><see langword="true"/> when the cache was built without errors.</returns>
+        public async Task<bool> Build(CancellationToken cancellationToken = default)
         {
             try
             {
-                await BuildInternal(cancellationToken);
+                return await BuildInternal(cancellationToken);
             }
             catch (Exception ex)
             {
-                LogError($"Unexpected error {ex}");
+                _logger.LogError(ex, "Unexpected error while building the registry cache");
+                return false;
             }
         }
 
@@ -219,7 +216,7 @@ namespace UnityNuGet
                     includePrerelease,
                     includeUnlisted,
                     _sourceCacheContext,
-                    _logger,
+                    _nuGetLogger,
                     cancellationToken);
 
                 if (result.Any())
@@ -240,21 +237,22 @@ namespace UnityNuGet
                 packageIdentity,
                 new PackageDownloadContext(_sourceCacheContext),
                 GlobalPackagesFolder,
-                _logger,
+                _nuGetLogger,
                 cancellationToken);
         }
 
         /// <summary>
         /// For each package in our registry.json, query NuGet, extract package metadata, and convert them to unity packages.
         /// </summary>
-        private async Task BuildInternal(CancellationToken cancellationToken = default)
+        private async Task<bool> BuildInternal(CancellationToken cancellationToken = default)
         {
+            bool hasErrors = false;
             string versionPath = Path.Combine(_rootPersistentFolder, "version.txt");
             bool forceUpdate = !File.Exists(versionPath) || await File.ReadAllTextAsync(versionPath, cancellationToken) != CurrentRegistryVersion;
 
             if (forceUpdate)
             {
-                LogInformation($"Registry version changed to {CurrentRegistryVersion} - Regenerating all packages");
+                _logger.LogInformation("Registry version changed to {RegistryVersion} - Regenerating all packages", CurrentRegistryVersion);
 
                 // Clear the cache entirely
                 _npmPackageRegistry.Reset();
@@ -264,7 +262,7 @@ namespace UnityNuGet
 
             if (regexFilter != null)
             {
-                LogInformation($"Filtering with regex: {Filter}");
+                _logger.LogInformation("Filtering with regex: {Filter}", Filter);
             }
 
             int progressCount = 0;
@@ -307,7 +305,8 @@ namespace UnityNuGet
 
                 if (packageMetaIt == null)
                 {
-                    LogError($"The package was not found in any registry: {packageName}");
+                    _logger.LogError("The package was not found in any registry: {PackageName}", packageName);
+                    hasErrors = true;
 
                     continue;
                 }
@@ -349,7 +348,7 @@ namespace UnityNuGet
 
                         if (!hasNativeLib)
                         {
-                            LogWarning($"The package `{packageIdentity}` doesn't support `{string.Join(",", _targetFrameworks.Select(x => x.Name))}`");
+                            _logger.LogWarning("The package `{PackageIdentity}` doesn't support `{TargetFrameworks}`", packageIdentity, string.Join(",", _targetFrameworks.Select(x => x.Name)));
                             continue;
                         }
                     }
@@ -427,7 +426,8 @@ namespace UnityNuGet
 
                             if (!_registry.TryGetValue(deps.Id, out RegistryEntry? packageEntryDep))
                             {
-                                LogError($"The package `{packageIdentity}` has a dependency on `{deps.Id}` which is not in the registry. You must add this dependency to the registry.json file.");
+                                _logger.LogError("The package `{PackageIdentity}` has a dependency on `{DependencyId}` which is not in the registry. You must add this dependency to the registry.json file.", packageIdentity, deps.Id);
+                                hasErrors = true;
                                 hasDependencyErrors = true;
                             }
                             else if (packageEntryDep.Ignored)
@@ -475,12 +475,12 @@ namespace UnityNuGet
                                     else
                                     {
                                         resolvedDeps = packageDependency;
-                                        LogWarning($"Overwriting dependency `{deps.Id} {deps.VersionRange}` of the package `{packageIdentity}` in favor of `{resolvedDeps.Id} {resolvedDeps.VersionRange}` because it is not compatible with {string.Join(",", _targetFrameworks.Select(x => x.Name))}.");
+                                        _logger.LogWarning("Overwriting dependency `{DependencyId} {DependencyVersionRange}` of the package `{PackageIdentity}` in favor of `{ResolvedDependencyId} {ResolvedDependencyVersionRange}` because it is not compatible with {TargetFrameworks}.", deps.Id, deps.VersionRange, packageIdentity, resolvedDeps.Id, resolvedDeps.VersionRange, string.Join(",", _targetFrameworks.Select(x => x.Name)));
                                     }
                                 }
                                 else
                                 {
-                                    LogWarning($"The version range `{deps.VersionRange}` for the dependency `{deps.Id}` for the package `{packageIdentity}` doesn't match the range allowed from the registry.json: `{packageEntryDep.Version}`");
+                                    _logger.LogWarning("The version range `{DependencyVersionRange}` for the dependency `{DependencyId}` for the package `{PackageIdentity}` doesn't match the range allowed from the registry.json: `{RegistryVersionRange}`", deps.VersionRange, deps.Id, packageIdentity, packageEntryDep.Version);
                                     hasDependencyErrors = true;
                                     continue;
                                 }
@@ -560,11 +560,11 @@ namespace UnityNuGet
                             {
                                 Directory.Delete(localPackagePath, true);
 
-                                LogInformation($"The NuGet package cache folder has been deleted: {localPackagePath}");
+                                _logger.LogInformation("The NuGet package cache folder has been deleted: {LocalPackagePath}", localPackagePath);
                             }
                             else
                             {
-                                LogWarning($"The NuGet package cache folder could not be deleted because it does not exist: {localPackagePath}");
+                                _logger.LogWarning("The NuGet package cache folder could not be deleted because it does not exist: {LocalPackagePath}", localPackagePath);
                             }
                         }
                     }
@@ -578,6 +578,8 @@ namespace UnityNuGet
                     CurrentRegistryVersion,
                     cancellationToken);
             }
+
+            return !hasErrors;
         }
 
         // Unity only supports the SemVer format: https://docs.unity3d.com/6000.1/Documentation/Manual/upm-lifecycle.html
@@ -678,7 +680,7 @@ namespace UnityNuGet
             string unsignedPackageFilePath = $"{unityPackageFilePath}.unsigned";
             bool packageFileWritten = false;
 
-            LogInformation($"Converting NuGet package {identity} to Unity `{unityPackageFileName}`");
+            _logger.LogInformation("Converting NuGet package {PackageIdentity} to Unity `{UnityPackageFileName}`", identity, unityPackageFileName);
 
             try
             {
@@ -734,7 +736,7 @@ namespace UnityNuGet
 
                     if (isPackageNetStandard21Assembly)
                     {
-                        LogInformation($"Package {identity.Id} is a system package for netstandard2.1 and will be only used for netstandard 2.0");
+                        _logger.LogInformation("Package {PackageId} is a system package for netstandard2.1 and will be only used for netstandard 2.0", identity.Id);
                     }
 
                     // There are packages that have embedded analyzers, e.g.: CommunityToolkit.Mvvm
@@ -812,7 +814,7 @@ namespace UnityNuGet
                             PlatformDefinition? platformDef = platformDefs.Find(os, cpu);
                             if (platformDef == null)
                             {
-                                LogInformation($"Failed to find a platform definition for: {os}, {cpu}");
+                                _logger.LogInformation("Failed to find a platform definition for: {OperatingSystem}, {Cpu}", os, cpu);
                                 continue;
                             }
 
@@ -929,7 +931,7 @@ namespace UnityNuGet
                         PlatformDefinition? platformDef = platformDefs.Find(os, cpu);
                         if (platformDef == null)
                         {
-                            LogInformation($"Failed to find a platform definition for: {os}, {cpu}");
+                            _logger.LogInformation("Failed to find a platform definition for: {OperatingSystem}, {Cpu}", os, cpu);
                             continue;
                         }
 
@@ -943,7 +945,7 @@ namespace UnityNuGet
 
                         if (meta == null)
                         {
-                            LogInformation($"Skipping file without meta: {file} ...");
+                            _logger.LogInformation("Skipping file without meta: {File} ...", file);
                             continue;
                         }
 
@@ -1134,7 +1136,7 @@ namespace UnityNuGet
                     // ignored
                 }
 
-                LogWarning($"Error while processing package `{identity}`. Reason: {ex}");
+                _logger.LogWarning(ex, "Error while processing package `{PackageIdentity}`", identity);
             }
         }
 
@@ -1550,24 +1552,6 @@ namespace UnityNuGet
             }
 
             return sb.ToString();
-        }
-
-        private void LogInformation(string message)
-        {
-            _logger.LogInformation(message);
-            OnInformation(this, new RegistryLogEventArgs(message));
-        }
-
-        private void LogWarning(string message)
-        {
-            _logger.LogWarning(message);
-            OnWarning(this, new RegistryLogEventArgs(message));
-        }
-
-        private void LogError(string message)
-        {
-            _logger.LogError(message);
-            OnError(this, new RegistryLogEventArgs(message));
         }
 
         private static List<string> SplitCommaSeparatedString(string input)

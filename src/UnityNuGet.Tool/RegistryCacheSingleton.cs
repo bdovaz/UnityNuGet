@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UnityNuGet.Server
+namespace UnityNuGet.Tool
 {
     public sealed class RegistryCacheSingleton
     {

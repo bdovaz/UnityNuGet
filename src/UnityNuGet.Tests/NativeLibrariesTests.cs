@@ -4,7 +4,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-using NuGet.Common;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 using NuGet.Packaging;
 using NUnit.Framework;
 
@@ -31,17 +32,17 @@ namespace UnityNuGet.Tests
             string path = $"runtimes/{rid}/native/{fileName}";
             using MemoryStream package = CreatePackage(path);
             using PackageArchiveReader reader = new(package);
-            RecordingLogger logger = new();
+            FakeLogger<NativeLibrariesTests> logger = new();
 
             var results = await NativeLibraries.GetSupportedNativeLibsAsync(reader, logger).ToListAsync();
 
             Assert.That(results, Has.Count.EqualTo(1));
             var result = results[0];
             Assert.That(result.file.Replace('\\', '/'), Is.EqualTo(path));
-            Assert.That(result.folders, Is.EqualTo(new[] { "runtimes", rid, "native" }));
+            Assert.That(result.folders, Is.EqualTo(["runtimes", rid, "native"]));
             Assert.That(result.os, Is.EqualTo(os));
             Assert.That(result.cpu, Is.EqualTo(cpu));
-            Assert.That(logger.Messages, Is.Empty);
+            Assert.That(logger.Collector.GetSnapshot(), Is.Empty);
         }
 
         [TestCase("runtimes/win-x64/lib/netstandard2.0/plugin.dll", "non-native library")]
@@ -61,14 +62,14 @@ namespace UnityNuGet.Tests
         {
             using MemoryStream package = CreatePackage(path);
             using PackageArchiveReader reader = new(package);
-            RecordingLogger logger = new();
+            FakeLogger<NativeLibrariesTests> logger = new();
 
             var results = await NativeLibraries.GetSupportedNativeLibsAsync(reader, logger).ToListAsync();
 
             Assert.That(results, Is.Empty);
-            Assert.That(logger.Messages, Has.Count.EqualTo(1));
-            Assert.That(logger.Messages[0], Does.Contain(diagnostic));
-            Assert.That(logger.Messages[0].Replace('\\', '/'), Does.Contain(path));
+            string message = logger.Collector.GetSnapshot().Single().Message;
+            Assert.That(message, Does.Contain(diagnostic));
+            Assert.That(message.Replace('\\', '/'), Does.Contain(path));
         }
 
         [Test]
@@ -76,12 +77,12 @@ namespace UnityNuGet.Tests
         {
             using MemoryStream package = CreatePackage("lib/netstandard2.0/example.dll");
             using PackageArchiveReader reader = new(package);
-            RecordingLogger logger = new();
+            FakeLogger<NativeLibrariesTests> logger = new();
 
             var results = await NativeLibraries.GetSupportedNativeLibsAsync(reader, logger).ToListAsync();
 
             Assert.That(results, Is.Empty);
-            Assert.That(logger.Messages, Is.Empty);
+            Assert.That(logger.Collector.GetSnapshot(), Is.Empty);
         }
 
         [Test]
@@ -93,7 +94,7 @@ namespace UnityNuGet.Tests
                 "runtimes/freebsd-x64/native/ignored.so",
                 "runtimes/linux-x64/native/readme.txt");
             using PackageArchiveReader reader = new(package);
-            RecordingLogger logger = new();
+            FakeLogger<NativeLibrariesTests> logger = new();
 
             var results = await NativeLibraries.GetSupportedNativeLibsAsync(reader, logger).ToListAsync();
 
@@ -102,7 +103,7 @@ namespace UnityNuGet.Tests
                 ("runtimes/win-x64/native/first.dll", UnityOs.Windows, UnityCpu.X64),
                 ("runtimes/android-arm64/native/second.so", UnityOs.Android, UnityCpu.ARM64)
             }));
-            Assert.That(logger.Messages, Has.Count.EqualTo(2));
+            Assert.That(logger.Collector.GetSnapshot(), Has.Count.EqualTo(2));
         }
 
         [TestCase("plugin.dll", UnityOs.Windows, true)]
@@ -143,17 +144,5 @@ namespace UnityNuGet.Tests
             return stream;
         }
 
-        private sealed class RecordingLogger : LoggerBase
-        {
-            public List<string> Messages { get; } = [];
-
-            public override void Log(ILogMessage message) => Messages.Add(message.Message);
-
-            public override Task LogAsync(ILogMessage message)
-            {
-                Log(message);
-                return Task.CompletedTask;
-            }
-        }
     }
 }
