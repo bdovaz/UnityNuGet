@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ using static NuGet.Frameworks.FrameworkConstants;
 
 namespace UnityNuGet.Tests
 {
+    [NonParallelizable]
     public class RegistryValidatorTests
     {
         private string _tempDir = string.Empty;
@@ -351,6 +353,99 @@ namespace UnityNuGet.Tests
                 Assert.That(result.CheckedPackageCount, Is.EqualTo(2));
             }
             }
+        }
+
+        [TestCase(true, true)]
+        [TestCase(false, false)]
+        public async Task Validate_ReportsConversionOutcome(bool includePackageInFeed, bool expectedIsValid)
+        {
+            string previousDirectory = Directory.GetCurrentDirectory();
+            string? previousNuGetPackages = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
+            string workingDirectory = Path.Combine(Path.GetTempPath(), $"unitynuget-conversion-tests-{Guid.NewGuid():N}");
+            string feedDirectory = Path.Combine(workingDirectory, "packages");
+            Directory.CreateDirectory(feedDirectory);
+
+            try
+            {
+                File.WriteAllText(
+                    Path.Combine(workingDirectory, "NuGet.Config"),
+                    "<configuration><packageSources><clear /><add key=\"local\" value=\"packages\" /></packageSources></configuration>");
+
+                string registryFilePath = Path.Combine(workingDirectory, "registry.json");
+                File.WriteAllText(registryFilePath, "{ \"Sample.Package\": { \"listed\": true, \"version\": \"1.0.0\" } }");
+
+                if (includePackageInFeed)
+                {
+                    CreateLocalPackage(feedDirectory);
+                }
+
+                Directory.SetCurrentDirectory(workingDirectory);
+                Environment.SetEnvironmentVariable("NUGET_PACKAGES", "original-nuget-cache");
+
+                FakeLoggerProvider loggerProvider = new();
+                using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => builder.AddProvider(loggerProvider));
+                Mock<IPackageSearchMetadata> metadata = new();
+                metadata.SetupGet(item => item.Identity).Returns(new PackageIdentity("Sample.Package", NuGetVersion.Parse("1.0.0")));
+                metadata.SetupGet(item => item.DependencySets).Returns([new PackageDependencyGroup(CommonFrameworks.NetStandard20, [])]);
+
+                RegistryValidator validator = new(
+                    loggerFactory,
+                    (_, _, _, _) => Task.FromResult<IReadOnlyList<IPackageSearchMetadata>>([metadata.Object]),
+                    (_, _) => Task.FromResult(false));
+
+                RegistryValidationResult result = await validator.Validate(new RegistryValidationOptions
+                {
+                    RegistryFilePath = registryFilePath,
+                    PackageNames = ["Sample.Package"],
+                });
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(result.IsValid, Is.EqualTo(expectedIsValid));
+                    Assert.That(result.CheckedPackageCount, Is.EqualTo(1));
+                    Assert.That(Environment.GetEnvironmentVariable("NUGET_PACKAGES"), Is.EqualTo("original-nuget-cache"));
+                }
+
+                if (includePackageInFeed)
+                {
+                    string[] logMessages = [.. loggerProvider.Collector.GetSnapshot().Select(record => record.Message)];
+                    using (Assert.EnterMultipleScope())
+                    {
+                        Assert.That(logMessages, Has.Some.Contains("unitynuget-validate-").And.Contains(".nuget"));
+                        Assert.That(logMessages, Has.None.Contains("did not produce any converted Unity package versions"));
+                    }
+                }
+                else
+                {
+                    Assert.That(
+                        loggerProvider.Collector.GetSnapshot().Select(record => record.Message),
+                        Has.Some.Contains("did not produce any converted Unity package versions"));
+                }
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(previousDirectory);
+                Environment.SetEnvironmentVariable("NUGET_PACKAGES", previousNuGetPackages);
+                if (Directory.Exists(workingDirectory))
+                {
+                    Directory.Delete(workingDirectory, recursive: true);
+                }
+            }
+        }
+
+        private static void CreateLocalPackage(string feedDirectory)
+        {
+            string packagePath = Path.Combine(feedDirectory, "Sample.Package.1.0.0.nupkg");
+            using ZipArchive archive = ZipFile.Open(packagePath, ZipArchiveMode.Create);
+            ZipArchiveEntry nuspec = archive.CreateEntry("Sample.Package.nuspec");
+            using (StreamWriter writer = new(nuspec.Open()))
+            {
+                writer.Write("<package xmlns=\"http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd\"><metadata><id>Sample.Package</id><version>1.0.0</version><authors>Test</authors><description>Test package</description><dependencies><group targetFramework=\".NETStandard2.0\" /></dependencies></metadata></package>");
+            }
+
+            archive.CreateEntryFromFile(
+                typeof(RegistryValidatorTests).Assembly.Location,
+                "lib/netstandard2.0/UnityNuGet.Tests.dll");
         }
 
         [Test]

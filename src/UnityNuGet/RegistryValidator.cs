@@ -361,12 +361,6 @@ namespace UnityNuGet
                                 "Package `{PackageName}` has `ignore: true` and was skipped.",
                                 packageName);
                         }
-                        if (_logger.IsEnabled(LogLevel.Information))
-                        {
-                            _logger.LogInformation(
-                                "Package `{PackageName}` has `ignore: true` and was skipped.",
-                                packageName);
-                        }
                     }
 
                     continue;
@@ -515,7 +509,8 @@ namespace UnityNuGet
                 return result;
             }
 
-            result.IsValid = await ValidateConversionAsync(registryFilePath, targetPackages, options.ValidateAll, cancellationToken);
+            bool hasConversionErrors = await ValidateConversionAsync(registryFilePath, targetPackages, options.ValidateAll, cancellationToken);
+            result.IsValid = !hasConversionErrors;
 
             return result;
         }
@@ -552,6 +547,7 @@ namespace UnityNuGet
             try
             {
                 Directory.CreateDirectory(tempFolder);
+                Environment.SetEnvironmentVariable("NUGET_PACKAGES", Path.Combine(tempFolder, ".nuget"));
 
                 RegistryOptions registryOptions = CreateDefaultRegistryOptions(registryFilePath, tempFolder);
                 Registry registry = new(_loggerFactory, Options.Create(registryOptions));
@@ -563,7 +559,7 @@ namespace UnityNuGet
                     Options.Create(new SigningOptions()));
 
                 NuGet.Common.ILogger nuGetLogger = new NuGetRedirectLogger(_logger);
-                RegistryCache cache = new(
+                using RegistryCache cache = new(
                     registry,
                     tempFolder,
                     registryOptions.RootHttpUrl!,
@@ -580,7 +576,10 @@ namespace UnityNuGet
                     Filter = validateAll ? null : BuildExactPackageFilterRegex(targetPackages.Select(p => p.Key)),
                 };
 
-                await cache.Build(cancellationToken);
+                if (!await cache.Build(cancellationToken))
+                {
+                    hasErrors = true;
+                }
 
                 foreach ((string packageId, _) in targetPackages)
                 {

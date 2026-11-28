@@ -28,7 +28,7 @@ namespace UnityNuGet
     /// <summary>
     /// Main class used to build the unity packages and create the NPM object responses.
     /// </summary>
-    public class RegistryCache
+    public class RegistryCache : IDisposable
     {
         public static readonly bool IsRunningAsContinuousIntegration = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI"));
 
@@ -1522,6 +1522,20 @@ namespace UnityNuGet
             }
 
             return list;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _sourceCacheContext.Dispose();
+            }
         }
     }
 }
