@@ -1,3 +1,4 @@
+using System;
 using System.CommandLine;
 using Microsoft.Extensions.Logging;
 
@@ -5,7 +6,7 @@ namespace UnityNuGet.Tool.Commands
 {
     internal sealed class ValidateCommand : Command
     {
-        public ValidateCommand(ILogger<ValidateCommand> logger, IRegistryValidator registryValidator) : base("validate", "Validate registry.json entries without requiring appsettings.json")
+        public ValidateCommand(Func<ILogger<ValidateCommand>> loggerFactory, Func<IRegistryValidator> registryValidatorFactory) : base("validate", "Validate registry.json entries without requiring appsettings.json")
         {
             Argument<string> registryFilePathArgument = new("registryFilePath")
             {
@@ -40,6 +41,8 @@ namespace UnityNuGet.Tool.Commands
 
             SetAction(async (parseResult, cancellationToken) =>
             {
+                ILogger<ValidateCommand> logger = loggerFactory();
+                IRegistryValidator registryValidator = registryValidatorFactory();
                 string? registryFilePath = parseResult.GetValue(registryFilePathArgument);
 
                 string[]? packageNames = parseResult.GetValue(packageOption);

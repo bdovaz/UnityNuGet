@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -27,7 +25,7 @@ namespace UnityNuGet.Tool.Tests
                 });
 
             FakeLogger<ValidateCommand> logger = new();
-            ValidateCommand command = new(logger, registryValidator.Object);
+            ValidateCommand command = new(() => logger, () => registryValidator.Object);
 
             int exitCode = await command.Parse([
                 "registry.json",
@@ -43,7 +41,7 @@ namespace UnityNuGet.Tool.Tests
                 Assert.That(exitCode, Is.Zero);
                 Assert.That(capturedOptions, Is.Not.Null);
                 Assert.That(capturedOptions!.RegistryFilePath, Is.EqualTo("registry.json"));
-                Assert.That(capturedOptions.PackageNames, Is.EquivalentTo(new[] { "Package.One", "Package.Two" }));
+                Assert.That(capturedOptions.PackageNames, Is.EquivalentTo(["Package.One", "Package.Two"]));
                 Assert.That(capturedOptions.Filter, Is.EqualTo("^Package\\."));
                 Assert.That(capturedOptions.ValidateAll, Is.True);
                 Assert.That(capturedOptions.SkipConversion, Is.True);
@@ -67,7 +65,7 @@ namespace UnityNuGet.Tool.Tests
                 });
 
             FakeLogger<ValidateCommand> logger = new();
-            ValidateCommand command = new(logger, registryValidator.Object);
+            ValidateCommand command = new(() => logger, () => registryValidator.Object);
 
             int exitCode = await command.Parse(["registry.json"]).InvokeAsync();
 
@@ -92,7 +90,7 @@ namespace UnityNuGet.Tool.Tests
                 });
 
             FakeLogger<ValidateCommand> logger = new();
-            ValidateCommand command = new(logger, registryValidator.Object);
+            ValidateCommand command = new(() => logger, () => registryValidator.Object);
 
             int exitCode = await command.Parse(["registry.json"]).InvokeAsync();
 
@@ -117,7 +115,7 @@ namespace UnityNuGet.Tool.Tests
                 });
 
             FakeLogger<ValidateCommand> logger = new();
-            ValidateCommand command = new(logger, registryValidator.Object);
+            ValidateCommand command = new(() => logger, () => registryValidator.Object);
 
             int exitCode = await command.Parse(["registry.json"]).InvokeAsync();
 

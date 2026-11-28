@@ -17,7 +17,7 @@ namespace UnityNuGet.Tool.Tests
                 .Setup(updater => updater.Execute(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(executeResult);
 
-            UnityNuGetCommand command = new(registryCacheUpdater.Object);
+            UnityNuGetCommand command = new(() => registryCacheUpdater.Object);
 
             int exitCode = await command.Parse([]).InvokeAsync();
 

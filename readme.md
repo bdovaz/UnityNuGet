@@ -177,7 +177,7 @@ This use case is useful when you simply don't want to depend on an external serv
 
 To use it, once installed with `dotnet tool install -g UnityNuGet.Tool` simply run the command `unityNuGet`.
 
-> Note that an `appsettings.json` file must exist in the working directory from which the command is executed.
+> Note that an `appsettings.json` file must exist in the working directory from which the command is executed. Its `Registry:RegistryFilePath` setting must point to a `registry.json` file that you provide (by default, `registry.json` in the working directory).
 
 To validate a `registry.json` file without needing an `appsettings.json` (for example in PR CI), use the `validate` subcommand:
 
