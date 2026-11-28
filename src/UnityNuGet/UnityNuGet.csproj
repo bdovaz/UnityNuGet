@@ -7,16 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="registry.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="..\..\registry.json" Link="registry.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 

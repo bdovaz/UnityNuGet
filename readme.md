@@ -175,9 +175,18 @@ UnityNuGet is also distributed as a dotnet tool. The difference is that in this 
 
 This use case is useful when you simply don't want to depend on an external server and want your dependencies to be [local packages](https://docs.unity3d.com/6000.1/Documentation/Manual/upm-localpath.html).
 
-To use it, once installed with `dotnet install -g UnityNuGet.Tool` simply run the command `unityNuGet`.
+To use it, once installed with `dotnet tool install -g UnityNuGet.Tool` simply run the command `unityNuGet`.
 
-> Note that an `appsettings.json` file must exist in the working directory from which the command is executed.
+> Note that an `appsettings.json` file must exist in the working directory from which the command is executed. Its `Registry:RegistryFilePath` setting must point to a `registry.json` file that you provide (by default, `registry.json` in the working directory).
+
+To validate a `registry.json` file without needing an `appsettings.json` (for example in PR CI), use the `validate` subcommand:
+
+```text
+unityNuGet validate <registry-json-path> [--package <id> ...] [--filter <regex>] [--all] [--skip-conversion]
+```
+
+- Without `--package`, `--filter`, or `--all`, `validate` runs fast static checks (JSON validity, duplicate keys, alphabetical order, `.NETStandard2.0` built-in exclusion, and required `version`).
+- With `--package` (repeatable, exact match) or `--filter`, `validate` also checks online NuGet minimum compatible versions (`>=`) and runs a package conversion test against the full `registry.json` dependency graph.
 
 ## FAQ
 

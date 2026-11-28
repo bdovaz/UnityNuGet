@@ -17,6 +17,41 @@ namespace UnityNuGet.Tests
     public class RegistryCacheTests
     {
         [Test]
+        public void Dispose_CanBeCalledMoreThanOnce()
+        {
+            using LoggerFactory loggerFactory = new();
+            string tempFolder = Path.Combine(Path.GetTempPath(), $"unitynuget-cache-dispose-{Guid.NewGuid():N}");
+            Registry registry = new(loggerFactory, Options.Create(new RegistryOptions { RegistryFilePath = "registry.json" }));
+            RegistryCache cache = new(
+                registry,
+                tempFolder,
+                new Uri("http://localhost/"),
+                "org.nuget",
+                "2019.1",
+                " (NuGet)",
+                [],
+                [new() { Name = "netstandard2.0" }],
+                [],
+                new NuGetConsoleTestLogger(),
+                loggerFactory.CreateLogger<RegistryCache>(),
+                new UnityPackageSigner(loggerFactory.CreateLogger<UnityPackageSigner>(), Options.Create(new SigningOptions())));
+
+            try
+            {
+                Assert.That(cache, Is.InstanceOf<IDisposable>());
+                Assert.DoesNotThrow(() => cache.Dispose());
+                Assert.DoesNotThrow(() => cache.Dispose());
+            }
+            finally
+            {
+                if (Directory.Exists(tempFolder))
+                {
+                    Directory.Delete(tempFolder, recursive: true);
+                }
+            }
+        }
+
+        [Test]
         [TestCase("1.0.0", "1.0.0")]
         [TestCase("1.0.0.0", "1.0.0")]
         [TestCase("1.0.0.1", "1.0.0-1")]

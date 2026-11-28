@@ -27,4 +27,8 @@
     <ProjectReference Include="..\UnityNuGet\UnityNuGet.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+
 </Project>

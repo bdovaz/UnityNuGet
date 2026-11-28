@@ -17,6 +17,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="..\..\registry.json" Link="registry.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\UnityNuGet\UnityNuGet.csproj" />
   </ItemGroup>
 

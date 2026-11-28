@@ -28,7 +28,7 @@ namespace UnityNuGet
     /// <summary>
     /// Main class used to build the unity packages and create the NPM object responses.
     /// </summary>
-    public class RegistryCache
+    public class RegistryCache : IDisposable
     {
         public static readonly bool IsRunningAsContinuousIntegration = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI"));
 
@@ -132,7 +132,12 @@ namespace UnityNuGet
 
             _canSignPackages = _unityPackageSigner.CanSign();
 
-            _logger.LogInformation("NuGet packages directory: {GlobalPackagesFolder}", GlobalPackagesFolder);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "NuGet packages directory: {GlobalPackagesFolder}",
+                    GlobalPackagesFolder);
+            }
         }
 
         /// <summary>
@@ -196,7 +201,10 @@ namespace UnityNuGet
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error while building the registry cache");
+                _logger.LogError(
+                    ex,
+                    "Unexpected error while building the registry cache");
+
                 return false;
             }
         }
@@ -252,7 +260,12 @@ namespace UnityNuGet
 
             if (forceUpdate)
             {
-                _logger.LogInformation("Registry version changed to {RegistryVersion} - Regenerating all packages", CurrentRegistryVersion);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
+                        "Registry version changed to {RegistryVersion} - Regenerating all packages",
+                        CurrentRegistryVersion);
+                }
 
                 // Clear the cache entirely
                 _npmPackageRegistry.Reset();
@@ -262,7 +275,12 @@ namespace UnityNuGet
 
             if (regexFilter != null)
             {
-                _logger.LogInformation("Filtering with regex: {Filter}", Filter);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
+                        "Filtering with regex: {Filter}",
+                        Filter);
+                }
             }
 
             int progressCount = 0;
@@ -305,7 +323,10 @@ namespace UnityNuGet
 
                 if (packageMetaIt == null)
                 {
-                    _logger.LogError("The package was not found in any registry: {PackageName}", packageName);
+                    _logger.LogError(
+                        "The package was not found in any registry: {PackageName}",
+                        packageName);
+
                     hasErrors = true;
 
                     continue;
@@ -348,7 +369,11 @@ namespace UnityNuGet
 
                         if (!hasNativeLib)
                         {
-                            _logger.LogWarning("The package `{PackageIdentity}` doesn't support `{TargetFrameworks}`", packageIdentity, string.Join(",", _targetFrameworks.Select(x => x.Name)));
+                            _logger.LogWarning(
+                                "The package `{PackageIdentity}` doesn't support `{TargetFrameworks}`",
+                                packageIdentity,
+                                string.Join(",", _targetFrameworks.Select(x => x.Name)));
+
                             continue;
                         }
                     }
@@ -426,7 +451,11 @@ namespace UnityNuGet
 
                             if (!_registry.TryGetValue(deps.Id, out RegistryEntry? packageEntryDep))
                             {
-                                _logger.LogError("The package `{PackageIdentity}` has a dependency on `{DependencyId}` which is not in the registry. You must add this dependency to the registry.json file.", packageIdentity, deps.Id);
+                                _logger.LogError(
+                                    "The package `{PackageIdentity}` has a dependency on `{DependencyId}` which is not in the registry. You must add this dependency to the registry.json file.",
+                                    packageIdentity,
+                                    deps.Id);
+
                                 hasErrors = true;
                                 hasDependencyErrors = true;
                             }
@@ -475,12 +504,26 @@ namespace UnityNuGet
                                     else
                                     {
                                         resolvedDeps = packageDependency;
-                                        _logger.LogWarning("Overwriting dependency `{DependencyId} {DependencyVersionRange}` of the package `{PackageIdentity}` in favor of `{ResolvedDependencyId} {ResolvedDependencyVersionRange}` because it is not compatible with {TargetFrameworks}.", deps.Id, deps.VersionRange, packageIdentity, resolvedDeps.Id, resolvedDeps.VersionRange, string.Join(",", _targetFrameworks.Select(x => x.Name)));
+
+                                        _logger.LogWarning(
+                                            "Overwriting dependency `{DependencyId} {DependencyVersionRange}` of the package `{PackageIdentity}` in favor of `{ResolvedDependencyId} {ResolvedDependencyVersionRange}` because it is not compatible with {TargetFrameworks}.",
+                                            deps.Id,
+                                            deps.VersionRange,
+                                            packageIdentity,
+                                            resolvedDeps.Id,
+                                            resolvedDeps.VersionRange,
+                                            string.Join(",", _targetFrameworks.Select(x => x.Name)));
                                     }
                                 }
                                 else
                                 {
-                                    _logger.LogWarning("The version range `{DependencyVersionRange}` for the dependency `{DependencyId}` for the package `{PackageIdentity}` doesn't match the range allowed from the registry.json: `{RegistryVersionRange}`", deps.VersionRange, deps.Id, packageIdentity, packageEntryDep.Version);
+                                    _logger.LogWarning(
+                                        "The version range `{DependencyVersionRange}` for the dependency `{DependencyId}` for the package `{PackageIdentity}` doesn't match the range allowed from the registry.json: `{RegistryVersionRange}`",
+                                        deps.VersionRange,
+                                        deps.Id,
+                                        packageIdentity,
+                                        packageEntryDep.Version);
+
                                     hasDependencyErrors = true;
                                     continue;
                                 }
@@ -560,11 +603,18 @@ namespace UnityNuGet
                             {
                                 Directory.Delete(localPackagePath, true);
 
-                                _logger.LogInformation("The NuGet package cache folder has been deleted: {LocalPackagePath}", localPackagePath);
+                                if (_logger.IsEnabled(LogLevel.Information))
+                                {
+                                    _logger.LogInformation(
+                                        "The NuGet package cache folder has been deleted: {LocalPackagePath}",
+                                        localPackagePath);
+                                }
                             }
                             else
                             {
-                                _logger.LogWarning("The NuGet package cache folder could not be deleted because it does not exist: {LocalPackagePath}", localPackagePath);
+                                _logger.LogWarning(
+                                    "The NuGet package cache folder could not be deleted because it does not exist: {LocalPackagePath}",
+                                    localPackagePath);
                             }
                         }
                     }
@@ -675,7 +725,13 @@ namespace UnityNuGet
             string unityPackageFileName = GetUnityPackageFileName(identity, npmPackageVersion);
             string unityPackageFilePath = Path.Combine(_rootPersistentFolder, unityPackageFileName);
 
-            _logger.LogInformation("Converting NuGet package {PackageIdentity} to Unity `{UnityPackageFileName}`", identity, unityPackageFileName);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "Converting NuGet package {PackageIdentity} to Unity `{UnityPackageFileName}`",
+                    identity,
+                    unityPackageFileName);
+            }
 
             try
             {
@@ -731,7 +787,12 @@ namespace UnityNuGet
 
                     if (isPackageNetStandard21Assembly)
                     {
-                        _logger.LogInformation("Package {PackageId} is a system package for netstandard2.1 and will be only used for netstandard 2.0", identity.Id);
+                        if (_logger.IsEnabled(LogLevel.Information))
+                        {
+                            _logger.LogInformation(
+                                "Package {PackageId} is a system package for netstandard2.1 and will be only used for netstandard 2.0",
+                                identity.Id);
+                        }
                     }
 
                     // There are packages that have embedded analyzers, e.g.: CommunityToolkit.Mvvm
@@ -809,7 +870,13 @@ namespace UnityNuGet
                             PlatformDefinition? platformDef = platformDefs.Find(os, cpu);
                             if (platformDef == null)
                             {
-                                _logger.LogInformation("Failed to find a platform definition for: {OperatingSystem}, {Cpu}", os, cpu);
+                                if (_logger.IsEnabled(LogLevel.Information))
+                                {
+                                    _logger.LogInformation(
+                                        "Failed to find a platform definition for: {OperatingSystem}, {Cpu}",
+                                        os,
+                                        cpu);
+                                }
                                 continue;
                             }
 
@@ -926,7 +993,13 @@ namespace UnityNuGet
                         PlatformDefinition? platformDef = platformDefs.Find(os, cpu);
                         if (platformDef == null)
                         {
-                            _logger.LogInformation("Failed to find a platform definition for: {OperatingSystem}, {Cpu}", os, cpu);
+                            if (_logger.IsEnabled(LogLevel.Information))
+                            {
+                                _logger.LogInformation(
+                                    "Failed to find a platform definition for: {OperatingSystem}, {Cpu}",
+                                    os,
+                                    cpu);
+                            }
                             continue;
                         }
 
@@ -940,7 +1013,12 @@ namespace UnityNuGet
 
                         if (meta == null)
                         {
-                            _logger.LogInformation("Skipping file without meta: {File} ...", file);
+                            if (_logger.IsEnabled(LogLevel.Information))
+                            {
+                                _logger.LogInformation(
+                                    "Skipping file without meta: {File} ...",
+                                    file);
+                            }
                             continue;
                         }
 
@@ -1056,7 +1134,10 @@ namespace UnityNuGet
                     // ignored
                 }
 
-                _logger.LogWarning(ex, "Error while processing package `{PackageIdentity}`", identity);
+                _logger.LogWarning(
+                    ex,
+                    "Error while processing package `{PackageIdentity}`",
+                    identity);
             }
         }
 
@@ -1441,6 +1522,20 @@ namespace UnityNuGet
             }
 
             return list;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _sourceCacheContext.Dispose();
+            }
         }
     }
 }
